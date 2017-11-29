@@ -1,0 +1,3 @@
+[0m[[0mdebug[0m] [0mCopy resource mappings: [0m
+[0m[[0mdebug[0m] [0m	(C:\Users\Henry\Documents\thingy\akka-quickstart-scala\src\main\resources\application.conf,C:\Users\Henry\Documents\thingy\akka-quickstart-scala\target\scala-2.11\classes\application.conf)[0m
+[0m[[0mdebug[0m] [0m	(C:\Users\Henry\Documents\thingy\akka-quickstart-scala\src\main\resources\seed.json,C:\Users\Henry\Documents\thingy\akka-quickstart-scala\target\scala-2.11\classes\seed.json)[0m

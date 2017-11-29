@@ -1,0 +1,5 @@
+[0m[[0minfo[0m] [0m[32mTestNeuron:[0m[0m
+[0m[[0minfo[0m] [0m[32mthe neuron[0m[0m
+[0m[[0minfo[0m] [0m[32m- should be in state Initialising when started[0m[0m
+[0m[[0minfo[0m] [0m[32mthe neuron[0m[0m
+[0m[[0minfo[0m] [0m[32m- should then move to state Ready, when provided with sufficient connection detail[0m[0m
