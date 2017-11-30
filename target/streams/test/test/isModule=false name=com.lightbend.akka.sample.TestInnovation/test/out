@@ -12,6 +12,6 @@
 [0m[[0minfo[0m] [0m[32madd another new one and we[0m[0m
 [0m[[0minfo[0m] [0m[32m- should get another new one[0m[0m
 [0m[[0minfo[0m] [0m[32mWhen a subnetwork innovation occurs, the innovation id for subnetworks[0m[0m
-[0m[[0minfo[0m] [0m[32m- should increase to 2[0m[0m
+[0m[[0minfo[0m] [0m[32m- should increase by 1 and so should the subnet tracker[0m[0m
 [0m[[0minfo[0m] [0m[32mJust for comlpeteness when requested again we[0m[0m
-[0m[[0minfo[0m] [0m[32m- should get the same number again[0m[0m
+[0m[[0minfo[0m] [0m[32m- should get the same number[0m[0m

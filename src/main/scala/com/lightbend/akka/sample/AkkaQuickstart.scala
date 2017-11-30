@@ -9,6 +9,7 @@ import com.thingy.genome.{NetworkGenomeBuilder}
 import com.thingy.network.Network
 import com.thingy.subnetwork.SubNetwork
 import com.thingy.innovation._
+import com.thingy.agent._
 
 object Acne extends App {
   //Kamon.start()
@@ -17,19 +18,13 @@ object Acne extends App {
 // The first network will consist of the most simple sub networks input -> output.
 // These subnetworks wil complexify over time.
 
- val gNet = new NetworkGenomeBuilder()
-
-
 
  val system = ActorSystem()
+ val gNet = new NetworkGenomeBuilder()
+ val innovation = system.actorOf(Innovation.props(gNet), "innov8")
+ val agent = system.actorOf(Agent.props(innovation, gNet), "agent")
 
 
-val snInnovation = system.actorOf(Innovation.props(gNet), "innov8")
-
- val net = system.actorOf(Network.props("Init network", gNet), "network")
-
- net ! Neuron.Signal(10)
- snInnovation ! Innovation.NetworkConnectionInnovation(1,3)
 
  //val subnet = system.actorOf(SubNetwork.props("subnetwork"), "subnetwork")
  //val subnet2 = system.actorOf(SubNetwork.props("subnetwork2"), "subnetwork2")

@@ -24,13 +24,13 @@ object Network {
     // an override of props to allow Actor to take constructor args.
 	// Network should take a genome and create a number of sub networks.
 
-	def props(name: String, networkGenome: NetworkGenomeBuilder): Props = {
+	def props(name: String, networkGenome: NetworkGenome.NetworkGenome): Props = {
 
 		Props(classOf[Network], name, networkGenome)
 	}
 }
 
-class Network(name: String, networkGenome: NetworkGenomeBuilder) extends FSM[NetworkState, NetworkSettings] {
+class Network(name: String, networkGenome: NetworkGenome.NetworkGenome) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
 	log.debug("network: {} created", name)
@@ -39,10 +39,10 @@ class Network(name: String, networkGenome: NetworkGenomeBuilder) extends FSM[Net
 	// Input neurons will not have any internal node structures so can be created as straight Neurons.
 	// By giving the context the neurons will be created in this context.
 
-	val genome = networkGenome.generateFromSeed
-	val generatedActors = genome.generateActors(context)
+	
+	val generatedActors = networkGenome.generateActors(context)
 
-	log.debug("generated genome: {}, actors are setup as {} ", genome, generatedActors)
+	log.debug("Network ctors are setup as {} ", generatedActors)
 
 
 	startWith(Ready, NetworkSettings())

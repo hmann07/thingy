@@ -56,15 +56,24 @@ class TestInnovation extends FlatSpec {
 		assert(snInnovation.stateData.networkConnectionTracker.currentInnovationId == 4)
 	}
 
-	"When a subnetwork innovation occurs, the innovation id for subnetworks" should "increase by 1" in {
+	"When a subnetwork innovation occurs, the innovation id for subnetworks" should "increase by 1 and so should the subnet tracker" in {
 		val oldid = snInnovation.stateData.subnetConnectionTracker.currentInnovationId
-		snInnovation ! Innovation.SubNetConnectionInnovation(2,2)
-		assert(snInnovation.stateData.subnetConnectionTracker.currentInnovationId == oldid + 1)
+		val sntrackid = snInnovation.stateData.subnetTracker.currentInnovationId
+		val mutatingsubnet = gNet.generateFromSeed.subnets.get(0)
+		snInnovation ! Innovation.SubNetConnectionInnovation(2,2, mutatingsubnet.innovationHash)
+		assert(snInnovation.stateData.subnetConnectionTracker.currentInnovationId == oldid + 1 &&
+			   snInnovation.stateData.subnetTracker.currentInnovationId == oldid + 1 && 
+			   snInnovation.stateData.subnetTracker.library.size == 2
+			   )
 	}
 
 	"Just for comlpeteness when requested again we" should "get the same number" in {
 		val oldid = snInnovation.stateData.subnetConnectionTracker.currentInnovationId
-		snInnovation ! Innovation.SubNetConnectionInnovation(2,2)
+		val mutatingsubnet = gNet.generateFromSeed.subnets.get(0)
+		snInnovation ! Innovation.SubNetConnectionInnovation(2,2, mutatingsubnet.innovationHash)
 		assert(snInnovation.stateData.subnetConnectionTracker.currentInnovationId == oldid)
 	}
+
+
+
 }

@@ -9,11 +9,6 @@ case object Initialising extends InnovationState
 case object Active extends InnovationState
 
 trait Tracker
-case class SubnetTracker
-	(
-	val currentInnovationId: Int = 1,
-	val library: HashMap[Set[Int], Int] = HashMap.empty
-	) extends Tracker
 
 /*
  * This class is to keep track of the neuron genomes that make up
@@ -32,45 +27,65 @@ object Innovation {
 
 	// messages 
 
-	trait ConnectionInnovation {val from:Int; val to: Int}
-	case class NetworkConnectionInnovation(from: Int, to: Int) extends ConnectionInnovation
-	case class SubNetConnectionInnovation(from: Int, to: Int) extends ConnectionInnovation
+	
+	case class NetworkConnectionInnovation(from: Int, to: Int) 
+	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int]) 
 	case class NetworkNeuronInnovation(from: Int, to: Int)
 	case class SubNetNeuronInnovation(from: Int, to: Int)
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
+	case class SubnetLookupResult(id: Int, tracker: SubnetConnectionTracker)
+	case class NetworkLookupResult(id: Int, tracker: NetworkConnectionTracker)
+	case class SubnetStructureLookupResult(id: Int, tracker: SubnetTracker)
 
 	abstract class ConnectionTracker{val currentInnovationId: Int; val library: HashMap[String, Int]}
 	case class NetworkConnectionTracker(
 		val currentInnovationId: Int = 1,
 		val library: HashMap[String, Int] = HashMap.empty) extends ConnectionTracker {
-		def innovationLookup(s: NetworkConnectionInnovation, innovator: ActorRef) = {
+		def innovationLookup(s: NetworkConnectionInnovation) = {
 			val newKey = s.from + ":" + s.to
 			val oldId = currentInnovationId
 			val newId = library.getOrElse(newKey, oldId + 1) 
-			innovator ! InnovationConfirmation(newId, s.from, s.to)
+			NetworkLookupResult(newId,
 			if(newId == oldId) {
 					// no update need be done
 					this
 				} else {
 					// new innovation so update library increase the numbers
 					this.copy(currentInnovationId = newId, library = library + (newKey -> newId))
-				}}} 
+				})}} 
 
 	case class SubnetConnectionTracker(
 		val currentInnovationId: Int = 1,
 		val library: HashMap[String, Int] = HashMap.empty) extends ConnectionTracker {
-		def innovationLookup(s: SubNetConnectionInnovation, innovator: ActorRef) = {
+		def innovationLookup(s: SubNetConnectionInnovation) = {
 			val newKey = s.from + ":" + s.to
 			val oldId = currentInnovationId
 			val newId = library.getOrElse(newKey, oldId + 1) 
-			innovator ! InnovationConfirmation(newId, s.from, s.to)
+			SubnetLookupResult(newId,
 			if(newId == oldId) {
 					// no update need be done
 					this
 				} else {
 					// new innovation so update library increase the numbers
 					this.copy(currentInnovationId = newId, library = library + (newKey -> newId))
-				}}}
+				})}} 
+
+	case class SubnetTracker(
+	val currentInnovationId: Int = 1,
+	val library: HashMap[Set[Int], Int] = HashMap.empty) extends Tracker {
+		def innovationLookup(newSubNetKey: Set[Int]) = {
+			val newKey = newSubNetKey
+			val oldId = currentInnovationId
+			val newId = library.getOrElse(newKey, oldId + 1) 
+			SubnetStructureLookupResult(newId,
+			if(newId == oldId) {
+					// no update need be done
+					this
+				} else {
+					// new innovation so update library increase the numbers
+					this.copy(currentInnovationId = newId, library = library + (newKey -> newId))
+				})}}
+
 
 	case class InnovationSettings (
 
@@ -135,16 +150,16 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 
 		case Event(s: NetworkConnectionInnovation, t: InnovationSettings) =>
 			log.debug("received request to create connection between {} and {}", s.to, s.from)
-			val updatedTracker = t.networkConnectionTracker.innovationLookup(s, sender())
-			stay using t.copy(networkConnectionTracker = updatedTracker)
+			val updatedTracker = t.networkConnectionTracker.innovationLookup(s)
+			sender() ! InnovationConfirmation(1,1,1)
+			stay using t.copy(networkConnectionTracker = updatedTracker.tracker)
 
 		case Event(s: SubNetConnectionInnovation, t: InnovationSettings) =>
 			log.debug("received request to create connection between {} and {} of subnetwork", s.to, s.from)
-			val updatedTracker = t.subnetConnectionTracker.innovationLookup(s, sender())
-			/*
-			 * todo We also need to update the subnetwork innovation id. Either becuase it is new. or, because it already exists.
-			 * The propose connection may exist already.. in another network but perhaps the rest of the configuration is innovative.
-			 */ 
-			stay using t.copy(subnetConnectionTracker = updatedTracker)
+			val updatedTracker = t.subnetConnectionTracker.innovationLookup(s)
+			val updatedNetTracker = t.subnetTracker.innovationLookup(s.existingStructure + updatedTracker.id)
+		
+			stay using t.copy(subnetConnectionTracker = updatedTracker.tracker, subnetTracker = updatedNetTracker.tracker)
 	}
 }
+	
