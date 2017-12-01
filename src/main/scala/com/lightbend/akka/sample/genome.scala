@@ -12,6 +12,7 @@ import play.api.libs.json._
 import com.thingy.neuron.{Successor, Predecessor}
 import com.thingy.weight.Weight
 import com.thingy.node._
+import com.thingy.innovation.Innovation
 
 
 
@@ -44,6 +45,12 @@ case class NetworkGenome(id: Int, neurons: Seq[NeuronGenome], connections: Seq[C
 
 	 def innovationHash: Set[Int] = {
 	 	connections.map(_.id).toSet
+	 }
+
+	 def updateNetworkGenome(s: Innovation.InnovationConfirmation) = {
+	 	val newConnection = ConnectionGenome(s.id, s.from, s.to, None)
+	 	this.copy(connections = newConnection +: connections )
+
 	 }
 
 

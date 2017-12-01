@@ -6,6 +6,7 @@ import com.thingy.neuron.Neuron
 import play.api.libs.json._
 import com.thingy.neuron.{Successor, Predecessor}
 import com.thingy.weight.Weight
+import com.thingy.innovation._
 
 sealed trait NetworkState
 case object Initialising extends NetworkState
@@ -14,7 +15,7 @@ case object Active extends NetworkState
 
 
 // State Data holder
-final case class NetworkSettings(id: Int = 1)
+final case class NetworkSettings(id: Int = 1, genome:  NetworkGenome.NetworkGenome)
 
 object Network {
 
@@ -45,18 +46,42 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome) extends 
 	log.debug("Network ctors are setup as {} ", generatedActors)
 
 
-	startWith(Ready, NetworkSettings())
+	startWith(Ready, NetworkSettings(genome = networkGenome))
 
 	when(Ready) {
 		case Event(s: Neuron.Signal, t: NetworkSettings) =>
 
 			log.debug("received signal of {}", s.value)
-
 			generatedActors.in.nodes.foreach {i =>
 			 	i.actor ! s
 				}
 
-			goto(Ready) using t
+			
+
+			stay using t
+
+		
+		case Event(s: Innovation.InnovationConfirmation, t: NetworkSettings) =>
+			log.debug("received innovation confirmation, will update genome. innovation id: {}, from {}, to {}", s.id, s.from, s.to)
+
+			val updatedGenome = t.genome.updateNetworkGenome(s)
+			val updatedSettings = t.copy(genome = updatedGenome)
+
+			log.debug("new genome is {}", updatedGenome)
+
+			
+			// tell to neuron it has a new Predecessor, tell from neuron it has a new Successor
+
+			val fromActor = generatedActors.allNodes(s.from)
+			val toActor = generatedActors.allNodes(s.to)
+
+			toActor.actor ! Neuron.ConnectionConfig(inputs = List(Predecessor(fromActor)))
+			fromActor.actor ! Neuron.ConnectionConfig(outputs = List(Successor(toActor)))
+
+
+
+
+			stay using updatedSettings
 
 	}
 

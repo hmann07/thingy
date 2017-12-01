@@ -47,7 +47,6 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 		case Event(d: Neuron.ConnectionConfig, t: SubNetworkSettings) =>
 
 				log.debug("received settings config object of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
-
 				goto(Ready) using t.copy(connections = d)
 
 	}
@@ -55,6 +54,15 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 
 
 	when(Ready) {
+
+		
+		case Event(d: Neuron.ConnectionConfig, t: SubNetworkSettings) =>
+
+			log.debug("received settings config update of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
+			val updatedConfig = t.connections.copy(inputs = d.inputs ++ t.connections.inputs, outputs = d.outputs ++ t.connections.outputs)
+			stay using t.copy(connections = updatedConfig)
+
+
 
 		/*
 		 * If a new signal is received by the subnetwork it will need to act as the linear combiner.

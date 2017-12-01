@@ -14,8 +14,7 @@ case object Active extends AgentState
 
 object Agent {
 
-	case class AgentSettings(
-		genome: NetworkGenome.NetworkGenome)
+	case class AgentSettings()
 
 	def props(innovation: ActorRef, network: NetworkGenomeBuilder): Props = {
 		Props(classOf[Agent], innovation, network)
@@ -31,15 +30,18 @@ class Agent(innovation: ActorRef, networkGenomeBuilder: NetworkGenomeBuilder) ex
 	val networkGenome = networkGenomeBuilder.generateFromSeed
 	val network = context.actorOf(Network.props("my network", networkGenome), "mynetwork")
 	network ! Neuron.Signal(10)
- 	innovation ! Innovation.NetworkConnectionInnovation(1,3)
+ 	innovation ! Innovation.NetworkConnectionInnovation(3,3)
 
 
- 	startWith(Active, AgentSettings(genome = networkGenome))
+ 	startWith(Active, AgentSettings())
 
 	when(Active) {
 
+			
 		case Event(s: Innovation.InnovationConfirmation, t: AgentSettings) =>
-			log.debug("received innovation confirmation, will update genome.")
+			log.debug("received innovation confirmation, will update genome. innovation id: {}, from {}, to {}", s.id, s.from, s.to)
+			network ! s
 			stay using t
+			
 	}
 }

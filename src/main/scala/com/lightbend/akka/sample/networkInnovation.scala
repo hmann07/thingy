@@ -149,9 +149,9 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 	when(Active) {
 
 		case Event(s: NetworkConnectionInnovation, t: InnovationSettings) =>
-			log.debug("received request to create connection between {} and {}", s.to, s.from)
+			log.debug("received request to create connection between {} and {}", s.from, s.to)
 			val updatedTracker = t.networkConnectionTracker.innovationLookup(s)
-			sender() ! InnovationConfirmation(1,1,1)
+			sender() ! InnovationConfirmation(updatedTracker.id, s.from, s.to)
 			stay using t.copy(networkConnectionTracker = updatedTracker.tracker)
 
 		case Event(s: SubNetConnectionInnovation, t: InnovationSettings) =>
