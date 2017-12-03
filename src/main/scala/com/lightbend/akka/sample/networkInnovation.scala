@@ -29,10 +29,11 @@ object Innovation {
 
 	
 	case class NetworkConnectionInnovation(from: Int, to: Int) 
-	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int]) 
+	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int) 
 	case class NetworkNeuronInnovation(from: Int, to: Int)
 	case class SubNetNeuronInnovation(from: Int, to: Int)
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
+	case class SubnetConnectionInnovationConfirmation(updatedNetTracker: Int, updatedConnectionTracker: Int, originalRequest: SubNetConnectionInnovation)
 	case class SubnetLookupResult(id: Int, tracker: SubnetConnectionTracker)
 	case class NetworkLookupResult(id: Int, tracker: NetworkConnectionTracker)
 	case class SubnetStructureLookupResult(id: Int, tracker: SubnetTracker)
@@ -158,7 +159,7 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 			log.debug("received request to create connection between {} and {} of subnetwork", s.to, s.from)
 			val updatedTracker = t.subnetConnectionTracker.innovationLookup(s)
 			val updatedNetTracker = t.subnetTracker.innovationLookup(s.existingStructure + updatedTracker.id)
-		
+			sender() ! SubnetConnectionInnovationConfirmation(updatedNetTracker.id, updatedTracker.id, s)
 			stay using t.copy(subnetConnectionTracker = updatedTracker.tracker, subnetTracker = updatedNetTracker.tracker)
 	}
 }

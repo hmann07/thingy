@@ -19,8 +19,6 @@ object Agent {
 	def props(innovation: ActorRef, network: NetworkGenomeBuilder): Props = {
 		Props(classOf[Agent], innovation, network)
 	}
-
-
 }
 
 
@@ -28,20 +26,10 @@ object Agent {
 class Agent(innovation: ActorRef, networkGenomeBuilder: NetworkGenomeBuilder) extends FSM[AgentState, Agent.AgentSettings] {
 	import Agent._
 	val networkGenome = networkGenomeBuilder.generateFromSeed
-	val network = context.actorOf(Network.props("my network", networkGenome), "mynetwork")
+	val network = context.actorOf(Network.props("my network", networkGenome, innovation), "mynetwork")
 	network ! Neuron.Signal(10)
- 	innovation ! Innovation.NetworkConnectionInnovation(3,3)
-
-
+	network ! Network.Mutate()
+ 
  	startWith(Active, AgentSettings())
 
-	when(Active) {
-
-			
-		case Event(s: Innovation.InnovationConfirmation, t: AgentSettings) =>
-			log.debug("received innovation confirmation, will update genome. innovation id: {}, from {}, to {}", s.id, s.from, s.to)
-			network ! s
-			stay using t
-			
-	}
 }
