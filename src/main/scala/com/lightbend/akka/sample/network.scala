@@ -7,6 +7,7 @@ import play.api.libs.json._
 import com.thingy.neuron.{Successor, Predecessor}
 import com.thingy.weight.Weight
 import com.thingy.innovation._
+import com.thingy.subnetwork.SubNetwork
 
 sealed trait NetworkState
 case object Initialising extends NetworkState
@@ -104,10 +105,10 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			val updatedSettings = t.copy(genome = updatedGenome)
 
 			val newlyupdatedsubnetGenome = updatedGenome.subnets.get.filter(sn => sn.id == s.updatedNetTracker )(0)
+			val newlyupdatedconnectionGenome = newlyupdatedsubnetGenome.connections.filter(cn=> cn.id == s.updatedConnectionTracker)(0)
+			log.debug("updated the subnet and network genome now: {}, going to send to node {} which is {}", updatedGenome, s.originalRequest.neuronId, generatedActors.allNodes(s.originalRequest.neuronId).actor)
 
-			log.debug("updated the subnet and network genome now: {}, going to send to node {} which is {}", updatedGenome, s.originalRequest.neuronId, generatedActors.allNodes(s.originalRequest.existingNetId).actor)
-
-			generatedActors.allNodes(s.originalRequest.neuronId).actor ! newlyupdatedsubnetGenome
+			generatedActors.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)
 
 			goto(Ready) using updatedSettings
 	}

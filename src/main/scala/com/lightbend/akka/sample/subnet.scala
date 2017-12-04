@@ -23,7 +23,7 @@ object SubNetwork {
 
 	// Messages it can receive
 		// Imported from NEURON TODO. split connections and signal into packages.
-
+	case class ConnectionUpdate(newGenome: NetworkGenome.NetworkGenome, newConnection: NetworkGenome.ConnectionGenome)
     // an override of props to allow Actor to take constructor args
 	def props(name: String, subnetGenome: NetworkGenome.NetworkGenome): Props = {
 
@@ -52,6 +52,10 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 	}
 
 	when(Ready) {
+
+		case Event(cu: ConnectionUpdate, t:SubNetworkSettings) =>
+			log.debug("received new connection update")
+			stay using t
 
 		case Event(g: NetworkGenome.NetworkGenome, t: SubNetworkSettings) =>
 			log.debug("received new NetworkGenome, now need to inform ")
