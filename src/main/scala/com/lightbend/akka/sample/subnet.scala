@@ -46,22 +46,23 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 
 		case Event(d: Neuron.ConnectionConfig, t: SubNetworkSettings) =>
 
-				log.debug("received settings config object of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
-				goto(Ready) using t.copy(connections = d)
+			log.debug("received settings config object of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
+			goto(Ready) using t.copy(connections = d)
 
 	}
 
-
-
 	when(Ready) {
 
-		
+		case Event(g: NetworkGenome.NetworkGenome, t: SubNetworkSettings) =>
+			log.debug("received new NetworkGenome, now need to inform ")
+			stay using t
+
+
 		case Event(d: Neuron.ConnectionConfig, t: SubNetworkSettings) =>
 
 			log.debug("received settings config update of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
 			val updatedConfig = t.connections.copy(inputs = d.inputs ++ t.connections.inputs, outputs = d.outputs ++ t.connections.outputs)
 			stay using t.copy(connections = updatedConfig)
-
 
 
 		/*

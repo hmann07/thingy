@@ -53,13 +53,37 @@ case class NetworkGenome(id: Int, neurons: Seq[NeuronGenome], connections: Seq[C
 
 	 }
 
+	 def updateSubnet(s: Innovation.SubnetConnectionInnovationConfirmation) = {
+	 	val updatedSubnets = subnets.get.foldLeft(Seq[NetworkGenome]()) { (subnets, current) =>
+
+	 		val updatedNet = if(current.id == s.originalRequest.existingNetId) {
+	 			val newConnection = ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, None)
+	 			current.copy(id = s.updatedNetTracker, connections = newConnection +: current.connections )
+	 		} else {
+	 			current
+	 		}
+	 		updatedNet +: subnets
+	 	}
+
+	 	val updatedNeuron = neurons.foldLeft(Seq[NeuronGenome]()) { (neurons, current) =>
+	 			val updatedNeuron = if(current.id == s.originalRequest.neuronId) {
+	 				current.copy(subnetId = Some(s.updatedNetTracker))
+	 			} else {
+	 				current
+	 			}
+	 		updatedNeuron +: neurons
+	 	}
+
+	 	this.copy(neurons = updatedNeuron, subnets = Some(updatedSubnets))
+	}
+
 
 	/*
 	 * Network genome has a specific method generate Actors so that subnetworks and networks can
 	 * generate actor networks from the class based genome rather than directly from Json.
 	 */
 
-	 def generateActors(context: ActorContext) = {
+	 def generateActors(context: ActorContext): NetworkNodeSchema = {
 	 	val neuronActors = neurons.foldLeft(NetworkNodeSchema()){ (schemaObj, current) =>
 		 	current.subnetId match {
 

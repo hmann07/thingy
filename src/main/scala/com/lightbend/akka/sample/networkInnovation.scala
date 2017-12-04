@@ -29,7 +29,7 @@ object Innovation {
 
 	
 	case class NetworkConnectionInnovation(from: Int, to: Int) 
-	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int) 
+	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) 
 	case class NetworkNeuronInnovation(from: Int, to: Int)
 	case class SubNetNeuronInnovation(from: Int, to: Int)
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)

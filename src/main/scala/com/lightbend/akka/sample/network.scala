@@ -52,11 +52,12 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			log.debug("mutating genome")
 			//innovation ! Innovation.NetworkConnectionInnovation(3,3)
 			
-			val gs = t.genome.subnets.get(0) // get the first subnet genome. and simulate a new conection.
+			val neuronId = 3
+			val gs = t.genome.subnets.get(0) // get the first subnet genome. and simulate a new conection. his should be reset to get the subnet related to the neuron
 			// if we are updatying a subnet, then we may need to update the id and the connection/neuron list.
 			// so at a later point we need to identify which network in the genome needs to be updated. using the id.
 
-			innovation ! Innovation.SubNetConnectionInnovation(2,2, gs.innovationHash, gs.id)
+			innovation ! Innovation.SubNetConnectionInnovation(2,2, gs.innovationHash, gs.id, neuronId)
 
 			goto(Mutating) using t
 
@@ -94,11 +95,21 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 
 		case Event(s: Innovation.SubnetConnectionInnovationConfirmation, t: NetworkSettings) =>
 
-			log.debug("received innovation confirmation for subnet {}. innovation id: {}, from {}, to {}", s.originalReuest.id, s.from, s.to)
-			// first we need to re-get the subnet par tthat we are supposed to be mutating. 
+			log.debug("received innovation confirmation for subnet {}. innovation id: {}, from {}, to {}", s.originalRequest.existingNetId, s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to)
+			// first we need to re-get the subnet part that we are supposed to be mutating. 
 			// then, add the connection to the genome,
 			// then create the connections and send to neuron actors. or rather to the subnetwork actor.
-			goto(Ready using t)
+			
+			val updatedGenome = t.genome.updateSubnet(s)
+			val updatedSettings = t.copy(genome = updatedGenome)
+
+			val newlyupdatedsubnetGenome = updatedGenome.subnets.get.filter(sn => sn.id == s.updatedNetTracker )(0)
+
+			log.debug("updated the subnet and network genome now: {}, going to send to node {} which is {}", updatedGenome, s.originalRequest.neuronId, generatedActors.allNodes(s.originalRequest.existingNetId).actor)
+
+			generatedActors.allNodes(s.originalRequest.neuronId).actor ! newlyupdatedsubnetGenome
+
+			goto(Ready) using updatedSettings
 	}
 
 }

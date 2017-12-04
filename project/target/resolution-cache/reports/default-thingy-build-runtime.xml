@@ -9,27 +9,27 @@
 		extra-sbtVersion="0.13"
 		conf="runtime"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool"
-		date="20171203121154"/>
+		date="20171204052755"/>
 	<dependencies>
 		<module organisation="io.kamon" name="aspectj-runner">
-			<revision name="0.1.3" status="release" pubdate="20150815021538" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://kamon.io" extra-scalaVersion="2.10" extra-sbtVersion="0.13" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="0">
+			<revision name="0.1.3" status="release" pubdate="20150814211538" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://kamon.io" extra-scalaVersion="2.10" extra-sbtVersion="0.13" downloaded="false" searched="false" default="false" conf="default, compile, runtime, default(compile), master" position="0">
 				<license name="Apache 2" url="http://www.apache.org/licenses/LICENSE-2.0.txt"/>
-				<metadata-artifact status="no" details="" size="3125" time="0" location="C:\Users\user\.ivy2\cache\scala_2.10\sbt_0.13\io.kamon\aspectj-runner\ivy-0.1.3.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/kamon/aspectj-runner_2.10_0.13/0.1.3/aspectj-runner-0.1.3.pom"/>
+				<metadata-artifact status="no" details="" size="3125" time="0" location="C:\Users\HMann\.ivy2\cache\scala_2.10\sbt_0.13\io.kamon\aspectj-runner\ivy-0.1.3.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/io/kamon/aspectj-runner_2.10_0.13/0.1.3/aspectj-runner-0.1.3.pom"/>
 				<caller organisation="default" name="thingy-build" conf="compile, runtime" rev="0.1.3" rev-constraint-default="0.1.3" rev-constraint-dynamic="0.1.3" callerrev="0.1-SNAPSHOT" extra-scalaVersion="2.10" extra-sbtVersion="0.13"/>
 				<artifacts>
-					<artifact name="aspectj-runner" type="jar" ext="jar" status="no" details="" size="32445" time="0" location="C:\Users\user\.ivy2\cache\scala_2.10\sbt_0.13\io.kamon\aspectj-runner\jars\aspectj-runner-0.1.3.jar">
+					<artifact name="aspectj-runner" type="jar" ext="jar" status="no" details="" size="32445" time="0" location="C:\Users\HMann\.ivy2\cache\scala_2.10\sbt_0.13\io.kamon\aspectj-runner\jars\aspectj-runner-0.1.3.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/io/kamon/aspectj-runner_2.10_0.13/0.1.3/aspectj-runner-0.1.3.jar"/>
 					</artifact>
 				</artifacts>
 			</revision>
 		</module>
 		<module organisation="org.aspectj" name="aspectjtools">
-			<revision name="1.8.6" status="release" pubdate="20150607174214" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.aspectj.org" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="1">
+			<revision name="1.8.6" status="release" pubdate="20150607124214" resolver="sbt-chain" artresolver="sbt-chain" homepage="http://www.aspectj.org" downloaded="false" searched="false" default="false" conf="compile, runtime(*), master(compile), runtime, compile(*), master" position="1">
 				<license name="Eclipse Public License - v 1.0" url="http://www.eclipse.org/legal/epl-v10.html"/>
-				<metadata-artifact status="no" details="" size="2522" time="0" location="C:\Users\user\.ivy2\cache\org.aspectj\aspectjtools\ivy-1.8.6.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/aspectj/aspectjtools/1.8.6/aspectjtools-1.8.6.pom"/>
+				<metadata-artifact status="no" details="" size="2522" time="0" location="C:\Users\HMann\.ivy2\cache\org.aspectj\aspectjtools\ivy-1.8.6.xml" searched="false" origin-is-local="false" origin-location="https://repo1.maven.org/maven2/org/aspectj/aspectjtools/1.8.6/aspectjtools-1.8.6.pom"/>
 				<caller organisation="io.kamon" name="aspectj-runner" conf="default, compile, runtime, master" rev="1.8.6" rev-constraint-default="1.8.6" rev-constraint-dynamic="1.8.6" callerrev="0.1.3"/>
 				<artifacts>
-					<artifact name="aspectjtools" type="jar" ext="jar" status="no" details="" size="11166440" time="0" location="C:\Users\user\.ivy2\cache\org.aspectj\aspectjtools\jars\aspectjtools-1.8.6.jar">
+					<artifact name="aspectjtools" type="jar" ext="jar" status="no" details="" size="11166440" time="0" location="C:\Users\HMann\.ivy2\cache\org.aspectj\aspectjtools\jars\aspectjtools-1.8.6.jar">
 						<origin-location is-local="false" location="https://repo1.maven.org/maven2/org/aspectj/aspectjtools/1.8.6/aspectjtools-1.8.6.jar"/>
 					</artifact>
 				</artifacts>
