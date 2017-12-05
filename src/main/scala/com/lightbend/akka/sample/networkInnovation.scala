@@ -30,7 +30,7 @@ object Innovation {
 	trait InnovationType
 	case class NetworkConnectionInnovation(from: Int, to: Int) extends InnovationType
 	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
-	case class NetworkNeuronInnovation(from: Int, to: Int) extends InnovationType
+	case class NetworkNeuronInnovation(connectionId: Int) extends InnovationType
 	case class SubNetNeuronInnovation(from: Int, to: Int) extends InnovationType
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
 	case class SubnetConnectionInnovationConfirmation(updatedNetTracker: Int, updatedConnectionTracker: Int, originalRequest: SubNetConnectionInnovation)
@@ -38,7 +38,9 @@ object Innovation {
 	case class NetworkLookupResult(id: Int, tracker: NetworkConnectionTracker)
 	case class SubnetStructureLookupResult(id: Int, tracker: SubnetTracker)
 
+	abstract class NeuronTracker{val currentInnovationId: Int, val library: Map[Int, Int]}
 	abstract class ConnectionTracker{val currentInnovationId: Int; val library: HashMap[String, Int]}
+
 	case class NetworkConnectionTracker(
 		val currentInnovationId: Int = 1,
 		val library: HashMap[String, Int] = HashMap.empty) extends ConnectionTracker {
@@ -72,8 +74,8 @@ object Innovation {
 				})}} 
 
 	case class SubnetTracker(
-	val currentInnovationId: Int = 1,
-	val library: HashMap[Set[Int], Int] = HashMap.empty) extends Tracker {
+		val currentInnovationId: Int = 1,
+		val library: HashMap[Set[Int], Int] = HashMap.empty) extends Tracker {
 		def innovationLookup(newSubNetKey: Set[Int]) = {
 			val newKey = newSubNetKey
 			val oldId = currentInnovationId
@@ -86,6 +88,15 @@ object Innovation {
 					// new innovation so update library increase the numbers
 					this.copy(currentInnovationId = newId, library = library + (newKey -> newId))
 				})}}
+
+	case class NetworkNeuronTracker(
+		val currentInnovationId: Int = 1,
+		val library: HashMap[Int, Int] = HashMap.empty
+	) extends NeuronTracker {
+		def innovationLookup(connectionToBeSplit: Int) = {
+			this 
+		}
+	}
 
 
 	case class InnovationSettings (
@@ -161,6 +172,9 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 			val updatedNetTracker = t.subnetTracker.innovationLookup(s.existingStructure + updatedTracker.id)
 			sender() ! SubnetConnectionInnovationConfirmation(updatedNetTracker.id, updatedTracker.id, s)
 			stay using t.copy(subnetConnectionTracker = updatedTracker.tracker, subnetTracker = updatedNetTracker.tracker)
+
+		case Event(s: NetworkNeuronInnovation, t: InnovationSettings) =>
+			log.debug("received request to create a new Neuron")
 	}
 }
 	

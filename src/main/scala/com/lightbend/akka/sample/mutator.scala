@@ -20,7 +20,9 @@ class Mutator {
 	def mutate(genome: NetworkGenome.NetworkGenome): Innovation.InnovationType = {
 
 
-		val mutationFunctions = List(addNetworkConnection(_), addSubNetConnection(_))
+		val mutationFunctions = List(
+				addNetworkConnection(_), 
+				addSubNetConnection(_))
 
 		mutationFunctions(Random.nextInt(mutationFunctions.length))(genome)
 	}
@@ -71,4 +73,31 @@ class Mutator {
 			Innovation.SubNetConnectionInnovation(node1, node2, subnet.innovationHash, subnet.id, subnet.parentId.get)
 		}
 	}
+
+	/*
+	 * Add Neuron
+	 * Pick a connection randomly
+	 * Insert a Neuron 
+	 * soft delete exisitng connection. Such that it may be enabled again at some point.
+	 */
+
+
+	 def addNetworkNode(genome: NetworkGenome.NetworkGenome) = {
+
+	 	val connectionCount = genome.connections.length
+	 	val connectionToSplit = genome.connections(Random.nextInt(connectionCount))
+
+	 	// no point evolving disabled connections right?
+	 	
+	 	if(connectionToSplit.enabled) {
+	 		Innovation.NetworkNeuronInnovation(connectionToSplit.id)
+	 	} else {
+			addNetworkNode(genome)	 		
+	 	}
+
+	 }
+
+
+
+
 }
