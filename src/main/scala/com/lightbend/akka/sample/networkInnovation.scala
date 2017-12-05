@@ -27,11 +27,11 @@ object Innovation {
 
 	// messages 
 
-	
-	case class NetworkConnectionInnovation(from: Int, to: Int) 
-	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) 
-	case class NetworkNeuronInnovation(from: Int, to: Int)
-	case class SubNetNeuronInnovation(from: Int, to: Int)
+	trait InnovationType
+	case class NetworkConnectionInnovation(from: Int, to: Int) extends InnovationType
+	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
+	case class NetworkNeuronInnovation(from: Int, to: Int) extends InnovationType
+	case class SubNetNeuronInnovation(from: Int, to: Int) extends InnovationType
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
 	case class SubnetConnectionInnovationConfirmation(updatedNetTracker: Int, updatedConnectionTracker: Int, originalRequest: SubNetConnectionInnovation)
 	case class SubnetLookupResult(id: Int, tracker: SubnetConnectionTracker)

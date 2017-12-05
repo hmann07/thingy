@@ -8,6 +8,7 @@ import com.thingy.neuron.{Successor, Predecessor}
 import com.thingy.weight.Weight
 import com.thingy.innovation._
 import com.thingy.subnetwork.SubNetwork
+import com.thingy.mutator.Mutator
 
 sealed trait NetworkState
 case object Initialising extends NetworkState
@@ -42,6 +43,7 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 	// By giving the context the neurons will be created in this context.
 	
 	val generatedActors = networkGenome.generateActors(context)
+	val mutator = new Mutator
 
 	log.debug("Network ctors are setup as {} ", generatedActors)
 
@@ -50,15 +52,19 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 	when(Ready) {
 
 		case Event(s: Network.Mutate, t: NetworkSettings) =>
+			
 			log.debug("mutating genome")
+			
+			innovation ! mutator.mutate(t.genome) 
+			
 			//innovation ! Innovation.NetworkConnectionInnovation(3,3)
 			
-			val neuronId = 3
-			val gs = t.genome.subnets.get(0) // get the first subnet genome. and simulate a new conection. his should be reset to get the subnet related to the neuron
+			//val neuronId = 3
+			//val gs = t.genome.subnets.get(0) // get the first subnet genome. and simulate a new conection. his should be reset to get the subnet related to the neuron
 			// if we are updatying a subnet, then we may need to update the id and the connection/neuron list.
 			// so at a later point we need to identify which network in the genome needs to be updated. using the id.
 
-			innovation ! Innovation.SubNetConnectionInnovation(2,2, gs.innovationHash, gs.id, neuronId)
+			
 
 			goto(Mutating) using t
 

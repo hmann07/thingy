@@ -41,7 +41,7 @@ case class NetworkNodeSchema(
 
 case class NeuronGenome(id: Int, name: String, layer: Int, activationFunction: Option[String], subnetId: Option[Int])
 case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Option[Double])
-case class NetworkGenome(id: Int, neurons: Seq[NeuronGenome], connections: Seq[ConnectionGenome], subnets: Option[Seq[NetworkGenome]]) {
+case class NetworkGenome(id: Int, neurons: Seq[NeuronGenome], connections: Seq[ConnectionGenome], subnets: Option[Seq[NetworkGenome]], parentId: Option[Int]) {
 
 	 def innovationHash: Set[Int] = {
 	 	connections.map(_.id).toSet
@@ -153,7 +153,8 @@ implicit lazy val networkReads: Reads[NetworkGenome] = (
  (JsPath \ "id").read[Int] and
  (JsPath \ "neurons").read[Seq[NeuronGenome]] and
  (JsPath \ "connections").read[Seq[ConnectionGenome]] and
- (JsPath \ "subnets").lazyReadNullable[Seq[NetworkGenome]](Reads.seq(networkReads))
+ (JsPath \ "subnets").lazyReadNullable[Seq[NetworkGenome]](Reads.seq(networkReads)) and
+ (JsPath  \ "parentId").readNullable[Int]
 ) (NetworkGenome.apply _)
 
 

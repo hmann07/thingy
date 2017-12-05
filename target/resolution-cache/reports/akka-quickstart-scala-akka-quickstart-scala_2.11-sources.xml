@@ -7,7 +7,7 @@
 		revision="1.0"
 		conf="sources"
 		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool, weaver-compile-configuration, weaver-scope"
-		date="20171204052803"/>
+		date="20171205051409"/>
 	<dependencies>
 	</dependencies>
 </ivy-report>

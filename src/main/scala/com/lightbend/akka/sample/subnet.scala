@@ -15,7 +15,8 @@ case object Active extends SubNetworkState
 final case class SubNetworkSettings(
 	activationLevel: Double = 0,
 	signalsReceived: Int = 0,
-	connections: Neuron.ConnectionConfig = Neuron.ConnectionConfig())
+	connections: Neuron.ConnectionConfig = Neuron.ConnectionConfig(),
+	genome: NetworkGenome.NetworkGenome)
 
 
 
@@ -40,7 +41,7 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 
 	log.debug("generated subnet genome: {}, actors are setup as {} ", subnetGenome, generatedActors)
 
-	startWith(Initialising, SubNetworkSettings())
+	startWith(Initialising, SubNetworkSettings(genome = subnetGenome))
 
 	when(Initialising) {
 
@@ -54,8 +55,16 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 	when(Ready) {
 
 		case Event(cu: ConnectionUpdate, t:SubNetworkSettings) =>
+			
 			log.debug("received new connection update")
-			stay using t
+
+			// first create new Connection config and send to 
+			val fromActor = generatedActors.allNodes(cu.newConnection.from)
+			val toActor = generatedActors.allNodes(cu.newConnection.to)
+			toActor.actor ! Neuron.ConnectionConfig(inputs = List(Predecessor(fromActor)))
+			fromActor.actor ! Neuron.ConnectionConfig(outputs = List(Successor(toActor)))
+
+			stay using t.copy(genome = cu.newGenome)
 
 		case Event(g: NetworkGenome.NetworkGenome, t: SubNetworkSettings) =>
 			log.debug("received new NetworkGenome, now need to inform ")
