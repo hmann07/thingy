@@ -21,8 +21,9 @@ class Mutator {
 
 
 		val mutationFunctions = List(
-				addNetworkConnection(_), 
-				addSubNetConnection(_))
+				//addNetworkConnection(_), 
+				//addSubNetConnection(_),
+				addNetworkNode(_))
 
 		mutationFunctions(Random.nextInt(mutationFunctions.length))(genome)
 	}
@@ -82,7 +83,7 @@ class Mutator {
 	 */
 
 
-	 def addNetworkNode(genome: NetworkGenome.NetworkGenome) = {
+	 def addNetworkNode(genome: NetworkGenome.NetworkGenome): Innovation.NetworkNeuronInnovation = {
 
 	 	val connectionCount = genome.connections.length
 	 	val connectionToSplit = genome.connections(Random.nextInt(connectionCount))
@@ -90,7 +91,7 @@ class Mutator {
 	 	// no point evolving disabled connections right?
 	 	
 	 	if(connectionToSplit.enabled) {
-	 		Innovation.NetworkNeuronInnovation(connectionToSplit.id)
+	 		Innovation.NetworkNeuronInnovation(connectionToSplit)
 	 	} else {
 			addNetworkNode(genome)	 		
 	 	}

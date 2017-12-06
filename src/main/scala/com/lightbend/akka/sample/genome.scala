@@ -13,11 +13,13 @@ import com.thingy.neuron.{Successor, Predecessor}
 import com.thingy.weight.Weight
 import com.thingy.node._
 import com.thingy.innovation.Innovation
+import play.api.libs.json.Json.JsValueWrapper
 
 
 
 
 object NetworkGenome {
+
 
 case class NetworkNodeSchema(
 	in: InputNodes = InputNodes(),
@@ -40,38 +42,56 @@ case class NetworkNodeSchema(
 }
 
 case class NeuronGenome(id: Int, name: String, layer: Int, activationFunction: Option[String], subnetId: Option[Int])
-case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Option[Double])
-case class NetworkGenome(id: Int, neurons: Seq[NeuronGenome], connections: Seq[ConnectionGenome], subnets: Option[Seq[NetworkGenome]], parentId: Option[Int]) {
+case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Option[Double], enabled: Boolean = true)
+case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int]) {
 
 	 def innovationHash: Set[Int] = {
-	 	connections.map(_.id).toSet
+	 	connections.values.map(_.id).toSet
 	 }
 
+
+
 	 def updateNetworkGenome(s: Innovation.InnovationConfirmation) = {
-	 	val newConnection = ConnectionGenome(s.id, s.from, s.to, None)
-	 	this.copy(connections = newConnection +: connections )
+	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, None))
+	 	this.copy(connections =  connections + newConnection )
+
+	 }
+
+	 def updateNetworkGenome(s: Innovation.NetworkNeuronInnovationConfirmation) = {
+	 	val neuronLayer = 1
+	 	val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
+	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
+	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
+	 	val updatedConnectionList = connections.foldLeft(Map[Int, ConnectionGenome]()) { (conns, current) =>
+	 		val currentObj = current._2
+	 			conns + (current._1 -> {if (currentObj.id == s.connectionToBeSplit.id) {
+	 				currentObj.copy(enabled = false)
+	 			} else {currentObj}}) 
+	 	}
+	 	this.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
 
 	 }
 
 	 def updateSubnet(s: Innovation.SubnetConnectionInnovationConfirmation) = {
-	 	val updatedSubnets = subnets.get.foldLeft(Seq[NetworkGenome]()) { (subnets, current) =>
-
-	 		val updatedNet = if(current.id == s.originalRequest.existingNetId) {
-	 			val newConnection = ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, None)
-	 			current.copy(id = s.updatedNetTracker, connections = newConnection +: current.connections )
+	 	val updatedSubnets = subnets.get.foldLeft(Map[Int, NetworkGenome]()) { (subnets, current) =>
+	 		val currentObj = current._2
+	 		val updatedNet = if(currentObj.id == s.originalRequest.existingNetId) {
+	 			val newConnection = (s.updatedConnectionTracker -> ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, None))
+	 			(currentObj.id ->  currentObj.copy(id = s.updatedNetTracker, connections = currentObj.connections + newConnection))
 	 		} else {
 	 			current
 	 		}
-	 		updatedNet +: subnets
+	 		subnets + updatedNet
 	 	}
 
-	 	val updatedNeuron = neurons.foldLeft(Seq[NeuronGenome]()) { (neurons, current) =>
-	 			val updatedNeuron = if(current.id == s.originalRequest.neuronId) {
-	 				current.copy(subnetId = Some(s.updatedNetTracker))
+	 	val updatedNeuron = neurons.foldLeft(Map[Int, NeuronGenome]()) { (neurons, current) =>
+	 			val currentObj = current._2
+	 			val updatedNeuron = (currentObj.id -> {if(currentObj.id == s.originalRequest.neuronId) {
+	 				currentObj.copy(subnetId = Some(s.updatedNetTracker))
 	 			} else {
-	 				current
-	 			}
-	 		updatedNeuron +: neurons
+	 				currentObj
+	 			}})
+	 		neurons + updatedNeuron
 	 	}
 
 	 	this.copy(neurons = updatedNeuron, subnets = Some(updatedSubnets))
@@ -85,41 +105,41 @@ case class NetworkGenome(id: Int, neurons: Seq[NeuronGenome], connections: Seq[C
 
 	 def generateActors(context: ActorContext): NetworkNodeSchema = {
 	 	val neuronActors = neurons.foldLeft(NetworkNodeSchema()){ (schemaObj, current) =>
-		 	current.subnetId match {
+	 		val currentObj = current._2
+		 	currentObj.subnetId match {
 
 			 	case Some(subnet) =>
 				 	// Here we should probably check that the filter actually returns something...
-				 	val subnetStructure = subnets.get.filter( sn => {
-					 sn.id == subnet
-				 })(0)
+				 	val subnetStructure = subnets.get(subnet)
 
-				 val sn: ActorRef = context.actorOf(SubNetwork.props("subnet-" + current.name, subnetStructure), "subnet-" + current.name)
-				 schemaObj.update(current, sn)
+				 val sn: ActorRef = context.actorOf(SubNetwork.props("subnet-" + currentObj.name, subnetStructure), "subnet-" + currentObj.name)
+				 schemaObj.update(currentObj, sn)
 			 case None =>
-				 val ar: ActorRef = context.actorOf(Props[Neuron], current.name)
-				 schemaObj.update(current, ar)
+				 val ar: ActorRef = context.actorOf(Props[Neuron], currentObj.name)
+				 schemaObj.update(currentObj, ar)
 		 	 }
 	 	}
 
 	 	val connectionConfigs = connections.foldLeft(Map[ActorRef, Neuron.ConnectionConfig]()) { (acc, current) =>
-		 	val pre = Predecessor(neuronActors.allNodes(current.from))
-		 	val suc = Successor(neuronActors.allNodes(current.to), Weight())
-		 	val updateIncoming: Map[ActorRef, Neuron.ConnectionConfig] = acc get neuronActors.allNodes(current.to).actor match {
+	 		val currentObj = current._2
+		 	val pre = Predecessor(neuronActors.allNodes(currentObj.from))
+		 	val suc = Successor(neuronActors.allNodes(currentObj.to), Weight())
+		 	val updateIncoming: Map[ActorRef, Neuron.ConnectionConfig] = acc get neuronActors.allNodes(currentObj.to).actor match {
 
 			 	case Some(a) => {
 				 	val exisitingConfig = a
-				 	acc + (neuronActors.allNodes(current.to).actor -> exisitingConfig.copy(inputs = pre :: exisitingConfig.inputs))
+				 	acc + (neuronActors.allNodes(currentObj.to).actor -> exisitingConfig.copy(inputs = pre :: exisitingConfig.inputs))
 				 }
-			 	case None => acc + (neuronActors.allNodes(current.to).actor -> Neuron.ConnectionConfig(inputs = List(pre)))
+			 	case None => acc + (neuronActors.allNodes(currentObj.to).actor -> Neuron.ConnectionConfig(inputs = List(pre)))
 		 	}
 
-		 updateIncoming get neuronActors.allNodes(current.from).actor match {
+		 updateIncoming get neuronActors.allNodes(currentObj.from).actor match {
 			 case Some(a) => {
 				 val exisitingConfig = a
 
-				 updateIncoming + (neuronActors.allNodes(current.from).actor ->  exisitingConfig.copy(outputs = suc :: exisitingConfig.outputs))
+				 updateIncoming + (neuronActors.allNodes(currentObj.from).actor ->  exisitingConfig.copy(outputs = suc :: exisitingConfig.outputs))
 				 }
-			 case None => updateIncoming + (neuronActors.allNodes(current.from).actor -> Neuron.ConnectionConfig(outputs = List(suc)))
+			 case None => updateIncoming + (neuronActors.allNodes(currentObj.from).actor -> Neuron.ConnectionConfig(outputs = List(suc)))
 			 }
 	 	}
 
@@ -132,6 +152,25 @@ case class NetworkGenome(id: Int, neurons: Seq[NeuronGenome], connections: Seq[C
 	neuronActors
    	}
 }
+
+class MapIntReads[T]()(implicit reads: Reads[T]) extends Reads[Map[Int, T]] {
+  def reads(jv: JsValue): JsResult[Map[Int, T]] =
+    JsSuccess(jv.as[Map[String, T]].map{case (k, v) =>
+      k.toString.toInt -> v .asInstanceOf[T]
+    })
+}
+
+class MapIntWrites[T]()(implicit writes: Writes[T])  extends Writes[Map[Int, T]] {
+  def writes(map: Map[Int, T]): JsValue =
+    Json.obj(map.map{case (s, o) =>
+      val ret: (String, JsValueWrapper) = s.toString -> Json.toJson(o)
+      ret
+    }.toSeq:_*)
+}
+
+implicit val mapIntNeuron: Reads[Map[Int, NeuronGenome]] = new MapIntReads[NeuronGenome]
+implicit val mapIntConnection: Reads[Map[Int, ConnectionGenome]] = new MapIntReads[ConnectionGenome]
+implicit val mapIntSubnet: Reads[Map[Int, NetworkGenome]] = new MapIntReads[NetworkGenome]
 
 implicit val neruonReads: Reads[NeuronGenome] = (
  (JsPath \ "id").read[Int] and
@@ -146,14 +185,15 @@ implicit val connectionReads: Reads[ConnectionGenome] = (
  (JsPath \ "id").read[Int] and
  (JsPath  \ "from").read[Int] and
  (JsPath  \ "to").read[Int] and
- (JsPath  \ "weight").readNullable[Double]
+ (JsPath  \ "weight").readNullable[Double] and
+ (JsPath  \ "enabled").read[Boolean]
 ) (ConnectionGenome.apply _)
 
 implicit lazy val networkReads: Reads[NetworkGenome] = (
  (JsPath \ "id").read[Int] and
- (JsPath \ "neurons").read[Seq[NeuronGenome]] and
- (JsPath \ "connections").read[Seq[ConnectionGenome]] and
- (JsPath \ "subnets").lazyReadNullable[Seq[NetworkGenome]](Reads.seq(networkReads)) and
+ (JsPath \ "neurons").read[Map[Int, NeuronGenome]] and
+ (JsPath \ "connections").read[Map[Int, ConnectionGenome]] and
+ (JsPath \ "subnets").lazyReadNullable[Map[Int, NetworkGenome]] and
  (JsPath  \ "parentId").readNullable[Int]
 ) (NetworkGenome.apply _)
 

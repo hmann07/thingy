@@ -117,6 +117,19 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			generatedActors.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)
 
 			goto(Ready) using updatedSettings
+
+
+		case Event(s: Innovation.NetworkNeuronInnovationConfirmation, t: NetworkSettings) =>
+			log.debug("received confirmation of new neuron {}", s)
+
+			val updatedGenome = t.genome.updateNetworkGenome(s)
+
+			log.debug("genome updated now: {}", updatedGenome)
+
+			goto(Ready) using t
+
+
+
 	}
 
 }
