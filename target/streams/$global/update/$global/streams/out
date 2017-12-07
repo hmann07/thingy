@@ -6867,7 +6867,7 @@
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] org.scala-lang.modules#scala-xml_2.11;1.0.4!scala-xml_2.11.jar(bundle)[0m
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] jline#jline;2.12.1!jline.jar[0m
 [0m[[0mdebug[0m] [0m	[NOT REQUIRED] org.aspectj#aspectjweaver;1.8.6!aspectjweaver.jar[0m
-[0m[[0mdebug[0m] [0m:: resolution report :: resolve 875ms :: artifacts dl 31ms[0m
+[0m[[0mdebug[0m] [0m:: resolution report :: resolve 1797ms :: artifacts dl 32ms[0m
 [0m[[0mdebug[0m] [0m	report for akka-quickstart-scala#akka-quickstart-scala_2.11;1.0 compile produced in C:\Users\HMann\Desktop\thingy\thingy\target\resolution-cache\reports\akka-quickstart-scala-akka-quickstart-scala_2.11-compile.xml[0m
 [0m[[0mdebug[0m] [0m	report for akka-quickstart-scala#akka-quickstart-scala_2.11;1.0 runtime produced in C:\Users\HMann\Desktop\thingy\thingy\target\resolution-cache\reports\akka-quickstart-scala-akka-quickstart-scala_2.11-runtime.xml[0m
 [0m[[0mdebug[0m] [0m	report for akka-quickstart-scala#akka-quickstart-scala_2.11;1.0 test produced in C:\Users\HMann\Desktop\thingy\thingy\target\resolution-cache\reports\akka-quickstart-scala-akka-quickstart-scala_2.11-test.xml[0m
@@ -6883,7 +6883,7 @@
 [0m[[0mdebug[0m] [0m	report for akka-quickstart-scala#akka-quickstart-scala_2.11;1.0 scala-tool produced in C:\Users\HMann\Desktop\thingy\thingy\target\resolution-cache\reports\akka-quickstart-scala-akka-quickstart-scala_2.11-scala-tool.xml[0m
 [0m[[0mdebug[0m] [0m	report for akka-quickstart-scala#akka-quickstart-scala_2.11;1.0 weaver-compile-configuration produced in C:\Users\HMann\Desktop\thingy\thingy\target\resolution-cache\reports\akka-quickstart-scala-akka-quickstart-scala_2.11-weaver-compile-configuration.xml[0m
 [0m[[0mdebug[0m] [0m	report for akka-quickstart-scala#akka-quickstart-scala_2.11;1.0 weaver-scope produced in C:\Users\HMann\Desktop\thingy\thingy\target\resolution-cache\reports\akka-quickstart-scala-akka-quickstart-scala_2.11-weaver-scope.xml[0m
-[0m[[0mdebug[0m] [0m	resolve done (875ms resolve - 31ms download)[0m
+[0m[[0mdebug[0m] [0m	resolve done (1797ms resolve - 32ms download)[0m
 [0m[[0minfo[0m] [0mDone updating.[0m
 [0m[[33mwarn[0m] [0mThere may be incompatibilities among your library dependencies.[0m
 [0m[[33mwarn[0m] [0mHere are some of the libraries that were evicted:[0m

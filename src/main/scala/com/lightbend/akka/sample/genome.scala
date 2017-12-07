@@ -153,24 +153,6 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
    	}
 }
 
-class MapIntReads[T]()(implicit reads: Reads[T]) extends Reads[Map[Int, T]] {
-  def reads(jv: JsValue): JsResult[Map[Int, T]] =
-    JsSuccess(jv.as[Map[String, T]].map{case (k, v) =>
-      k.toString.toInt -> v .asInstanceOf[T]
-    })
-}
-
-class MapIntWrites[T]()(implicit writes: Writes[T])  extends Writes[Map[Int, T]] {
-  def writes(map: Map[Int, T]): JsValue =
-    Json.obj(map.map{case (s, o) =>
-      val ret: (String, JsValueWrapper) = s.toString -> Json.toJson(o)
-      ret
-    }.toSeq:_*)
-}
-
-implicit val mapIntNeuron: Reads[Map[Int, NeuronGenome]] = new MapIntReads[NeuronGenome]
-implicit val mapIntConnection: Reads[Map[Int, ConnectionGenome]] = new MapIntReads[ConnectionGenome]
-implicit val mapIntSubnet: Reads[Map[Int, NetworkGenome]] = new MapIntReads[NetworkGenome]
 
 implicit val neruonReads: Reads[NeuronGenome] = (
  (JsPath \ "id").read[Int] and
@@ -189,11 +171,13 @@ implicit val connectionReads: Reads[ConnectionGenome] = (
  (JsPath  \ "enabled").read[Boolean]
 ) (ConnectionGenome.apply _)
 
+
+
 implicit lazy val networkReads: Reads[NetworkGenome] = (
  (JsPath \ "id").read[Int] and
- (JsPath \ "neurons").read[Map[Int, NeuronGenome]] and
- (JsPath \ "connections").read[Map[Int, ConnectionGenome]] and
- (JsPath \ "subnets").lazyReadNullable[Map[Int, NetworkGenome]] and
+ (JsPath \ "neurons").read[Seq[NeuronGenome]].map{_.foldLeft(Map[Int, NeuronGenome]()){(acc, current) => acc + (current.id -> current)}} and
+ (JsPath \ "connections").read[Seq[ConnectionGenome]].map{_.foldLeft(Map[Int, ConnectionGenome]()){(acc, current) => acc + (current.id -> current)}} and
+ (JsPath \ "subnets").lazyReadNullable[Seq[NetworkGenome]](Reads.seq(networkReads)).map{_.map{_.foldLeft(Map[Int, NetworkGenome]()){(acc, current) => acc + (current.id -> current)}}} and
  (JsPath  \ "parentId").readNullable[Int]
 ) (NetworkGenome.apply _)
 

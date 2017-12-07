@@ -36,7 +36,7 @@ object Network {
 class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovation: ActorRef) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
-	log.debug("network: {} created", name)
+	log.debug("network: {} created with genome {}", name, networkGenome)
 
 	// First create input neurons. Select these on the basis that they belong to layer 0.
 	// Input neurons will not have any internal node structures so can be created as straight Neurons.
@@ -110,8 +110,8 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			val updatedGenome = t.genome.updateSubnet(s)
 			val updatedSettings = t.copy(genome = updatedGenome)
 
-			val newlyupdatedsubnetGenome = updatedGenome.subnets.get.filter(sn => sn.id == s.updatedNetTracker )(0)
-			val newlyupdatedconnectionGenome = newlyupdatedsubnetGenome.connections.filter(cn=> cn.id == s.updatedConnectionTracker)(0)
+			val newlyupdatedsubnetGenome = updatedGenome.subnets.get(s.updatedNetTracker)
+			val newlyupdatedconnectionGenome = newlyupdatedsubnetGenome.connections(s.updatedConnectionTracker)
 			log.debug("updated the subnet and network genome now: {}, going to send to node {} which is {}", updatedGenome, s.originalRequest.neuronId, generatedActors.allNodes(s.originalRequest.neuronId).actor)
 
 			generatedActors.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)

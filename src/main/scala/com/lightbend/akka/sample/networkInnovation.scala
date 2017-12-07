@@ -130,8 +130,9 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 
 	val genome = networkGenome.generateFromSeed
 	val networkConnectionTracker: NetworkConnectionTracker = genome.connections.foldLeft(NetworkConnectionTracker()) { (tracker, current) =>
-		val updatedLibrary = tracker.library + (current.from + ":" + current.to -> tracker.library.getOrElse(current.from + ":" + current.to, current.id))
-		val updatedInnovId = if(current.id > tracker.currentInnovationId) {current.id} else {tracker.currentInnovationId}
+		val currentVal = current._2
+		val updatedLibrary = tracker.library + (currentVal.from + ":" + currentVal.to -> tracker.library.getOrElse(currentVal.from + ":" + currentVal.to, currentVal.id))
+		val updatedInnovId = if(currentVal.id > tracker.currentInnovationId) {currentVal.id} else {tracker.currentInnovationId}
 		tracker.copy(updatedInnovId, updatedLibrary)
 	}
 
@@ -141,9 +142,11 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 	 */
 
 	val subnetConnectionTracker: SubnetConnectionTracker = genome.subnets.get.foldLeft(SubnetConnectionTracker()) { (tracker, currentSubnet) =>
-		currentSubnet.connections.foldLeft(tracker) { (tracker, currentConn) =>
-			val updatedLibrary = tracker.library + (currentConn.from + ":" + currentConn.to -> tracker.library.getOrElse(currentConn.from + ":" + currentConn.to, currentConn.id))
-			val updatedInnovId = if(currentConn.id > tracker.currentInnovationId) {currentConn.id} else {tracker.currentInnovationId}
+		val currentVal1 = currentSubnet._2
+		currentVal1.connections.foldLeft(tracker) { (tracker, currentConn) =>
+			val currentVal2 = currentConn._2
+			val updatedLibrary = tracker.library + (currentVal2.from + ":" + currentVal2.to -> tracker.library.getOrElse(currentVal2.from + ":" + currentVal2.to, currentVal2.id))
+			val updatedInnovId = if(currentVal2.id > tracker.currentInnovationId) {currentVal2.id} else {tracker.currentInnovationId}
 			tracker.copy(updatedInnovId, updatedLibrary)
 		}
 	}
@@ -155,14 +158,14 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 	 * 
 	 */
 	val subnetTracker: SubnetTracker = genome.subnets.get.foldLeft(SubnetTracker()) { (tracker, current) =>
-		val updatedLibrary = tracker.library + (current.innovationHash -> current.id)
-		val updatedInnovId = if(current.id > tracker.currentInnovationId) {current.id} else {tracker.currentInnovationId}
+		val updatedLibrary = tracker.library + (current._2.innovationHash -> current._2.id)
+		val updatedInnovId = if(current._2.id > tracker.currentInnovationId) {current._2.id} else {tracker.currentInnovationId}
 		tracker.copy(updatedInnovId, updatedLibrary)
 	}
 
 	
 	val networkNeuronTracker: NetworkNeuronTracker = genome.neurons.foldLeft(NetworkNeuronTracker()) { (tracker, current) =>
-		val updatedInnovId = if(current.id > tracker.currentInnovationId) {current.id} else {tracker.currentInnovationId}
+		val updatedInnovId = if(current._2.id > tracker.currentInnovationId) {current._2.id} else {tracker.currentInnovationId}
 		tracker.copy(currentInnovationId = updatedInnovId)
 	} 
 	
