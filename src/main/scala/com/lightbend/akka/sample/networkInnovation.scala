@@ -36,7 +36,7 @@ object Innovation {
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
 	case class SubnetConnectionInnovationConfirmation(updatedNetTracker: Int, updatedConnectionTracker: Int, originalRequest: SubNetConnectionInnovation)
 	case class NetworkNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int)
-	case class SubNetNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int)
+	case class SubNetNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int, originalRequest: SubNetNeuronInnovation)
 	
 	case class SubnetLookupResult(id: Int, tracker: SubnetConnectionTracker)
 	case class NetworkLookupResult(id: Int, tracker: NetworkConnectionTracker)
@@ -138,7 +138,7 @@ object Innovation {
 		val networkConnectionTracker: NetworkConnectionTracker = NetworkConnectionTracker(),
 		val subnetConnectionTracker: SubnetConnectionTracker = SubnetConnectionTracker(),
 		val subnetTracker: SubnetTracker = SubnetTracker(),
-		val networkNeuronTracker: NetworkNeuronTracker = NetworkNeuronTracker()
+		val networkNeuronTracker: NetworkNeuronTracker = NetworkNeuronTracker(),
 		val subnetNeuronTracker: SubNetNeuronTracker = SubNetNeuronTracker()
 		)
 	def props(networkGenome: NetworkGenomeBuilder): Props = {
@@ -229,10 +229,14 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 		case Event(s: SubNetNeuronInnovation, t: InnovationSettings) =>
 			log.debug("received request to create a new Neuron for connection {} within subnet {}", s.connection, s.existingNetId)
 			val updatedTracker = t.subnetNeuronTracker.innovationLookup(s.connection.id)
-			val lookup1 = t.subnetConnectionTracker.innovationLookup(SubNetConnectionInnovation(s.connection.from, updatedTracker.id))
-			val lookup2 = lookup1.tracker.innovationLookup(SubNetConnectionInnovation(updatedTracker.id, s.connection.to))
-			sender() ! SubNetNeuronInnovationConfirmation(s.connection, updatedTracker.id, lookup1.id, lookup2.id)
-			stay using t.copy(subnetNeuronTracker = updatedTracker.tracker, subnetConnectionTracker = lookup2.tracker)
+
+			val lookup1 = t.subnetConnectionTracker.innovationLookup(SubNetConnectionInnovation(s.connection.from, updatedTracker.id, s.existingStructure, s.existingNetId, s.neuronId))
+			val lookup2 = lookup1.tracker.innovationLookup(SubNetConnectionInnovation(updatedTracker.id, s.connection.to, s.existingStructure, s.existingNetId, s.neuronId))
+
+			val updatedNetTracker = t.subnetTracker.innovationLookup(s.existingStructure + lookup1.id + lookup2.id)
+
+			sender() ! SubNetNeuronInnovationConfirmation(s.connection, updatedTracker.id, lookup1.id, lookup2.id, s)
+			stay using t.copy(subnetNeuronTracker = updatedTracker.tracker, subnetConnectionTracker = lookup2.tracker, subnetTracker = updatedNetTracker.tracker)
 	}
 }
 	

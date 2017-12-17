@@ -123,21 +123,23 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			log.debug("received confirmation of new neuron {}", s)
 
 			val updatedGenome = t.genome.updateNetworkGenome(s)
-			
-
 			// generate the new actor
-
 			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
-
 			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
 			// need to tell two neurons that they have a disabled connection and a new one.
-			
-
 			log.debug("genome updated now: {}, represented as : {}", updatedGenome, updatedGenome.toJson)
-
 			goto(Ready) using updatedSettings
 
+		case Event(s: Innovation.SubNetNeuronInnovationConfirmation, t: NetworkSettings) =>
+			log.debug("received confirmation of new neuron {} for subnet", s)
 
+			val updatedGenome = t.genome.updateSubnet(s)
+			// generate the new actor
+			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
+			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
+			// need to tell two neurons that they have a disabled connection and a new one.
+			log.debug("genome updated now: {}, represented as : {}", updatedGenome, updatedGenome.toJson)
+			goto(Ready) using updatedSettings
 
 	}
 

@@ -116,6 +116,25 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	this.copy(neurons = updatedNeuron, subnets = Some(updatedSubnets))
 	}
 
+	def updateSubnet(s: Innovation.SubNetNeuronInnovationConfirmation): NetworkGenome = {
+		subnets.map(subnetList => {
+		
+			val subnet = subnetList(s.originalRequest.existingNetId)
+			val neuronLayer = (subnet.neurons(s.connectionToBeSplit.from).layer + subnet.neurons(s.connectionToBeSplit.to).layer) / 2
+	 		val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
+	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
+	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
+	 		val updatedConnectionList = subnet.connections + (s.connectionToBeSplit.id -> subnet.connections(s.connectionToBeSplit.id).copy(enabled = false)) 
+
+	 		val updatedSubnet = subnet.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
+	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet)
+
+	 		this.copy(subnets = Some(updatedSubnetList))
+
+		}).get
+		
+	}
+
 
 	/*
 	 * Network genome has a specific method generate Actors so that subnetworks and networks can
