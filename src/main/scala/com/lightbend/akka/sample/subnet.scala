@@ -37,7 +37,7 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 	import SubNetwork._
 	log.debug("sub-network: {} created", name)
 
-	val generatedActors = subnetGenome.generateActors(context)
+	val generatedActors: NetworkGenome.NetworkNodeSchema = subnetGenome.generateActors(context, NetworkGenome.NetworkNodeSchema())
 
 	log.debug("generated subnet genome: {}, actors are setup as {} ", subnetGenome, generatedActors)
 
@@ -61,8 +61,8 @@ class SubNetwork(name: String, subnetGenome: NetworkGenome.NetworkGenome) extend
 			// first create new Connection config and send to 
 			val fromActor = generatedActors.allNodes(cu.newConnection.from)
 			val toActor = generatedActors.allNodes(cu.newConnection.to)
-			toActor.actor ! Neuron.ConnectionConfig(inputs = List(Predecessor(fromActor)))
-			fromActor.actor ! Neuron.ConnectionConfig(outputs = List(Successor(toActor)))
+			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(toActor)))
 
 			stay using t.copy(genome = cu.newGenome)
 

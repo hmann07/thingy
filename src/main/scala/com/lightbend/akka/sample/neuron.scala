@@ -26,6 +26,7 @@ object Neuron {
 	// Messages it can receive
 	final case class Signal(value: Double)
 	final case class ConnectionConfig(inputs: List[Predecessor] = List.empty, outputs: List[Successor] = List.empty)
+	final case class ConnectionConfigUpdate(inputs: List[Predecessor] = List.empty, outputs: List[Successor] = List.empty)
 	
 
 }
@@ -51,9 +52,18 @@ class Neuron extends FSM[NeuronState, NeuronSettings] {
 
 		case Event(d: ConnectionConfig, t: NeuronSettings) =>
 
+			log.debug("received settings config of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
+			// Overwrite all existing connection details.
+			val updatedConfig = t.connections.copy(inputs = d.inputs, outputs = d.outputs)
+			stay using t.copy(connections = updatedConfig)
+
+		case Event(d: ConnectionConfigUpdate, t: NeuronSettings) =>
+
 			log.debug("received settings config update of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
+			// Append to list of connections
 			val updatedConfig = t.connections.copy(inputs = d.inputs ++ t.connections.inputs, outputs = d.outputs ++ t.connections.outputs)
 			stay using t.copy(connections = updatedConfig)
+
 
     	case Event(s: Signal, t: NeuronSettings) =>
 

@@ -42,7 +42,7 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 	// Input neurons will not have any internal node structures so can be created as straight Neurons.
 	// By giving the context the neurons will be created in this context.
 	
-	val generatedActors: NetworkGenome.NetworkNodeSchema  = networkGenome.generateActors(context)
+	val generatedActors: NetworkGenome.NetworkNodeSchema  = networkGenome.generateActors(context, NetworkGenome.NetworkNodeSchema())
 	val mutator = new Mutator
 
 	log.debug("Network actors are setup as {} ", generatedActors)
@@ -95,8 +95,8 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			val fromActor = generatedActors.allNodes(s.from)
 			val toActor = generatedActors.allNodes(s.to)
 
-			toActor.actor ! Neuron.ConnectionConfig(inputs = List(Predecessor(fromActor)))
-			fromActor.actor ! Neuron.ConnectionConfig(outputs = List(Successor(toActor)))
+			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(toActor)))
 
 			goto(Ready) using updatedSettings
 
@@ -123,16 +123,17 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			log.debug("received confirmation of new neuron {}", s)
 
 			val updatedGenome = t.genome.updateNetworkGenome(s)
-			val updatedSettings = t.copy(genome = updatedGenome)
+			
 
 			// generate the new actor
 
-			
+			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
 
+			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
 			// need to tell two neurons that they have a disabled connection and a new one.
 			
 
-			log.debug("genome updated now: {}", updatedGenome)
+			log.debug("genome updated now: {}, represented as : {}", updatedGenome, updatedGenome.toJson)
 
 			goto(Ready) using updatedSettings
 
