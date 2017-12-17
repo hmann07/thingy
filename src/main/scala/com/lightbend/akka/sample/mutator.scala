@@ -63,10 +63,10 @@ class Mutator {
 	def addSubNetConnection(genome: NetworkGenome.NetworkGenome): Innovation.SubNetConnectionInnovation = {
 
 		val subnetCount = genome.subnets.get.size 
-		val subnet = genome.subnets.get(Random.nextInt(subnetCount))
+		val subnet = genome.subnets.get.values.toList(Random.nextInt(subnetCount))
 		val neuronCount = subnet.neurons.size
-		val node1 = subnet.neurons(Random.nextInt(neuronCount)).id
-		val node2 = subnet.neurons(Random.nextInt(neuronCount)).id
+		val node1 = subnet.neurons.values.toList(Random.nextInt(neuronCount)).id
+		val node2 = subnet.neurons.values.toList(Random.nextInt(neuronCount)).id
 
 		if(subnet.connections.exists(c => c._2.from == node1 && c._2.to == node2)) {
 			addSubNetConnection(genome) //try again
@@ -86,7 +86,7 @@ class Mutator {
 	 def addNetworkNode(genome: NetworkGenome.NetworkGenome): Innovation.NetworkNeuronInnovation = {
 
 	 	val connectionCount = genome.connections.size
-	 	val connectionToSplit = genome.connections(Random.nextInt(connectionCount))
+	 	val connectionToSplit = genome.connections.values.toList(Random.nextInt(connectionCount))
 
 	 	// no point evolving disabled connections right?
 	 	

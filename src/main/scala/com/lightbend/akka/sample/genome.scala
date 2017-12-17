@@ -39,6 +39,8 @@ case class NetworkNodeSchema(
 		case _ => NetworkNodeSchema(in, out, hidden.copy(nodes = newnode :: hidden.nodes ), allNodes + (n.id -> newnode))
 		}
 	}
+
+
 }
 
 case class NeuronGenome(id: Int, name: String, layer: Int, activationFunction: Option[String], subnetId: Option[Int])
@@ -49,25 +51,38 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	connections.values.map(_.id).toSet
 	 }
 
-
-
-	 def updateNetworkGenome(s: Innovation.InnovationConfirmation) = {
+	 /*
+	  * This function will update the genome by adding a new connection based on
+	  * the innovation confirmation which will include the correct id
+	  * and the relevant from and to nodes.
+	  */
+	 def updateNetworkGenome(s: Innovation.InnovationConfirmation): NetworkGenome  = {
 	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, None))
 	 	this.copy(connections =  connections + newConnection )
-
 	 }
 
-	 def updateNetworkGenome(s: Innovation.NetworkNeuronInnovationConfirmation) = {
-	 	val neuronLayer = 1
+
+     /*
+	  * This updateNetworkGenome function will update the genome by adding a new new node based on
+	  * the innovation confirmation. The layer id will need to be computed based on the incoming and outoging nodes
+	  * Two new connections will be created and the original connection disabled.
+	  */
+	 def updateNetworkGenome(s: Innovation.NetworkNeuronInnovationConfirmation): NetworkGenome = {
+	 	val neuronLayer = (neurons(s.connectionToBeSplit.from).layer + neurons(s.connectionToBeSplit.to).layer) / 2
 	 	val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
 	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
 	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
+	 	val updatedConnectionList = connections + (s.connectionToBeSplit.id -> connections(s.connectionToBeSplit.id).copy(enabled = false))
+	 	
+	 	/*
 	 	val updatedConnectionList = connections.foldLeft(Map[Int, ConnectionGenome]()) { (conns, current) =>
 	 		val currentObj = current._2
 	 			conns + (current._1 -> {if (currentObj.id == s.connectionToBeSplit.id) {
 	 				currentObj.copy(enabled = false)
 	 			} else {currentObj}}) 
 	 	}
+	 	*/
+	 	
 	 	this.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
 
 	 }
@@ -101,6 +116,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	/*
 	 * Network genome has a specific method generate Actors so that subnetworks and networks can
 	 * generate actor networks from the class based genome rather than directly from Json.
+	 * Logic is added to check the schema to see if the node already exists or not.
 	 */
 
 	 def generateActors(context: ActorContext): NetworkNodeSchema = {

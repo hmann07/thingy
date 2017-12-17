@@ -17,7 +17,7 @@ case object Active extends NetworkState
 case object Mutating extends NetworkState
 
 // State Data holder
-final case class NetworkSettings(id: Int = 1, genome:  NetworkGenome.NetworkGenome)
+final case class NetworkSettings(id: Int = 1, genome:  NetworkGenome.NetworkGenome, networkSchema: NetworkGenome.NetworkNodeSchema )
 
 object Network {
 
@@ -42,12 +42,12 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 	// Input neurons will not have any internal node structures so can be created as straight Neurons.
 	// By giving the context the neurons will be created in this context.
 	
-	val generatedActors = networkGenome.generateActors(context)
+	val generatedActors: NetworkGenome.NetworkNodeSchema  = networkGenome.generateActors(context)
 	val mutator = new Mutator
 
-	log.debug("Network ctors are setup as {} ", generatedActors)
+	log.debug("Network actors are setup as {} ", generatedActors)
 
-	startWith(Ready, NetworkSettings(genome = networkGenome))
+	startWith(Ready, NetworkSettings(genome = networkGenome, networkSchema = generatedActors))
 
 	when(Ready) {
 
@@ -123,10 +123,18 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			log.debug("received confirmation of new neuron {}", s)
 
 			val updatedGenome = t.genome.updateNetworkGenome(s)
+			val updatedSettings = t.copy(genome = updatedGenome)
+
+			// generate the new actor
+
+			
+
+			// need to tell two neurons that they have a disabled connection and a new one.
+			
 
 			log.debug("genome updated now: {}", updatedGenome)
 
-			goto(Ready) using t
+			goto(Ready) using updatedSettings
 
 
 
