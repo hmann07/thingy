@@ -43,7 +43,7 @@ case class NetworkNodeSchema(
 
 }
 
-case class NeuronGenome(id: Int, name: String, layer: Int, activationFunction: Option[String], subnetId: Option[Int])
+case class NeuronGenome(id: Int, name: String, layer: Double, activationFunction: Option[String], subnetId: Option[Int])
 case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Option[Double], enabled: Boolean = true)
 case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int]) {
 
@@ -125,11 +125,10 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
 	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
 	 		val updatedConnectionList = subnet.connections + (s.connectionToBeSplit.id -> subnet.connections(s.connectionToBeSplit.id).copy(enabled = false)) 
-
-	 		val updatedSubnet = subnet.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
-	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet)
-
-	 		this.copy(subnets = Some(updatedSubnetList))
+	 		val updatedSubnet = subnet.copy(id = s.subnetId, connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
+	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet) - s.originalRequest.existingNetId
+	 		val updatedNeurons = neurons + (s.originalRequest.neuronId -> neurons(s.originalRequest.neuronId).copy(subnetId = Some(s.subnetId)))
+	 		this.copy(neurons = updatedNeurons, subnets = Some(updatedSubnetList))
 
 		}).get
 		
@@ -155,6 +154,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 					    val sn: ActorRef = context.actorOf(SubNetwork.props("subnet-" + currentObj.name, subnetStructure), "subnet-" + currentObj.name)
 					    schemaObj.update(currentObj, sn)
 				 	} else {
+				 		// TODO: send the new data to subnet... so it can update itself...
 				 		schemaObj
 				 	}}
 				 	
@@ -209,7 +209,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 implicit val neuronReads: Reads[NeuronGenome] = (
  (JsPath \ "id").read[Int] and
  (JsPath  \ "name").read[String] and
- (JsPath  \ "layer").read[Int] and
+ (JsPath  \ "layer").read[Double] and
  (JsPath  \ "activationFunction").readNullable[String] and
  (JsPath  \ "subnetid").readNullable[Int]
 
@@ -219,7 +219,7 @@ implicit val neuronReads: Reads[NeuronGenome] = (
 implicit val neuronWrites: Writes[NeuronGenome] = (
  (JsPath \ "id").write[Int] and
  (JsPath  \ "name").write[String] and
- (JsPath  \ "layer").write[Int] and
+ (JsPath  \ "layer").write[Double] and
  (JsPath  \ "activationFunction").writeNullable[String] and
  (JsPath  \ "subnetid").writeNullable[Int]
 

@@ -36,7 +36,7 @@ object Innovation {
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
 	case class SubnetConnectionInnovationConfirmation(updatedNetTracker: Int, updatedConnectionTracker: Int, originalRequest: SubNetConnectionInnovation)
 	case class NetworkNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int)
-	case class SubNetNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int, originalRequest: SubNetNeuronInnovation)
+	case class SubNetNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, subnetId: Int, priorconnectionId: Int, postconnectionId: Int, originalRequest: SubNetNeuronInnovation)
 	
 	case class SubnetLookupResult(id: Int, tracker: SubnetConnectionTracker)
 	case class NetworkLookupResult(id: Int, tracker: NetworkConnectionTracker)
@@ -191,7 +191,14 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 	val networkNeuronTracker: NetworkNeuronTracker = genome.neurons.foldLeft(NetworkNeuronTracker()) { (tracker, current) =>
 		val updatedInnovId = if(current._2.id > tracker.currentInnovationId) {current._2.id} else {tracker.currentInnovationId}
 		tracker.copy(currentInnovationId = updatedInnovId)
-	} 
+	}
+
+	val subnetNeuronTracker: SubNetNeuronTracker = genome.subnets.get.foldLeft(SubNetNeuronTracker()) { (tracker, currentSubnet) =>
+		val currentVal1 = currentSubnet._2
+		currentVal1.neurons.foldLeft(tracker) { (tracker, currentNeuron) =>
+			val updatedInnovId = if(currentNeuron._2.id > tracker.currentInnovationId) {currentNeuron._2.id} else {tracker.currentInnovationId}
+		    tracker.copy(currentInnovationId = updatedInnovId)
+	}} 
 	
 	
 
@@ -201,7 +208,7 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 		" subnets are {}\n" +
 		" net neurons are {}\n" , networkConnectionTracker, subnetConnectionTracker, subnetTracker, networkNeuronTracker)
 
-	startWith(Active, InnovationSettings(networkConnectionTracker, subnetConnectionTracker, subnetTracker, networkNeuronTracker))
+	startWith(Active, InnovationSettings(networkConnectionTracker, subnetConnectionTracker, subnetTracker, networkNeuronTracker, subnetNeuronTracker))
 
 	when(Active) {
 
@@ -235,7 +242,7 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 
 			val updatedNetTracker = t.subnetTracker.innovationLookup(s.existingStructure + lookup1.id + lookup2.id)
 
-			sender() ! SubNetNeuronInnovationConfirmation(s.connection, updatedTracker.id, lookup1.id, lookup2.id, s)
+			sender() ! SubNetNeuronInnovationConfirmation(s.connection, updatedTracker.id, updatedNetTracker.id, lookup1.id, lookup2.id, s)
 			stay using t.copy(subnetNeuronTracker = updatedTracker.tracker, subnetConnectionTracker = lookup2.tracker, subnetTracker = updatedNetTracker.tracker)
 	}
 }
