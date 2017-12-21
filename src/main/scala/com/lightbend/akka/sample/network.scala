@@ -16,6 +16,8 @@ case object Ready extends NetworkState
 case object Active extends NetworkState
 case object Mutating extends NetworkState
 
+
+
 // State Data holder
 final case class NetworkSettings(id: Int = 1, genome:  NetworkGenome.NetworkGenome, networkSchema: NetworkGenome.NetworkNodeSchema )
 
@@ -24,6 +26,7 @@ object Network {
 	// Messages it can receive
 	final case class Signal(value: Double)
 	final case class Mutate()
+	case class Mutated()
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
@@ -78,6 +81,11 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			stay using t
 
 
+	}
+
+	onTransition {
+		case Mutating -> Ready =>
+			context.parent ! Mutated()
 	}
 
 	when(Mutating) {

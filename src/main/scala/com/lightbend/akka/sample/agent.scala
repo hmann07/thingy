@@ -12,6 +12,7 @@ case object Active extends AgentState
 
 
 
+
 object Agent {
 
 	case class AgentSettings()
@@ -29,7 +30,15 @@ class Agent(innovation: ActorRef, networkGenomeBuilder: NetworkGenomeBuilder) ex
 	val network = context.actorOf(Network.props("my network", networkGenome, innovation), "mynetwork")
 	network ! Neuron.Signal(10)
 	network ! Network.Mutate()
- 
+ 	
+
+
  	startWith(Active, AgentSettings())
 
+ 	when(Active) {
+ 		case Event(g: Network.Mutated, t: AgentSettings) =>
+ 			log.debug("netowork finished mutating. Send a new signal")
+ 			network ! Neuron.Signal(10)
+ 			stay
+ 	}
 }

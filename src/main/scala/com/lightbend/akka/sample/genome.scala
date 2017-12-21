@@ -155,6 +155,13 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 					    schemaObj.update(currentObj, sn)
 				 	} else {
 				 		// TODO: send the new data to subnet... so it can update itself...
+				 		// get the new genome structure for the subnet
+				 		val subnetStructure = subnets.get(subnet)
+				 		// find the actor 
+				 		val sn: ActorRef = schemaObj.allNodes(currentObj.id).actor
+				 		// send the genome srtucture to the subnet
+				 		sn ! subnetStructure
+
 				 		schemaObj
 				 	}}
 				 	
@@ -171,7 +178,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 
 	 	val connectionConfigs = connections.foldLeft(Map[ActorRef, Neuron.ConnectionConfig]()) { (acc, current) =>
 	 		val currentObj = current._2
-	 		if (currentObj.enabled) {
+  	 		if (currentObj.enabled) {
 	 			// If the connection is enabled update the config obj. 
 		 		val pre = Predecessor(neuronActors.allNodes(currentObj.from))
 		 		val suc = Successor(neuronActors.allNodes(currentObj.to), Weight())
