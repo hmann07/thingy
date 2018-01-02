@@ -26,7 +26,7 @@ class Mutator {
 				//addNetworkNode(_),
 				addSubNetworkNode(_)
 			)
-
+		
 		mutationFunctions(Random.nextInt(mutationFunctions.length))(genome)
 	}
 

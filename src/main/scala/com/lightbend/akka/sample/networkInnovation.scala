@@ -55,13 +55,14 @@ object Innovation {
 			val oldId = currentInnovationId
 			val newId = library.getOrElse(newKey, oldId + 1) 
 			NetworkLookupResult(newId,
-			if(newId == oldId) {
+			{if(newId <= oldId) {
 					// no update need be done
 					this
 				} else {
 					// new innovation so update library increase the numbers
 					this.copy(currentInnovationId = newId, library = library + (newKey -> newId))
-				})}} 
+				}})
+			}} 
 
 	case class SubnetConnectionTracker(
 		val currentInnovationId: Int = 1,
@@ -71,7 +72,7 @@ object Innovation {
 			val oldId = currentInnovationId
 			val newId = library.getOrElse(newKey, oldId + 1) 
 			SubnetLookupResult(newId,
-			if(newId == oldId) {
+			if(newId <= oldId) {
 					// no update need be done
 					this
 				} else {
@@ -87,7 +88,7 @@ object Innovation {
 			val oldId = currentInnovationId
 			val newId = library.getOrElse(newKey, oldId + 1) 
 			SubnetStructureLookupResult(newId,
-			if(newId == oldId) {
+			if(newId <= oldId) {
 					// no update need be done
 					this
 				} else {
@@ -103,7 +104,7 @@ object Innovation {
 			val oldId = currentInnovationId
 			val newId = library.getOrElse(connectionToBeSplit, oldId + 1)
 			NetworkNeuronLookupResult(newId,
-				if(newId == oldId) {
+				if(newId <= oldId) {
 					// no update need be done
 					this
 				} else {
@@ -122,7 +123,7 @@ object Innovation {
 			val oldId = currentInnovationId
 			val newId = library.getOrElse(connectionToBeSplit, oldId + 1)
 			SubNetNeuronLookupResult(newId,
-				if(newId == oldId) {
+				if(newId <= oldId) {
 					// no update need be done
 					this
 				} else {
@@ -205,8 +206,8 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 	log.debug(
 		"\n innovation tracker started. networkConnectionTracker tracker is: {}\n" +
 		" subnetConnectionTracker tracker is {}\n" +
-		" subnets are {}\n" +
-		" net neurons are {}\n" , networkConnectionTracker, subnetConnectionTracker, subnetTracker, networkNeuronTracker)
+		" net neurons are {}\n" + 
+		" sub net neurons are {}\n", networkConnectionTracker, subnetConnectionTracker, networkNeuronTracker, subnetNeuronTracker)
 
 	startWith(Active, InnovationSettings(networkConnectionTracker, subnetConnectionTracker, subnetTracker, networkNeuronTracker, subnetNeuronTracker))
 
@@ -234,11 +235,15 @@ class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationStat
 			stay using t.copy(networkNeuronTracker = updatedTracker.tracker, networkConnectionTracker = lookup2.tracker)
 
 		case Event(s: SubNetNeuronInnovation, t: InnovationSettings) =>
-			log.debug("received request to create a new Neuron for connection {} within subnet {}", s.connection, s.existingNetId)
+			log.debug("received request to create a new Neuron for connection {} from neuron: {} to neruon {} within subnet {}", s.connection.id, s.connection.from, s.connection.to, s.existingNetId)
+			log.debug("neuron tracker is currently: {}", t.subnetNeuronTracker)
 			val updatedTracker = t.subnetNeuronTracker.innovationLookup(s.connection.id)
-
+			log.debug("neuron tracker updated to: {}, will use innovation id {}", updatedTracker, updatedTracker.id)
+			log.debug("connection tracker is currently: {}", t.subnetConnectionTracker)
 			val lookup1 = t.subnetConnectionTracker.innovationLookup(SubNetConnectionInnovation(s.connection.from, updatedTracker.id, s.existingStructure, s.existingNetId, s.neuronId))
 			val lookup2 = lookup1.tracker.innovationLookup(SubNetConnectionInnovation(updatedTracker.id, s.connection.to, s.existingStructure, s.existingNetId, s.neuronId))
+			
+			log.debug("connection tracker is updated to: {} is for prior and post are {} and {}", lookup2.tracker, lookup1.id, lookup2.id)
 
 			val updatedNetTracker = t.subnetTracker.innovationLookup(s.existingStructure + lookup1.id + lookup2.id)
 

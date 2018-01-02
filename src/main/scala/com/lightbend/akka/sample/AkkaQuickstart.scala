@@ -9,7 +9,7 @@ import com.thingy.genome.{NetworkGenomeBuilder}
 import com.thingy.network.Network
 import com.thingy.subnetwork.SubNetwork
 import com.thingy.innovation._
-import com.thingy.agent._
+import com.thingy.population._
 
 object Acne extends App {
   //Kamon.start()
@@ -20,9 +20,12 @@ object Acne extends App {
 
 
  val system = ActorSystem()
- val gNet = new NetworkGenomeBuilder()
- val innovation = system.actorOf(Innovation.props(gNet), "innov8")
- val agent = system.actorOf(Agent.props(innovation, gNet), "agent")
+
+ val p = system.actorOf(Props[Population], "population1")
+
+ //val gNet = new NetworkGenomeBuilder()
+ //val innovation = system.actorOf(Innovation.props(gNet), "innov8")
+ //val agent = system.actorOf(Agent.props(innovation, gNet), "agent")
 
 
 

@@ -9,6 +9,8 @@ import com.thingy.weight.Weight
 import com.thingy.innovation._
 import com.thingy.subnetwork.SubNetwork
 import com.thingy.mutator.Mutator
+import com.thingy.environment.Environment.Representation
+import com.thingy.evaluator._
 
 sealed trait NetworkState
 case object Initialising extends NetworkState
@@ -19,24 +21,34 @@ case object Mutating extends NetworkState
 
 
 // State Data holder
-final case class NetworkSettings(id: Int = 1, genome:  NetworkGenome.NetworkGenome, networkSchema: NetworkGenome.NetworkNodeSchema )
+final case class NetworkSettings(
+		id: Int = 1, 
+		genome:  NetworkGenome.NetworkGenome, 
+		networkSchema: NetworkGenome.NetworkNodeSchema,
+		rCount: Int = 0,
+		expectedOutputs: Map[Int, Representation] = Map.empty, // Map[Batchid, Representation]
+		actualOutputs: Map[Int, Map[Int, Double]] = Map.empty, // Map[Batchid, Map[OuputputId, ActualOutputValue]]
+		evaluator: Evaluator = XOREvaluator()
+		 )
 
 object Network {
 
 	// Messages it can receive
 	final case class Signal(value: Double)
 	final case class Mutate()
+	final case class Perceive()
 	case class Mutated()
+	case class Done(performanceValue: Double, genome: NetworkGenome.NetworkGenome)
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
-	def props(name: String, networkGenome: NetworkGenome.NetworkGenome, innovation: ActorRef): Props = {
+	def props(name: String, networkGenome: NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef): Props = {
 
-		Props(classOf[Network], name, networkGenome, innovation)
+		Props(classOf[Network], name, networkGenome, innovation, environment)
 	}
 }
 
-class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovation: ActorRef) extends FSM[NetworkState, NetworkSettings] {
+class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
 	log.debug("network: {} created with genome {}", name, networkGenome)
@@ -50,6 +62,8 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 
 	log.debug("Network actors are setup as {} ", generatedActors)
 
+	environment ! Perceive()
+
 	startWith(Ready, NetworkSettings(genome = networkGenome, networkSchema = generatedActors))
 
 	when(Ready) {
@@ -60,15 +74,6 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			
 			innovation ! mutator.mutate(t.genome) 
 			
-			//innovation ! Innovation.NetworkConnectionInnovation(3,3)
-			
-			//val neuronId = 3
-			//val gs = t.genome.subnets.get(0) // get the first subnet genome. and simulate a new conection. his should be reset to get the subnet related to the neuron
-			// if we are updatying a subnet, then we may need to update the id and the connection/neuron list.
-			// so at a later point we need to identify which network in the genome needs to be updated. using the id.
-
-			
-
 			goto(Mutating) using t
 
 		case Event(s: Neuron.Signal, t: NetworkSettings) =>
@@ -79,6 +84,60 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 				}
 
 			stay using t
+
+		case Event(r: Representation, t: NetworkSettings) =>
+
+			log.debug("received representation of {}", r.input)
+			
+			// Send the signals off into the network, send signal with a batch id (rCount)
+			r.input.foreach(i => {
+				generatedActors.allNodes(i._1).actor ! Neuron.Signal(i._2, r.flags, t.rCount)
+			})
+
+			val updateExpected = t.expectedOutputs + (t.rCount -> r)
+
+			stay using t.copy(rCount = t.rCount + 1, expectedOutputs = updateExpected)
+
+		case Event(s: Neuron.Output, t: NetworkSettings) =>
+
+			log.debug("network received Output signal of {}", s)
+
+			// add signal to actual outputsReceived
+			val existing = t.actualOutputs.getOrElse(s.batchId, Map.empty)
+			val updateExisting = existing + (s.nodeId -> s.value)
+			val updateOutputs = t.actualOutputs + (s.batchId -> updateExisting) 
+			
+			// check have we processed a representation complete?
+			if(updateOutputs(s.batchId).size == t.expectedOutputs(s.batchId).expectedOutput.size) {
+				// all outputs for batch received, we can evaluate them...
+				val e = t.evaluator.evaluateIteration(t.expectedOutputs(s.batchId), updateOutputs(s.batchId))
+
+				// now double check if we have more representations to process
+				// this assumes that no mesage can overtake another to a particular neuron. since all messages will visit all nodes it 
+				// should be impossible that a final signal arrives before another.
+				if(s.flags.contains("FINAL")) {
+					// then this was the last representation, eval all and tell parent we're done, reset settings
+	
+					val ep = e.evaluateEpoch
+
+					log.debug("Epoch finished. Fitness is {}", ep.fitness)
+
+					val newT = t.copy(actualOutputs = updateOutputs, evaluator = ep)
+					context.parent ! Done(ep.fitness, t.genome)
+					stay using newT
+				} else {
+					val newT = t.copy(actualOutputs = updateOutputs, evaluator = e)
+					environment ! Perceive()
+					stay using newT
+				}
+			} else {
+				val e = t.evaluator.evaluateIteration(t.expectedOutputs(s.batchId), updateOutputs(s.batchId))
+				val newT = t.copy(actualOutputs = updateOutputs, evaluator = e)
+				stay using newT	
+			}
+			
+			
+			
 
 
 	}

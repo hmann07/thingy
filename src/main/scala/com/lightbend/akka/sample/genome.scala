@@ -14,7 +14,7 @@ import com.thingy.weight.Weight
 import com.thingy.node._
 import com.thingy.innovation.Innovation
 import play.api.libs.json.Json.JsValueWrapper
-
+import scala.util.Random
 
 
 
@@ -55,6 +55,74 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	Json.toJson(this)
 	 }
 
+	 def crossover(partner: NetworkGenome): NetworkGenome = {
+	 	// first take all repective connections.
+	 	// perhaps make the assumption that this genome is the strongest:
+	 	// this has implications:
+	 	//	1) will keep all own connections.
+	 	// by lineing them up.
+
+	 	val newConnections = connections.foldLeft(Map[Int, ConnectionGenome]()){ (acc, current) =>
+	 		val conn: ConnectionGenome = partner.connections(current._1) match {
+	 			case c: ConnectionGenome => 
+	 				// then return one or other of the connections (i.e. from one or other of the genomes) with some probablity
+	 				// one of he connections could be disabled we will enable with some P
+	 				if(Random.nextDouble < 0.5) {
+	 					c
+	 				} else {
+	 					current._2
+	 				}
+	 			case _ => 
+	 				// the connection didn't exist in the other genome so we have to take this one.
+	 				current._2
+	 		}
+	 		acc + (conn.id -> conn)
+	 	}
+
+	 	// now just grab the new neurons.
+	 	// perhaps it's best at this point to cross over any that were subnets, so that we get a crossed version of the "neuron".
+	 	
+ 
+	 	val newNeurons = newConnections.foldLeft(Map[Int, NeuronGenome]()) { (acc, current) =>
+	 		
+	 		val nFrom = neurons(current._2.from)
+	 		val nTo = neurons(current._2.to)
+	 		acc + (current._2.from -> nFrom  , current._2.to -> nTo)
+	 	}
+
+
+	 	// now update the subnets... go thorugh new neurons if it's a subnet cross over the subnet.. iff 
+	 	// it was a matched neuron...
+	 	val updatedSubnets = newNeurons.foldLeft(Map[Int, NetworkGenome]()) { (acc, current) =>
+
+	 		val n = current._2
+	 		n.subnetId.map(s => 
+	 			// neuron has a subnet..
+	 			if(partner.neurons.contains(n.id)){
+	 				// then there is an opportunity to cross over too..
+	 				// this assume that we will not track subnet structures...
+	 				// In theory we should ask the innovation to re-set the innovation id of the subnet.  
+	 				// In reality this insnt being used anywhere at the moment, so why worry. also if the net goes through any mutations
+	 				// then the changes will be tracked. 
+	 				// crossover of subnets will not create new neurons or connections which are the important ones that need to be tracked
+	 				// IN FACT, does the sructure even change? Possibly not. the dominant genome will dictate the neruons in use
+	 				// it won't gain any from the less dominant just a differnet set of weights.. of different bias / activation fn.
+	 				val crossednet = subnets.get(s).crossover(partner.subnets.get(s))
+	 				acc + (s -> crossednet)
+	 			} else {
+	 				// no crossover opp
+	 				acc
+	 			}
+	 		) getOrElse acc
+
+	 	}
+
+	 	// TODO: do we need to clearup things neurons that no longer exist. assume the jvm will garb
+
+	 	this.copy(connections = newConnections, neurons = newNeurons, subnets = Some(updatedSubnets))
+
+	 }
+
 	 /*
 	  * This function will update the genome by adding a new connection based on
 	  * the innovation confirmation which will include the correct id
@@ -77,16 +145,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
 	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
 	 	val updatedConnectionList = connections + (s.connectionToBeSplit.id -> connections(s.connectionToBeSplit.id).copy(enabled = false))
-	 	
-	 	/*
-	 	val updatedConnectionList = connections.foldLeft(Map[Int, ConnectionGenome]()) { (conns, current) =>
-	 		val currentObj = current._2
-	 			conns + (current._1 -> {if (currentObj.id == s.connectionToBeSplit.id) {
-	 				currentObj.copy(enabled = false)
-	 			} else {currentObj}}) 
-	 	}
-	 	*/
-	 	
+	 		 	
 	 	this.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
 
 	 }
@@ -125,8 +184,8 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
 	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
 	 		val updatedConnectionList = subnet.connections + (s.connectionToBeSplit.id -> subnet.connections(s.connectionToBeSplit.id).copy(enabled = false)) 
-	 		val updatedSubnet = subnet.copy(id = s.subnetId, connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
-	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet) - s.originalRequest.existingNetId
+	 		val updatedSubnet = subnet.copy(id = s.subnetId, connections = updatedConnectionList + newPrior + newPost, neurons =  subnet.neurons + newNeuron  )
+	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet) - {if(s.originalRequest.existingNetId != updatedSubnet.id) {s.originalRequest.existingNetId} else{ -1}}
 	 		val updatedNeurons = neurons + (s.originalRequest.neuronId -> neurons(s.originalRequest.neuronId).copy(subnetId = Some(s.subnetId)))
 	 		this.copy(neurons = updatedNeurons, subnets = Some(updatedSubnetList))
 
@@ -151,10 +210,10 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 				 	// already an actor for this genome?
 				 	{if(!schemaObj.allNodes.contains(currentObj.id)){
 				 		val subnetStructure = subnets.get(subnet)
-					    val sn: ActorRef = context.actorOf(SubNetwork.props("subnet-" + currentObj.name, subnetStructure), "subnet-" + currentObj.name)
+					    val sn: ActorRef = context.actorOf(SubNetwork.props("subnet-" + currentObj.name, currentObj, subnetStructure), "subnet-" + currentObj.name)
 					    schemaObj.update(currentObj, sn)
 				 	} else {
-				 		// TODO: send the new data to subnet... so it can update itself...
+				 		
 				 		// get the new genome structure for the subnet
 				 		val subnetStructure = subnets.get(subnet)
 				 		// find the actor 
@@ -168,7 +227,8 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 			 case None =>
 			 		// already an actor for this genome?
 				 	{if(!schemaObj.allNodes.contains(currentObj.id)){
-				 		val ar: ActorRef = context.actorOf(Props[Neuron], currentObj.name)
+
+				 		val ar: ActorRef =  context.actorOf(Neuron.props(currentObj), currentObj.name)
 				 		schemaObj.update(currentObj, ar)
 		 	 		} else {
 				 		schemaObj
