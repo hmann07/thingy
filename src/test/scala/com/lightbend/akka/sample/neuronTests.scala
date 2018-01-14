@@ -14,16 +14,18 @@ import com.typesafe.config.ConfigFactory
 import com.thingy.weight.Weight
 import com.thingy.node._
 import com.thingy.neuron.{Predecessor, Successor, Neuron, Initialising, Ready}
+import com.thingy.genome.NetworkGenome.NeuronGenome
 
 class TestNeuron extends FlatSpec {
 
 	val config = ConfigFactory.load()
 
 	val w = Weight()
+	val nGenome = NeuronGenome(1, "testNeuron", 0.5, Some("SIGMOID"), None)
 
 	implicit val system = ActorSystem()
 
-	val na = TestFSMRef(new Neuron)
+	val na = TestFSMRef(new Neuron(nGenome))
 	val n = Node(1, na)
 
 	"the neuron" should "be in state Initialising when started" in {

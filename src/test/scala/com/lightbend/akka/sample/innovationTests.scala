@@ -60,7 +60,7 @@ class TestInnovation extends FlatSpec {
 		val oldid = snInnovation.stateData.subnetConnectionTracker.currentInnovationId
 		val sntrackid = snInnovation.stateData.subnetTracker.currentInnovationId
 		val neuronId = 3
-		val gmutatingsubnets = gNet.generateFromSeed.subnets.get(0) 
+		val mutatingsubnet = gNet.generateFromSeed.subnets.get(0) 
 		snInnovation ! Innovation.SubNetConnectionInnovation(2,2, mutatingsubnet.innovationHash, mutatingsubnet.id, neuronId)
 
 
@@ -73,7 +73,7 @@ class TestInnovation extends FlatSpec {
 	"Just for comlpeteness when requested again we" should "get the same number" in {
 		val oldid = snInnovation.stateData.subnetConnectionTracker.currentInnovationId
 		val neuronId = 3
-		val gmutatingsubnets = gNet.generateFromSeed.subnets.get(0) 
+		val mutatingsubnet = gNet.generateFromSeed.subnets.get(0) 
 		snInnovation ! Innovation.SubNetConnectionInnovation(2,2, mutatingsubnet.innovationHash, mutatingsubnet.id, neuronId)
 		assert(snInnovation.stateData.subnetConnectionTracker.currentInnovationId == oldid)
 	}

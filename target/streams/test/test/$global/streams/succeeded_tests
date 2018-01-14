@@ -1,6 +1,5 @@
 #Successful Tests
-#Thu Nov 30 11:29:36 EST 2017
-com.lightbend.akka.sample.TestNeuron=1512059375721
-com.lightbend.akka.sample.TestWeight=1512059375577
-com.lightbend.akka.sample.TestConnection=1512059375627
-com.lightbend.akka.sample.TestInnovation=1512059376055
+#Sat Jan 06 17:37:25 GMT 2018
+com.lightbend.akka.sample.TestNeuron=1515260245048
+com.lightbend.akka.sample.TestGenome=1515260244944
+com.lightbend.akka.sample.TestWeight=1515260244192

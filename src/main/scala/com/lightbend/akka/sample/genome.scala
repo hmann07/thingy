@@ -55,6 +55,52 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	Json.toJson(this)
 	 }
 
+
+	 def flattenGenome: Set[String] = {
+	 	val connList: Set[String] = connections.map(parentId.get.toString + ":" + _._1).toSet
+	 	val subnetConnList: Set[String] = subnets.map(_.foldLeft(Set[String]()){(acc, current)=>(acc ++ current._2.flattenGenome)}).getOrElse(Set.empty)
+	 	connList ++ subnetConnList
+	 }
+
+	 /*
+	  * Distance function is primarily to aid speciation. genomes. A measure of how similar or different two genomes are.
+	  * closer together will more likely end up in a species together. The calculation is Joined Conns + Disjoint Conns + weightsDiff
+	  * If the have genes in common, they are more similar. The more genomes not in common the less similar they are.
+	  * The process will be:
+	  * Iterate through the genome. 
+	  */
+
+	 def distance(genome: NetworkGenome) = {
+	 	val flattenedGenome1 = flattenGenome
+	 	val flattenedGenome2 = genome.flattenGenome
+
+	 	// whats the count of the union.
+	 	val unionSize = (flattenedGenome1 | flattenedGenome2).size
+
+	 	// size of symetric complement. 
+	 	// val diffSize = ((flattenedGenome1 &~ flattenedGenome2) | (flattenedGenome2 &~ flattenedGenome1)).size
+
+	 	// size of intersection
+	 	val intersection = (flattenedGenome1 & flattenedGenome2).size
+
+	 	val pctSimilar = intersection / unionSize
+
+	 	pctSimilar
+
+	 	// find the excess
+
+
+	 	// find the Disjoint
+
+
+	 	// find the common to both but calculate variance in weights.
+
+
+	 	// calculate the distance 
+
+
+	 }
+
 	 def crossover(partner: NetworkGenome): NetworkGenome = {
 	 	// first take all repective connections.
 	 	// perhaps make the assumption that this genome is the strongest:
