@@ -43,7 +43,7 @@ case class NetworkNodeSchema(
 
 }
 
-case class NeuronGenome(id: Int, name: String, layer: Double, activationFunction: Option[String], subnetId: Option[Int])
+case class NeuronGenome(id: Int, name: String, layer: Double, activationFunction: Option[String] = Some("SIGMOID"), subnetId: Option[Int])
 case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Option[Double], enabled: Boolean = true)
 case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int]) {
 
@@ -393,13 +393,18 @@ implicit val netWrites: Writes[NetworkGenome] = new Writes[NetworkGenome] {
 
 }
 
+
+
 class NetworkGenomeBuilder {
 
 	import NetworkGenome._
 	implicit val config = ConfigFactory.load()
+	
+	
+
 	val file = config.getConfig("thingy").getString("seed-network")
 	val stream = new FileInputStream(file)
-	val json = try {  Json.parse(stream) } finally { stream.close() }
+	val json = try {  Json.using[Json.WithDefaultValues].parse(stream) } finally { stream.close() }
 
 	//log.debug("loaded json file {}", json)
 

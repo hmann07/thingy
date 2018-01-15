@@ -61,8 +61,11 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
 			// decide species.
 
-			val newSpeciesDir = s.speciesDirectory.allocate(d.genome)
-			
+			val newSpeciesDir = s.speciesDirectory.allocate(d.genome, d.performanceValue)
+			log.debug("speciesDirectory is {}", newSpeciesDir)
+ 			
+
+
  			if(completed == p) {
  				// so....  we have got n genomes, each with a Performance value of some sort....
  				// time to select the best in line with their performance and send the genome back to agent whi should forward on to the network
@@ -71,13 +74,12 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  				// time to select or allocate the best genomes for mating..
 
-
+ 				val survivors = s.speciesDirectory.selectGenerationSurvivors
+ 				log.debug("survivors. find a better name. : {}", survivors)
 
  			}
  			
- 			log.debug("speciesDirectory is {}", newSpeciesDir)
-
- 			stay using s.copy(speciesDirectory = newSpeciesDir)
+ 			stay using s.copy(agentsCompleteCount = completed, 	speciesDirectory = newSpeciesDir)
  	}
 
 
