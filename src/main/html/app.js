@@ -16,9 +16,9 @@ var svg = d3.select('#networkViewer')
 svg.append('svg:defs').append('svg:marker')
     .attr('id', 'end-arrow')
     .attr('viewBox', '0 -5 10 10')
-    .attr('refX', 6)
-    .attr('markerWidth', 3)
-    .attr('markerHeight', 2)
+    .attr('refX', 16)
+    .attr('markerWidth', 13)
+    .attr('markerHeight', 12)
     .attr('orient', 'auto')
   .append('svg:path')
     .attr('d', 'M0,-5L10,0L0,5')
@@ -39,6 +39,12 @@ svg.append('svg:defs').append('svg:marker')
 //  - nodes are known by 'id', not by index in array.
 //  - reflexive edges are indicated on the node (as a bold black circle).
 //  - links are always source < target; edge directions are set by 'left' and 'right'.
+
+
+function populateSim(genome) {
+  
+}
+
 
 var nodes = genome.neurons
 var outputlinks = genome.connections.filter(function(l){return l.enabled})
@@ -72,10 +78,10 @@ var simulation = d3.forceSimulation()
     .data(links)
     .enter().append("path")
       .attr("class", "link")
-      .style("stroke-width", function(d){ return linkWidthScale(d.weight) + "px"})
-      //.style('marker-mid', 'url(#start-arrow)')
-      .style('marker-start', function(d) { return d.left ? 'url(#start-arrow)' : ''; })
-    .style('marker-end', function(d) { return d.right ? 'url(#end-arrow)' : ''; })
+     // .style("stroke-width", function(d){ return linkWidthScale(d.weight) + "px"})
+      .style('marker-mid', 'url(#end-arrow)')
+      //.style('marker-start', function(d) { return d.left ? 'url(#start-arrow)' : ''; })
+    //.style('marker-end', function(d) { return d.right ? 'url(#end-arrow)' : ''; })
       ;
 
   var node = svg.append("g")
@@ -85,7 +91,7 @@ var simulation = d3.forceSimulation()
     .enter().append("circle")
       .attr("r", nodeSize)
       .attr("fill", function(d) {
-        return actFnColourScale(d.actFn);
+        return d.subnetid?"#999999":actFnColourScale(d.actFn);
       })
       .call(d3.drag()
           .on("start", dragstarted)
