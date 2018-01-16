@@ -4,19 +4,24 @@ package com.thingy.species
 import com.typesafe.config.ConfigFactory
 import com.thingy.genome.NetworkGenome.NetworkGenome
 import scala.util.Random
+import com.thingy.selection.TournamentSelection
+
+case class SpeciesMember (
+	genome: NetworkGenome,
+	performanceValue: Double)
 
 case class Species(totalDistance: Double = 0.0,
 				   memberCount: Int = 0,
 				   speciesTotalFitness: Double = 0,
 				   averageDistance: Double = 0.0,
 				   archetype: NetworkGenome,
-				   members: List[NetworkGenome]) {
+				   members: List[SpeciesMember]) {
 	
 	def add(g: NetworkGenome, performanceValue: Double) = {
 		
 		val newtotalDist = totalDistance + g.distance(archetype)
 		val newMemberCount = memberCount + 1
-		val newMembers = g :: members
+		val newMembers = SpeciesMember(g, performanceValue) :: members
 		val newArchetype = newMembers(Random.nextInt(newMemberCount))
 		val updatedTotalFitness = speciesTotalFitness + performanceValue
 
@@ -24,7 +29,7 @@ case class Species(totalDistance: Double = 0.0,
 			totalDistance = newtotalDist,
 			averageDistance = newtotalDist / newMemberCount,
 			speciesTotalFitness = updatedTotalFitness,
-			archetype = newArchetype,
+			archetype = newArchetype.genome,
 			members = newMembers, 
 			memberCount = newMemberCount)
 
@@ -35,6 +40,7 @@ object SpeciesDirectory {
 	implicit val config = ConfigFactory.load()
 	val speciesExpansionFactor = config.getConfig("thingy").getDouble("species-expansion-factor")
 	val speciesStartingThreshold = config.getConfig("thingy").getDouble("species-starting-threshold")
+	val populationSize =  config.getConfig("thingy").getDouble("population-size")
 }
 
 case class SpeciesDirectory (
@@ -46,11 +52,16 @@ case class SpeciesDirectory (
 		
 		def allocate(f: NetworkGenome, performanceValue: Double): SpeciesDirectory = {
 			if (currentSpeciesId == 0) {
-				this.copy(totalFitness = totalFitness + performanceValue, currentSpeciesId = 1, species = species + (1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = f, members = List(f)) ))
+				this.copy(totalFitness = totalFitness + performanceValue, 
+						  currentSpeciesId = 1, 
+						  species = species + (1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = f, 
+						  								    members = List(SpeciesMember(f, performanceValue)))))
 			} else {
 				// iterate through the dir listing and add if compatible
 				val newSpeciesList = findSpecies(f, performanceValue, species, species)
-				this.copy(totalFitness = totalFitness + performanceValue, currentSpeciesId = if(newSpeciesList.size > currentSpeciesId){currentSpeciesId + 1} else {currentSpeciesId}, species= newSpeciesList)
+				this.copy(totalFitness = totalFitness + performanceValue,
+						  currentSpeciesId = if(newSpeciesList.size > currentSpeciesId){currentSpeciesId + 1} else {currentSpeciesId},
+						  species = newSpeciesList)
 			}
 		
 		}
@@ -74,14 +85,20 @@ case class SpeciesDirectory (
 					// this species is not compatible at all, so go to next
 					findSpecies(c, performanceValue, sList.tail, staticList)
 				}}
-			}).getOrElse(staticList + (currentSpeciesId -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, members = List(c))))
+			}).getOrElse(staticList + (currentSpeciesId -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, members = List(SpeciesMember(c, performanceValue)))))
 		}
 
 		def selectGenerationSurvivors = {
 			species.map(s => {
-				s._2.speciesTotalFitness / totalFitness // * populationSize
+
+				val speciesCandidates = ((s._2.speciesTotalFitness / totalFitness) * populationSize).toInt
 				// elites?
-				// 
+				// 		
+				// crossover
+				// Here we should pick an item from the species members x times based on fitness
+					1.to(speciesCandidates).map(i => TournamentSelection.select(s._2.members))
+				// mutation only
+
 			})
 		}
 
