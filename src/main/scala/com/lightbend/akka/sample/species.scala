@@ -95,11 +95,23 @@ case class SpeciesDirectory (
 				// elites?
 				// 		
 				// crossover
-				// Here we should pick an item from the species members x times based on fitness
-					1.to(speciesCandidates).map(i => TournamentSelection.select(s._2.members))
+				// Here we should pick candidates from the species members x times based on fitness
+					1.to(speciesCandidates).map(i => {
+							generationFunction(s._2)
 				// mutation only
-
+					})
 			})
 		}
+
+		def generationFunction(s: Species): () => NetworkGenome = {
+		val genome1 = TournamentSelection.select(s.members).genome
+		val genome2 = TournamentSelection.select(s.members).genome
+
+		val f = () => {
+			genome1.crossover(genome2)
+		}
+
+		f
+	}
 
 }
