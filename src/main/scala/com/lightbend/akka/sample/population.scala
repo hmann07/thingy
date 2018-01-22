@@ -3,7 +3,7 @@ package com.thingy.population
 import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.genome.NetworkGenomeBuilder
-import com.thingy.genome.NetworkGenome
+import com.thingy.genome.NetworkGenome.NetworkGenome
 import com.thingy.network.Network
 import com.thingy.subnetwork.SubNetwork
 import com.thingy.innovation._
@@ -24,7 +24,7 @@ object Population {
 
 	case class PopulationSettings(
 			agentsCompleteCount: Int = 0, 
-			agentsComplete: Map[ActorRef, NetworkGenome.NetworkGenome] = Map.empty,
+			agentsComplete: Map[ActorRef, NetworkGenome] = Map.empty,
 			agentSumTotalFitness: Double = 0.0,
 			currentSpecies: Int = 0,
 			speciesDirectory: SpeciesDirectory = SpeciesDirectory())
@@ -38,7 +38,21 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 	val gNet = new NetworkGenomeBuilder()
  	val innovation = context.actorOf(Innovation.props(gNet), "innov8")
  	val p = config.getConfig("thingy").getInt("population-size")
+ 	def repurposeAgents(gestatable: List[()=>NetworkGenome]) = {
+ 		rep(gestatable, context.children.toList)
+ 	}
 
+ 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef]):Unit ={
+		g.headOption.map(gnew=>{
+			val evalG = gnew()
+			c.headOption.map(cnew=> {
+				cnew ! evalG
+				rep(g.tail, c.tail)
+			}).getOrElse(context.actorOf(Agent.props(innovation, evalG), "agent" + "weneedtospecanid"))
+		}).getOrElse({
+			c.foreach(newc => context.stop(newc))
+		})	
+	}
 
  	for {
  		i <- 1 to p
@@ -74,8 +88,14 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  				// time to select or allocate the best genomes for mating..
 
- 				val survivors = s.speciesDirectory.selectGenerationSurvivors
- 				log.debug("survivors. find a better name. : {}", survivors)
+ 				val gestatable = s.speciesDirectory.selectGenerationSurvivors
+ 				log.debug("gestatable. find a better name. : {}", gestatable)
+
+ 				// Now we have a load of functions to run we need to send them to available agents. 
+ 				//creating new ones if required and shutting down old ones..
+
+ 				repurposeAgents(gestatable.flatten.toList)
+
 
  			}
  			
