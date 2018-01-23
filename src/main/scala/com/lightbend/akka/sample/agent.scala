@@ -19,24 +19,21 @@ object Agent {
 
 	case class AgentSettings()
 	case class Performance(performanceValue: Double, genome: NetworkGenome.NetworkGenome)
-	def props(innovation: ActorRef, network: NetworkGenomeBuilder): Props = {
-		Props(classOf[Agent], innovation, network.generateFromSeed)
-	}
-
-	def props(innovation: ActorRef, network: NetworkGenome.NetworkGenome): Props = {
+	
+	def props(innovation: ActorRef, network: ()=> NetworkGenome.NetworkGenome): Props = {
 		Props(classOf[Agent], innovation, network)
 	}
 }
 
 
 
-class Agent(innovation: ActorRef, networkgenome: NetworkGenome.NetworkGenome) extends FSM[AgentState, Agent.AgentSettings] {
+class Agent(innovation: ActorRef, network: ()=> NetworkGenome.NetworkGenome) extends FSM[AgentState, Agent.AgentSettings] {
 	import Agent._
 
 
 
 	val environment = context.actorOf(Environment.props(), "environment")
-	val networkGenome = networkgenome
+	val networkGenome = network
 	val network = context.actorOf(Network.props("my network", networkGenome, innovation, environment), "mynetwork")
 
  	startWith(Active, AgentSettings())
@@ -52,6 +49,12 @@ class Agent(innovation: ActorRef, networkgenome: NetworkGenome.NetworkGenome) ex
  			//network ! Network.Mutate()
  			context.parent ! g
 
+ 			stay
+
+ 		case Event(ng: ()=>NetworkGenome.NetworkGenome , s: AgentSettings) =>
+
+ 			log.debug("received network")
+ 			network ! ng
  			stay
  	}
 }

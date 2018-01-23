@@ -42,15 +42,17 @@ object Network {
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
-	def props(name: String, networkGenome: NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef): Props = {
+	def props(name: String, networkGenome: ()=> NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef): Props = {
 
 		Props(classOf[Network], name, networkGenome, innovation, environment)
 	}
 }
 
-class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef) extends FSM[NetworkState, NetworkSettings] {
+class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
+	val networkGenome = ng()
+
 	log.debug("network: {} created with genome {}", name, networkGenome)
 
 	// First create input neurons. Select these on the basis that they belong to layer 0.
@@ -135,6 +137,11 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 				val newT = t.copy(actualOutputs = updateOutputs, evaluator = e)
 				stay using newT	
 			}
+
+		case Event(ng: NetworkGenome, t: NetworkSettings) =>
+			val updatedSchema = ng.generateActors(context, t.networkSchema)
+			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
+			stay using updatedSettings
 			
 			
 			
@@ -207,6 +214,8 @@ class Network(name: String, networkGenome: NetworkGenome.NetworkGenome, innovati
 			// need to tell two neurons that they have a disabled connection and a new one.
 			log.debug("genome updated now: {}, represented as : {}", updatedGenome, updatedGenome.toJson)
 			goto(Ready) using updatedSettings
+
+
 
 	}
 

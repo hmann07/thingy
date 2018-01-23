@@ -35,7 +35,7 @@ object Population {
 class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 	import Population._
 
-	val gNet = new NetworkGenomeBuilder()
+	val gNet = () => {new NetworkGenomeBuilder()}.generateFromSeed
  	val innovation = context.actorOf(Innovation.props(gNet), "innov8")
  	val p = config.getConfig("thingy").getInt("population-size")
  	def repurposeAgents(gestatable: List[()=>NetworkGenome]) = {
@@ -44,7 +44,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef]):Unit ={
 		g.headOption.map(gnew=>{
-			val evalG = gnew()
+			val evalG = gnew
 			c.headOption.map(cnew=> {
 				cnew ! evalG
 				rep(g.tail, c.tail)
