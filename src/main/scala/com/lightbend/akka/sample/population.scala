@@ -23,6 +23,7 @@ object Population {
 
 
 	case class PopulationSettings(
+			currentGeneration: Int = 1,
 			agentsCompleteCount: Int = 0, 
 			agentsComplete: Map[ActorRef, NetworkGenome] = Map.empty,
 			agentSumTotalFitness: Double = 0.0,
@@ -36,8 +37,9 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 	import Population._
 
 	val gNet = () => {new NetworkGenomeBuilder()}.generateFromSeed
- 	val innovation = context.actorOf(Innovation.props(gNet), "innov8")
+ 	val innovation = context.actorOf(Innovation.props(gNet()), "innov8")
  	val p = config.getConfig("thingy").getInt("population-size")
+ 	val generations = config.getConfig("thingy").getInt("generations")
  	def repurposeAgents(gestatable: List[()=>NetworkGenome]) = {
  		rep(gestatable, context.children.toList)
  	}
@@ -46,7 +48,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 		g.headOption.map(gnew=>{
 			val evalG = gnew
 			c.headOption.map(cnew=> {
-				cnew ! evalG
+				cnew ! Network.NetworkUpdate(evalG)
 				rep(g.tail, c.tail)
 			}).getOrElse(context.actorOf(Agent.props(innovation, evalG), "agent" + "weneedtospecanid"))
 		}).getOrElse({
@@ -83,10 +85,17 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  			if(completed == p) {
  				// so....  we have got n genomes, each with a Performance value of some sort....
  				// time to select the best in line with their performance and send the genome back to agent whi should forward on to the network
- 				
- 				log.debug("population: All Agents Completed")
-
+ 					
+ 				//log.debug("population: All Agents Completed")
+ 				log.debug("generation {} completed", s.currentGeneration)
  				// time to select or allocate the best genomes for mating..
+
+ 				// check to see if we have done all generations
+
+ 				if (s.currentGeneration == generations) {
+ 					log.debug("All generations finished")
+ 					stay
+ 				} else {
 
  				val gestatable = s.speciesDirectory.selectGenerationSurvivors
  				log.debug("gestatable. find a better name. : {}", gestatable)
@@ -96,10 +105,16 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  				repurposeAgents(gestatable.flatten.toList)
 
-
- 			}
+ 				stay using s.copy(
+ 								  currentGeneration = s.currentGeneration + 1,
+ 								  agentsCompleteCount = 0, 	
+ 								  agentSumTotalFitness = 0,
+ 								  speciesDirectory = newSpeciesDir)
+ 				}
+ 			} else {	 
  			
- 			stay using s.copy(agentsCompleteCount = completed, 	speciesDirectory = newSpeciesDir)
+ 				stay using s.copy(agentsCompleteCount = completed, 	speciesDirectory = newSpeciesDir)
+ 			}
  	}
 
 

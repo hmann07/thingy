@@ -38,6 +38,7 @@ object Network {
 	final case class Mutate()
 	final case class Perceive()
 	case class Mutated()
+	case class NetworkUpdate(f: () => NetworkGenome.NetworkGenome)
 	case class Done(performanceValue: Double, genome: NetworkGenome.NetworkGenome)
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
@@ -124,9 +125,9 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 
 					log.debug("Epoch finished. Fitness is {}", ep.fitness)
 
-					val newT = t.copy(actualOutputs = updateOutputs, evaluator = ep)
+					val resetT = t.copy(expectedOutputs = Map.empty, actualOutputs = Map.empty, evaluator = ep.reset)
 					context.parent ! Done(ep.fitness, t.genome)
-					stay using newT
+					stay using resetT
 				} else {
 					val newT = t.copy(actualOutputs = updateOutputs, evaluator = e)
 					environment ! Perceive()
@@ -138,14 +139,13 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 				stay using newT	
 			}
 
-		case Event(ng: NetworkGenome, t: NetworkSettings) =>
-			val updatedSchema = ng.generateActors(context, t.networkSchema)
+		case Event(ng: NetworkUpdate, t: NetworkSettings) =>
+      val updatedGenome = ng.f()
+			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
 			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
+      		log.debug("new network received and actors updated")
+      		environment ! Perceive()
 			stay using updatedSettings
-			
-			
-			
-
 
 	}
 

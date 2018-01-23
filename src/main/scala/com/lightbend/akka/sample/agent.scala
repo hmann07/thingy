@@ -27,13 +27,13 @@ object Agent {
 
 
 
-class Agent(innovation: ActorRef, network: ()=> NetworkGenome.NetworkGenome) extends FSM[AgentState, Agent.AgentSettings] {
+class Agent(innovation: ActorRef, ng: ()=> NetworkGenome.NetworkGenome) extends FSM[AgentState, Agent.AgentSettings] {
 	import Agent._
 
 
 
 	val environment = context.actorOf(Environment.props(), "environment")
-	val networkGenome = network
+	val networkGenome = ng
 	val network = context.actorOf(Network.props("my network", networkGenome, innovation, environment), "mynetwork")
 
  	startWith(Active, AgentSettings())
@@ -51,7 +51,7 @@ class Agent(innovation: ActorRef, network: ()=> NetworkGenome.NetworkGenome) ext
 
  			stay
 
- 		case Event(ng: ()=>NetworkGenome.NetworkGenome , s: AgentSettings) =>
+ 		case Event(ng: Network.NetworkUpdate , s: AgentSettings) =>
 
  			log.debug("received network")
  			network ! ng

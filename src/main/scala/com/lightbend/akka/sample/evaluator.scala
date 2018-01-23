@@ -9,7 +9,7 @@ trait Evaluator {
 	val auxValue: Double
 	def evaluateIteration(networkInput: Representation, networkOutput: Map[Int, Double]): Evaluator
 	def evaluateEpoch() : Evaluator
-
+	def reset: Evaluator
 	
 }
 case class XOREvaluator(
@@ -32,6 +32,10 @@ case class XOREvaluator(
 		val evalfitness = 1 / aggregatedIterationValue
 		
 		this.copy(fitness = evalfitness, auxValue = aggregatedIterationValue)
+	}
+
+	override def reset = {
+		this.copy(aggregatedIterationValue = 0, fitness = 0, auxValue = 0)
 	}
 
 } 

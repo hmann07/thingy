@@ -142,7 +142,7 @@ object Innovation {
 		val networkNeuronTracker: NetworkNeuronTracker = NetworkNeuronTracker(),
 		val subnetNeuronTracker: SubNetNeuronTracker = SubNetNeuronTracker()
 		)
-	def props(networkGenome: NetworkGenomeBuilder): Props = {
+	def props(networkGenome: NetworkGenome.NetworkGenome): Props = {
 
 		Props(classOf[Innovation], networkGenome)
 	}
@@ -150,10 +150,10 @@ object Innovation {
 }
 
 
-class Innovation(networkGenome: NetworkGenomeBuilder) extends FSM[InnovationState, Innovation.InnovationSettings] {
+class Innovation(networkGenome: NetworkGenome.NetworkGenome) extends FSM[InnovationState, Innovation.InnovationSettings] {
 	import Innovation._
 
-	val genome = networkGenome.generateFromSeed
+	val genome = networkGenome
 	val networkConnectionTracker: NetworkConnectionTracker = genome.connections.foldLeft(NetworkConnectionTracker()) { (tracker, current) =>
 		val currentVal = current._2
 		val updatedLibrary = tracker.library + (currentVal.from + ":" + currentVal.to -> tracker.library.getOrElse(currentVal.from + ":" + currentVal.to, currentVal.id))
