@@ -50,6 +50,12 @@ case class SpeciesDirectory (
 
 		import SpeciesDirectory._
 		
+		def reset: SpeciesDirectory = {
+			///val updateMembers =  
+		
+			// GO through each species and clear it's members n rest its counts
+		}
+
 		def allocate(f: NetworkGenome, performanceValue: Double): SpeciesDirectory = {
 			if (currentSpeciesId == 0) {
 				this.copy(totalFitness = totalFitness + performanceValue, 
