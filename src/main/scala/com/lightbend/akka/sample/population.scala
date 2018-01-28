@@ -73,13 +73,14 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  		case Event(d: Network.Done, s: PopulationSettings) =>
  			
  			val completed = s.agentsCompleteCount + 1
-				
-			log.debug("population received Performance value of {} for genome: {}. received {} of {} ", d.performanceValue, d.genome.toJson, completed, p)
+			
+			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.toJson, completed, p)	
+			log.debug("generation {} population received Performance value of {} for genome: {}. received {} of {} ", logParams)
 
 			// decide species.
 
 			val newSpeciesDir = s.speciesDirectory.allocate(d.genome, d.performanceValue)
-			log.debug("speciesDirectory is {}", Json.toJson(newSpeciesDir))
+			log.debug("speciesDirectory id number is {}", s.speciesDirectory.currentSpeciesId)
  			
 
 
@@ -103,6 +104,8 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  				// Now we have a load of functions to run we need to send them to available agents. 
  				//creating new ones if required and shutting down old ones..
+
+ 				TODO: Handle populations that are diverging pop parameter
 
  				repurposeAgents(gestatable.flatten.toList)
 

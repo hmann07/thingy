@@ -15,6 +15,8 @@ case class SpeciesMember (
 object Species {
 	implicit val speciesWrites: Writes[Species] = new Writes[Species] {
     def writes(species: Species): JsValue = Json.obj(
+    	"speciesTotalFitness" -> species.speciesTotalFitness,
+    	"memberCount" -> species.memberCount,
     	"members" -> species.members.map(s=> Json.toJson(s.genome))
     	
         //bar.key -> Json.obj("value" -> bar.value)
@@ -60,8 +62,8 @@ object SpeciesDirectory {
 
 	implicit val speciesDirWrites: Writes[SpeciesDirectory] = new Writes[SpeciesDirectory] {
     def writes(speciesDir: SpeciesDirectory): JsValue = Json.obj(
-    	"species" -> speciesDir.species.map(s=> Json.toJson(s._2))
-    	
+    	"species" -> speciesDir.species.map(s=> Json.toJson(s._2)),
+    	"totalFitness" -> speciesDir.totalFitness
         //bar.key -> Json.obj("value" -> bar.value)
     )
 }
@@ -89,13 +91,26 @@ case class SpeciesDirectory (
 
 		def allocate(f: NetworkGenome, performanceValue: Double): SpeciesDirectory = {
 			if (currentSpeciesId == 0) {
+
+				// Then no species have been created yet. 
+				// Create one at location 1.
+				
 				this.copy(totalFitness = totalFitness + performanceValue, 
 						  currentSpeciesId = 1, 
-						  species = species + (1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = f, 
-						  								    members = List(SpeciesMember(f, performanceValue)))))
+						  species = species + (1 -> Species(
+						  								memberCount = 1, 
+						  								speciesTotalFitness = performanceValue, 
+						  								archetype = f, 
+						  								members = List(SpeciesMember(f, performanceValue)))))
 			} else {
+
 				// iterate through the dir listing and add if compatible
+				
+
 				val newSpeciesList = findSpecies(f, performanceValue, species, species)
+				
+				// Increase the species Id. and create new list.
+
 				this.copy(totalFitness = totalFitness + performanceValue,
 						  currentSpeciesId = if(newSpeciesList.size > currentSpeciesId){currentSpeciesId + 1} else {currentSpeciesId},
 						  species = newSpeciesList)
@@ -111,18 +126,27 @@ case class SpeciesDirectory (
 
 				if(current._2.memberCount  == 1 && d > speciesStartingThreshold) {
 					// this is a compatible species
+					//println("Species match rule 1")
 					staticList + (current._1 -> current._2.add(c, performanceValue))
 
 				} else {
 
-				if(d < (current._2.averageDistance * speciesExpansionFactor)) { 
+				if(d > (current._2.averageDistance * speciesExpansionFactor)) { 
 					// this is a compatible species
+
+					//println("Species match rule 2")
+
 					staticList + (current._1 -> current._2.add(c, performanceValue))
 				} else {
+
+					//println("check next species")
 					// this species is not compatible at all, so go to next
 					findSpecies(c, performanceValue, sList.tail, staticList)
 				}}
-			}).getOrElse(staticList + (currentSpeciesId -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, members = List(SpeciesMember(c, performanceValue)))))
+			}).getOrElse({
+					//println("No Matched Species Create new")
+					staticList + (currentSpeciesId + 1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, members = List(SpeciesMember(c, performanceValue)))
+				)})
 		}
 
 		def selectGenerationSurvivors = {
