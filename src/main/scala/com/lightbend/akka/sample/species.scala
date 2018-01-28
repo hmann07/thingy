@@ -5,10 +5,22 @@ import com.typesafe.config.ConfigFactory
 import com.thingy.genome.NetworkGenome.NetworkGenome
 import scala.util.Random
 import com.thingy.selection.TournamentSelection
+import play.api.libs.json._
+
 
 case class SpeciesMember (
 	genome: NetworkGenome,
 	performanceValue: Double)
+
+object Species {
+	implicit val speciesWrites: Writes[Species] = new Writes[Species] {
+    def writes(species: Species): JsValue = Json.obj(
+    	"members" -> species.members.map(s=> Json.toJson(s.genome))
+    	
+        //bar.key -> Json.obj("value" -> bar.value)
+    )
+}
+}
 
 case class Species(totalDistance: Double = 0.0,
 				   memberCount: Int = 0,
@@ -17,6 +29,10 @@ case class Species(totalDistance: Double = 0.0,
 				   archetype: NetworkGenome,
 				   members: List[SpeciesMember]) {
 	
+	def reset = {
+		this.copy(memberCount = 0, speciesTotalFitness = 0, averageDistance = 0, members = List.empty)
+	}
+
 	def add(g: NetworkGenome, performanceValue: Double) = {
 		
 		val newtotalDist = totalDistance + g.distance(archetype)
@@ -41,6 +57,15 @@ object SpeciesDirectory {
 	val speciesExpansionFactor = config.getConfig("thingy").getDouble("species-expansion-factor")
 	val speciesStartingThreshold = config.getConfig("thingy").getDouble("species-starting-threshold")
 	val populationSize =  config.getConfig("thingy").getDouble("population-size")
+
+	implicit val speciesDirWrites: Writes[SpeciesDirectory] = new Writes[SpeciesDirectory] {
+    def writes(speciesDir: SpeciesDirectory): JsValue = Json.obj(
+    	"species" -> speciesDir.species.map(s=> Json.toJson(s._2))
+    	
+        //bar.key -> Json.obj("value" -> bar.value)
+    )
+}
+
 }
 
 case class SpeciesDirectory (
@@ -51,9 +76,15 @@ case class SpeciesDirectory (
 		import SpeciesDirectory._
 		
 		def reset: SpeciesDirectory = {
-			///val updateMembers =  
-		
+
 			// GO through each species and clear it's members n rest its counts
+
+			val updateSpecies = species.foldLeft(Map[Int, Species]()) {(acc, current) =>
+				acc + (current._1 -> current._2.reset)
+			}
+
+			this.copy(species = updateSpecies, totalFitness = 0)
+			
 		}
 
 		def allocate(f: NetworkGenome, performanceValue: Double): SpeciesDirectory = {

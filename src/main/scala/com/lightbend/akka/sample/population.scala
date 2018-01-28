@@ -10,6 +10,7 @@ import com.thingy.innovation._
 import com.thingy.agent._
 import com.thingy.species.Species
 import com.thingy.species.SpeciesDirectory
+import play.api.libs.json._
 
 
 sealed trait PopulationState
@@ -78,7 +79,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 			// decide species.
 
 			val newSpeciesDir = s.speciesDirectory.allocate(d.genome, d.performanceValue)
-			log.debug("speciesDirectory is {}", newSpeciesDir)
+			log.debug("speciesDirectory is {}", Json.toJson(newSpeciesDir))
  			
 
 
@@ -89,7 +90,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  				//log.debug("population: All Agents Completed")
  				log.debug("generation {} completed", s.currentGeneration)
  				// time to select or allocate the best genomes for mating..
-
+ 				val resetSpeciesDir = s.speciesDirectory.reset
  				// check to see if we have done all generations
 
  				if (s.currentGeneration == generations) {
@@ -109,7 +110,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  								  currentGeneration = s.currentGeneration + 1,
  								  agentsCompleteCount = 0, 	
  								  agentSumTotalFitness = 0,
- 								  speciesDirectory = newSpeciesDir)
+ 								  speciesDirectory = resetSpeciesDir)
  				}
  			} else {	 
  			
