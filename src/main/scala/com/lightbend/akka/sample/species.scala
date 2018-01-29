@@ -131,7 +131,9 @@ case class SpeciesDirectory (
 
 				} else {
 
-				if(d > (current._2.averageDistance * speciesExpansionFactor)) { 
+				// if(d > (current._2.averageDistance * speciesExpansionFactor)) { 
+				if(d > speciesStartingThreshold) {
+
 					// this is a compatible species
 
 					//println("Species match rule 2")
@@ -168,6 +170,7 @@ case class SpeciesDirectory (
 		val genome1 = TournamentSelection.select(s.members).genome
 		val genome2 = TournamentSelection.select(s.members).genome
 
+		
 		val f = () => {
 			genome1.crossover(genome2)
 		}

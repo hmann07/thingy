@@ -21,9 +21,9 @@ class Mutator {
 
 
 		val mutationFunctions = List(
-				//addNetworkConnection(_), 
-				//addSubNetConnection(_),
-				//addNetworkNode(_),
+				addNetworkConnection(_), 
+				addSubNetConnection(_),
+				addNetworkNode(_),
 				addSubNetworkNode(_)
 			)
 		
@@ -42,8 +42,8 @@ class Mutator {
 	def addNetworkConnection(genome: NetworkGenome.NetworkGenome): Innovation.NetworkConnectionInnovation = {
 
 		val neuronCount = genome.neurons.size
-		val node1 = genome.neurons(Random.nextInt(neuronCount)).id
-		val node2 = genome.neurons(Random.nextInt(neuronCount)).id
+		val node1 = genome.neurons.values.toList(Random.nextInt(neuronCount)).id
+		val node2 = genome.neurons.values.toList(Random.nextInt(neuronCount)).id
 
 		if(genome.connections.exists(c => c._2.from == node1 && c._2.to == node2)) {
 			addNetworkConnection(genome) //try again

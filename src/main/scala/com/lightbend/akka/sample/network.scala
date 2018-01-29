@@ -11,6 +11,8 @@ import com.thingy.subnetwork.SubNetwork
 import com.thingy.mutator.Mutator
 import com.thingy.environment.Environment.Representation
 import com.thingy.evaluator._
+import scala.util.Random
+import com.typesafe.config.ConfigFactory
 
 sealed trait NetworkState
 case object Initialising extends NetworkState
@@ -32,6 +34,9 @@ final case class NetworkSettings(
 		 )
 
 object Network {
+
+	implicit val config = ConfigFactory.load()
+	
 
 	// Messages it can receive
 	final case class Signal(value: Double)
@@ -140,12 +145,29 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 			}
 
 		case Event(ng: NetworkUpdate, t: NetworkSettings) =>
-      val updatedGenome = ng.f()
-			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
-			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
-      		log.debug("new network received and actors updated")
-      		environment ! Perceive()
-			stay using updatedSettings
+      		val updatedGenome = ng.f()
+			
+      		// Here we should decide whether or not to mutate the new genome... 
+      		// if we mutate - > go to status mutating
+      		// if we don't mutate, go to ready and perceive
+
+      		val mr = config.getConfig("thingy").getDouble("mutation-rate")
+      		if(Random.nextDouble < mr) {
+      			log.debug("mutating genome")
+				innovation ! mutator.mutate(updatedGenome) 
+				goto(Mutating) using t
+      		
+      		} else {
+      			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
+				val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
+      			log.debug("new network received and actors updated")
+      			environment ! Perceive()
+				stay using updatedSettings	
+      		}
+			
+
+
+      		
 
 	}
 

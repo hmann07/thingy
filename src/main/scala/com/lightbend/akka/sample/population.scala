@@ -20,18 +20,19 @@ case object Active extends PopulationState
 
 object Population {
 
-	
-
+	implicit val config = ConfigFactory.load()
+	val p = config.getConfig("thingy").getInt("population-size")
 
 	case class PopulationSettings(
 			currentGeneration: Int = 1,
+			currentPopulation: Int = p,
 			agentsCompleteCount: Int = 0, 
 			agentsComplete: Map[ActorRef, NetworkGenome] = Map.empty,
 			agentSumTotalFitness: Double = 0.0,
 			currentSpecies: Int = 0,
 			speciesDirectory: SpeciesDirectory = SpeciesDirectory())
 
-	implicit val config = ConfigFactory.load()
+	
 }
 
 class Population() extends FSM[PopulationState, Population.PopulationSettings] {
@@ -39,8 +40,8 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
 	val gNet = () => {new NetworkGenomeBuilder()}.generateFromSeed
  	val innovation = context.actorOf(Innovation.props(gNet()), "innov8")
- 	val p = config.getConfig("thingy").getInt("population-size")
  	val generations = config.getConfig("thingy").getInt("generations")
+ 	
  	def repurposeAgents(gestatable: List[()=>NetworkGenome]) = {
  		rep(gestatable, context.children.toList)
  	}
@@ -74,7 +75,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  			
  			val completed = s.agentsCompleteCount + 1
 			
-			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.toJson, completed, p)	
+			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.toJson, completed, s.currentPopulation)	
 			log.debug("generation {} population received Performance value of {} for genome: {}. received {} of {} ", logParams)
 
 			// decide species.
@@ -84,7 +85,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  			
 
 
- 			if(completed == p) {
+ 			if(completed == s.currentPopulation) {
  				// so....  we have got n genomes, each with a Performance value of some sort....
  				// time to select the best in line with their performance and send the genome back to agent whi should forward on to the network
  					
@@ -105,12 +106,13 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  				// Now we have a load of functions to run we need to send them to available agents. 
  				//creating new ones if required and shutting down old ones..
 
- 				TODO: Handle populations that are diverging pop parameter
-
- 				repurposeAgents(gestatable.flatten.toList)
+ 				
+ 				val agentFns = gestatable.flatten.toList
+ 				repurposeAgents(agentFns)
 
  				stay using s.copy(
  								  currentGeneration = s.currentGeneration + 1,
+ 								  currentPopulation = agentFns.length,
  								  agentsCompleteCount = 0, 	
  								  agentSumTotalFitness = 0,
  								  speciesDirectory = resetSpeciesDir)
