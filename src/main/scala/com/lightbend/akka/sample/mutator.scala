@@ -21,9 +21,9 @@ class Mutator {
 
 
 		val mutationFunctions = List(
-				addNetworkConnection(_), 
-				addSubNetConnection(_),
-				addNetworkNode(_),
+				//addNetworkConnection(_), 
+				//addSubNetConnection(_),
+				//addNetworkNode(_),
 				addSubNetworkNode(_)
 			)
 		

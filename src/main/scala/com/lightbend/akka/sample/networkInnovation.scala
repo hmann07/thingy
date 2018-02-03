@@ -147,11 +147,19 @@ object Innovation {
 		Props(classOf[Innovation], networkGenome)
 	}
 
+
+
 }
 
 
 class Innovation(networkGenome: NetworkGenome.NetworkGenome) extends FSM[InnovationState, Innovation.InnovationSettings] {
 	import Innovation._
+
+	override def preRestart(reason: Throwable, message: Option[Any]) {
+        log.debug("ivvo8: preRestart. MESSAGE: {} REASON: {}", message.getOrElse(""), reason.getMessage)
+       super.preRestart(reason, message)
+    }
+	
 
 	val genome = networkGenome
 	val networkConnectionTracker: NetworkConnectionTracker = genome.connections.foldLeft(NetworkConnectionTracker()) { (tracker, current) =>
