@@ -44,7 +44,7 @@ case class NetworkNodeSchema(
 }
 
 case class NeuronGenome(id: Int, name: String, layer: Double, activationFunction: Option[String] = Some("SIGMOID"), subnetId: Option[Int])
-case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Option[Double], enabled: Boolean = true)
+case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Option[Double], enabled: Boolean = true, recurrent: Boolean = false)
 case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int]) {
 
 	 def innovationHash: Set[Int] = {
@@ -175,7 +175,8 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	  * and the relevant from and to nodes.
 	  */
 	 def updateNetworkGenome(s: Innovation.InnovationConfirmation): NetworkGenome  = {
-	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, None))
+	 	val recurrent = if(neurons(s.from).layer < neurons(s.to).layer) {false} else {true}
+	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, None, true, recurrent))
 	 	this.copy(connections =  connections + newConnection )
 	 }
 
@@ -188,8 +189,10 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 def updateNetworkGenome(s: Innovation.NetworkNeuronInnovationConfirmation): NetworkGenome = {
 	 	val neuronLayer = (neurons(s.connectionToBeSplit.from).layer + neurons(s.connectionToBeSplit.to).layer) / 2
 	 	val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
-	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
-	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
+	 	val recurrentPrior = if(neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
+	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None, true, recurrentPrior))
+	 	val recurrentPost = if(neuronLayer < neurons(s.connectionToBeSplit.to).layer) {false} else {true}
+	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None, true, recurrentPost))
 	 	val updatedConnectionList = connections + (s.connectionToBeSplit.id -> connections(s.connectionToBeSplit.id).copy(enabled = false))
 	 		 	
 	 	this.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
@@ -200,8 +203,9 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	val updatedSubnets = subnets.get.foldLeft(Map[Int, NetworkGenome]()) { (subnets, current) =>
 	 		val currentObj = current._2
 	 		val updatedNet = if(currentObj.id == s.originalRequest.existingNetId) {
-	 			val newConnection = (s.updatedConnectionTracker -> ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, None))
-	 			(currentObj.id ->  currentObj.copy(id = s.updatedNetTracker, connections = currentObj.connections + newConnection))
+	 			val recurrent = if(currentObj.neurons(s.originalRequest.from).layer < currentObj.neurons(s.originalRequest.to).layer) {false} else {true}
+	 			val newConnection = (s.updatedConnectionTracker -> ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, None, true, recurrent))
+	 			(s.updatedNetTracker ->  currentObj.copy(id = s.updatedNetTracker, connections = currentObj.connections + newConnection))
 	 		} else {
 	 			current
 	 		}
@@ -227,15 +231,17 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 			val subnet = subnetList(s.originalRequest.existingNetId)
 			val neuronLayer = (subnet.neurons(s.connectionToBeSplit.from).layer + subnet.neurons(s.connectionToBeSplit.to).layer) / 2
 	 		val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
-	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None))
-	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None))
+	 		val recurrentPrior = if(subnet.neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
+	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, None, true, recurrentPrior))
+	 		val recurrentPost = if(neuronLayer < subnet.neurons(s.connectionToBeSplit.to).layer) {false} else {true}
+	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, None, true, recurrentPost))
 	 		val updatedConnectionList = subnet.connections + (s.connectionToBeSplit.id -> subnet.connections(s.connectionToBeSplit.id).copy(enabled = false)) 
 	 		val updatedSubnet = subnet.copy(id = s.subnetId, connections = updatedConnectionList + newPrior + newPost, neurons =  subnet.neurons + newNeuron  )
 	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet) - {if(s.originalRequest.existingNetId != updatedSubnet.id) {s.originalRequest.existingNetId} else{ -1}}
 	 		val updatedNeurons = neurons + (s.originalRequest.neuronId -> neurons(s.originalRequest.neuronId).copy(subnetId = Some(s.subnetId)))
 	 		this.copy(neurons = updatedNeurons, subnets = Some(updatedSubnetList))
 
-		}).get
+		}).getOrElse(this)
 		
 	}
 
@@ -286,8 +292,8 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 		val currentObj = current._2
   	 		if (currentObj.enabled) {
 	 			// If the connection is enabled update the config obj. 
-		 		val pre = Predecessor(neuronActors.allNodes(currentObj.from))
-		 		val suc = Successor(neuronActors.allNodes(currentObj.to), Weight())
+		 		val pre = Predecessor(neuronActors.allNodes(currentObj.from), currentObj.recurrent)
+		 		val suc = Successor(neuronActors.allNodes(currentObj.to), Weight(), currentObj.recurrent)
 
 		 		// Create configs for all inputs
 		 		val updateIncoming: Map[ActorRef, Neuron.ConnectionConfig] = acc get neuronActors.allNodes(currentObj.to).actor match {
@@ -346,7 +352,8 @@ implicit val connectionReads: Reads[ConnectionGenome] = (
  (JsPath  \ "from").read[Int] and
  (JsPath  \ "to").read[Int] and
  (JsPath  \ "weight").readNullable[Double] and
- (JsPath  \ "enabled").read[Boolean]
+ (JsPath  \ "enabled").read[Boolean] and 
+ (JsPath  \ "recurrent").read[Boolean].orElse(Reads.pure(false))
 ) (ConnectionGenome.apply _)
 
 
@@ -355,7 +362,8 @@ implicit val connectionWrites: Writes[ConnectionGenome] = (
  (JsPath  \ "from").write[Int] and
  (JsPath  \ "to").write[Int] and
  (JsPath  \ "weight").writeNullable[Double] and
- (JsPath  \ "enabled").write[Boolean]
+ (JsPath  \ "enabled").write[Boolean] and 
+ (JsPath  \ "recurrent").write[Boolean]
 ) (unlift(ConnectionGenome.unapply))
 
 

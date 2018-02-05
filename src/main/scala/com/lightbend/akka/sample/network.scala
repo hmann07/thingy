@@ -95,7 +95,7 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 
 		case Event(r: Representation, t: NetworkSettings) =>
 
-			log.debug("received representation of {}", r.input)
+			log.debug("received representation of {} will generate batch {}", r.input, t.rCount)
 			
 			// Send the signals off into the network, send signal with a batch id (rCount)
 			r.input.foreach(i => {
@@ -108,12 +108,14 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 
 		case Event(s: Neuron.Output, t: NetworkSettings) =>
 
-			log.debug("network received Output signal of {}", s)
+			log.debug("network received Output signal of {} from {}, reps processed: {}", s, sender(), t.expectedOutputs)
 
 			// add signal to actual outputsReceived
 			val existing = t.actualOutputs.getOrElse(s.batchId, Map.empty)
 			val updateExisting = existing + (s.nodeId -> s.value)
 			val updateOutputs = t.actualOutputs + (s.batchId -> updateExisting) 
+			
+			
 			
 			// check have we processed a representation complete?
 			if(updateOutputs(s.batchId).size == t.expectedOutputs(s.batchId).expectedOutput.size) {
@@ -153,9 +155,22 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 
       		val mr = config.getConfig("thingy").getDouble("mutation-rate")
       		if(Random.nextDouble < mr) {
-      			log.debug("mutating genome")
-				innovation ! mutator.mutate(updatedGenome) 
-				goto(Mutating) using t
+      			
+      			val mutationAction = mutator.mutate(updatedGenome) 
+      			mutationAction match {
+      				case m: Innovation.WeightChangeInnovation => {
+      					log.debug("mutating genome weights, currently has no effect")
+      					environment ! Perceive()
+						stay
+      				}
+
+      				case _ => {
+      					log.debug("mutating genome, request will be {}", mutationAction)
+						innovation ! mutationAction
+						goto(Mutating) using t
+      				}
+      			}
+      			
       		
       		} else {
       			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
@@ -173,13 +188,14 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 
 	onTransition {
 		case Mutating -> Ready =>
-			context.parent ! Mutated()
+			
+			environment ! Perceive()
 	}
 
 	when(Mutating) {
 
 		case Event(s: Innovation.InnovationConfirmation, t: NetworkSettings) =>
-			log.debug("received innovation confirmation, will update genome. innovation id: {}, from {}, to {}", s.id, s.from, s.to)
+			log.debug("received connection innovation confirmation, will update genome. innovation id: {}, from {}, to {}", s.id, s.from, s.to)
 
 			val updatedGenome = t.genome.updateNetworkGenome(s)
 			val updatedSettings = t.copy(genome = updatedGenome)
@@ -188,17 +204,21 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 			
 			// tell to neuron it has a new Predecessor, tell from neuron it has a new Successor
 
-			val fromActor = generatedActors.allNodes(s.from)
-			val toActor = generatedActors.allNodes(s.to)
+			val fromActor = t.networkSchema.allNodes(s.from)
+			val toActor = t.networkSchema.allNodes(s.to)
 
-			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor)))
-			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(toActor)))
+			val trecurrent = {updatedGenome.neurons(s.to).layer <= updatedGenome.neurons(s.from).layer}
+
+			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor, recurrent = trecurrent)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, recurrent = trecurrent)))
 
 			goto(Ready) using updatedSettings
 
 		case Event(s: Innovation.SubnetConnectionInnovationConfirmation, t: NetworkSettings) =>
 
-			log.debug("received innovation confirmation for subnet {}. innovation id: {}, from {}, to {}", s.originalRequest.existingNetId, s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to)
+
+			val logparams =Array( s.originalRequest.existingNetId, s.updatedNetTracker, s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to)
+			log.debug("received innovation confirmation for subnet {} new id {}. conn innovation id: {}, from {}, to {}",logparams)
 			// first we need to re-get the subnet part that we are supposed to be mutating. 
 			// then, add the connection to the genome,
 			// then create the connections and send to neuron actors. or rather to the subnetwork actor.
@@ -210,7 +230,7 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 			val newlyupdatedconnectionGenome = newlyupdatedsubnetGenome.connections(s.updatedConnectionTracker)
 			log.debug("updated the subnet and network genome now: {}, going to send to node {} which is {}", updatedGenome, s.originalRequest.neuronId, generatedActors.allNodes(s.originalRequest.neuronId).actor)
 
-			generatedActors.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)
+			t.networkSchema.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)
 
 			goto(Ready) using updatedSettings
 

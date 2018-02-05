@@ -73,30 +73,39 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
 
     	case Event(s: Signal, t: NeuronSettings) =>
 
-			val newT = t.copy(signalsReceived = t.signalsReceived + 1, activationLevel = t.activationLevel + s.value )
+    		
 
-			val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
-			log.debug("{} neuron got signal {},  now {}, received {} out of {} ", o)
+    		if(s.recurrent) {
 
-			if (newT.signalsReceived == newT.connections.inputs.length || newT.connections.inputs.length == 0) {
+    			stay
+
+    		} else {
+        		
+        		val newT = t.copy(signalsReceived = t.signalsReceived + 1, activationLevel = t.activationLevel + s.value )
+
+    			val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
+				log.debug("{} neuron got signal {},  now {}, received {} out of {} ", o)
+
+				if (newT.signalsReceived == newT.connections.inputs.filter(!_.recurrent).length || newT.connections.inputs.length == 0) {
 				
-				val resetT = t.copy(signalsReceived = 0, activationLevel = 0)
+					val resetT = t.copy(signalsReceived = 0, activationLevel = 0)
 
-				t.genome.layer match {
-					case 0 => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = s.value * output.weight.value))
-					case 1 => context.parent ! Output(t.genome.id, t.activationFunction.function(s.value), s.batchId, s.flags)
-					case _ => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight.value))
+					t.genome.layer match {
+						case 0 => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = s.value * output.weight.value))
+						case 1 => {
+							context.parent ! Output(t.genome.id, t.activationFunction.function(s.value), s.batchId, s.flags)
+							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight.value, recurrent = output.recurrent))
+						}
+						case _ => {
+							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight.value, recurrent = output.recurrent))
+						}
+					}
+					stay using resetT
 				}
-		
-				stay using resetT
-
-			}
 			
-			else {
-
-				stay using newT
-
-			}
+				else {stay using newT}
+    		}
+			
   	}
 
 	initialize()

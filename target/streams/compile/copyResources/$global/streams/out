@@ -1,5 +1,5 @@
 [0m[[0mdebug[0m] [0mCopy resource mappings: [0m
-[0m[[0mdebug[0m] [0m	(C:\Users\user\Documents\thingy\thingy\src\main\resources\application.conf,C:\Users\user\Documents\thingy\thingy\target\scala-2.11\classes\application.conf)[0m
-[0m[[0mdebug[0m] [0m	(C:\Users\user\Documents\thingy\thingy\src\main\resources\logback.xml,C:\Users\user\Documents\thingy\thingy\target\scala-2.11\classes\logback.xml)[0m
-[0m[[0mdebug[0m] [0m	(C:\Users\user\Documents\thingy\thingy\src\main\resources\seed.json,C:\Users\user\Documents\thingy\thingy\target\scala-2.11\classes\seed.json)[0m
-[0m[[0mdebug[0m] [0m	(C:\Users\user\Documents\thingy\thingy\src\main\resources\Xor.json,C:\Users\user\Documents\thingy\thingy\target\scala-2.11\classes\Xor.json)[0m
+[0m[[0mdebug[0m] [0m	(C:\Users\Henry\Documents\thingy\akka-quickstart-scala\src\main\resources\application.conf,C:\Users\Henry\Documents\thingy\akka-quickstart-scala\target\scala-2.11\classes\application.conf)[0m
+[0m[[0mdebug[0m] [0m	(C:\Users\Henry\Documents\thingy\akka-quickstart-scala\src\main\resources\logback.xml,C:\Users\Henry\Documents\thingy\akka-quickstart-scala\target\scala-2.11\classes\logback.xml)[0m
+[0m[[0mdebug[0m] [0m	(C:\Users\Henry\Documents\thingy\akka-quickstart-scala\src\main\resources\seed.json,C:\Users\Henry\Documents\thingy\akka-quickstart-scala\target\scala-2.11\classes\seed.json)[0m
+[0m[[0mdebug[0m] [0m	(C:\Users\Henry\Documents\thingy\akka-quickstart-scala\src\main\resources\Xor.json,C:\Users\Henry\Documents\thingy\akka-quickstart-scala\target\scala-2.11\classes\Xor.json)[0m

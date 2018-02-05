@@ -18,8 +18,10 @@ import com.thingy.node.Node
 trait AdjacentNeuron
 
 case class Predecessor(
-	node: Node) extends AdjacentNeuron
+	node: Node,
+  recurrent: Boolean = false) extends AdjacentNeuron
 
 case class Successor(
 	node: Node,
-	weight: Weight = Weight()) extends AdjacentNeuron
+	weight: Weight = Weight(),
+  recurrent: Boolean) extends AdjacentNeuron

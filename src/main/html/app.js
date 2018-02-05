@@ -32,7 +32,7 @@ function drawSim(genome) {
 svg.append('svg:defs').append('svg:marker')
     .attr('id', 'end-arrow')
     .attr('viewBox', '0 -5 10 10')
-    .attr('refX', 16)
+    .attr('refX', 4)
     .attr('markerWidth', 13)
     .attr('markerHeight', 12)
     .attr('orient', 'auto')
@@ -113,7 +113,7 @@ svg.append('svg:defs').append('svg:marker')
   function ticked() {
     link.attr("d",  function(d) {
     if(d.target.id == d.source.id){
-      return 'M' + (xPosScale(d.target.layer)) + ',' + (d.target.y) +  'A30, 30 -160, 1, 1,' + (xPosScale(d.target.layer)  ) +  ',' + (d.target.y )
+      return 'M' + (xPosScale(d.target.layer)) + ',' + (d.target.y) +  'A30, 30 -160, 1, 1,' + (xPosScale(d.target.layer)-1  ) +  ',' + (d.target.y )
     }else {
       var deltaX = xPosScale(d.target.layer) - xPosScale(d.source.layer),
           deltaY = d.target.y - d.source.y,

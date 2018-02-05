@@ -25,7 +25,8 @@ object Population {
 
 	case class PopulationSettings(
 			currentGeneration: Int = 1,
-			currentPopulation: Int = p,
+			currentPopulation: List[ActorRef],
+			currentPopulationSize: Int = p,
 			agentsCompleteCount: Int = 0, 
 			agentsComplete: Map[ActorRef, NetworkGenome] = Map.empty,
 			agentSumTotalFitness: Double = 0.0,
@@ -42,23 +43,24 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  	val innovation = context.actorOf(Innovation.props(gNet()), "innov8")
  	val generations = config.getConfig("thingy").getInt("generations")
  	
- 	def repurposeAgents(gestatable: List[()=>NetworkGenome]) = {
- 		rep(gestatable, context.children.toList)
+ 	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef]) = {
+ 		rep(gestatable, population, List.empty)
  	}
 
- 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef]):Unit ={
+ 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef]):List[ActorRef] ={
 		g.headOption.map(gnew=>{
 			val evalG = gnew
 			c.headOption.map(cnew=> {
 				cnew ! Network.NetworkUpdate(evalG)
-				rep(g.tail, c.tail)
-			}).getOrElse(context.actorOf(Agent.props(innovation, evalG), "agent" + "weneedtospecanid"))
+				rep(g.tail, c.tail, cnew :: cummulate)
+			}).getOrElse(context.actorOf(Agent.props(innovation, evalG), "agent" + "weneedtospecanid") :: cummulate)
 		}).getOrElse({
-			c.foreach(newc => context.stop(newc))
+			//c.foreach(newc => context.stop(newc))
+			c ++ cummulate
 		})	
 	}
 
- 	for {
+ 	val popList = for {
  		i <- 1 to p
  	}
  	yield {
@@ -68,15 +70,15 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 	log.info("population created with {} children", context.children.size) 
 
 
-	startWith(Active, PopulationSettings())
+	startWith(Active, PopulationSettings(currentPopulation = popList.toList))
 
 	when(Active) {
  		case Event(d: Network.Done, s: PopulationSettings) =>
  			
  			val completed = s.agentsCompleteCount + 1
 			
-			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.toJson, completed, s.currentPopulation)	
-			log.debug("generation {} population received Performance value of {} for genome: {}. received {} of {} ", logParams)
+			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.toJson, sender(), completed, s.currentPopulationSize)	
+			log.debug("generation {} population received Performance value of {} for genome: {} from {}. received {} of {} ", logParams)
 
 			// decide species.
 
@@ -85,7 +87,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  			
 
 
- 			if(completed == s.currentPopulation) {
+ 			if(completed == s.currentPopulationSize) {
  				// so....  we have got n genomes, each with a Performance value of some sort....
  				// time to select the best in line with their performance and send the genome back to agent whi should forward on to the network
  					
@@ -108,11 +110,12 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  				
  				val agentFns = gestatable.flatten.toList
- 				repurposeAgents(agentFns)
+ 				val pop = repurposeAgents(agentFns, s.currentPopulation)
 
  				stay using s.copy(
  								  currentGeneration = s.currentGeneration + 1,
- 								  currentPopulation = agentFns.length,
+ 								  currentPopulation = pop,
+ 								  currentPopulationSize = agentFns.length,
  								  agentsCompleteCount = 0, 	
  								  agentSumTotalFitness = 0,
  								  speciesDirectory = resetSpeciesDir)

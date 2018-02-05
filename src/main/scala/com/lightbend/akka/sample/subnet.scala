@@ -63,8 +63,11 @@ class SubNetwork(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGen
 			// first create new Connection config and send to 
 			val fromActor = generatedActors.allNodes(cu.newConnection.from)
 			val toActor = generatedActors.allNodes(cu.newConnection.to)
-			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor)))
-			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(toActor)))
+
+			//val recurrent = {updatedGenome.neurons(s.from).layer < updatedGenome.neurons(s.to).layer}
+
+			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(node = fromActor, recurrent = cu.newConnection.recurrent)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, recurrent = cu.newConnection.recurrent)))
 
 			stay using t.copy(genome = cu.newGenome)
 
@@ -97,20 +100,27 @@ class SubNetwork(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGen
 
     	case Event(s: Neuron.Signal, t: SubNetworkSettings) =>
 
-			val newT = t.copy(signalsReceived = t.signalsReceived + 1, activationLevel = t.activationLevel + s.value )
 
-			val o = Array(s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
-			log.debug("Subnet got signal {},  now {}, received {} out of {} ", o)
+    		if(s.recurrent) {
+
+    			stay
+
+    		} else {
+				val newT = t.copy(signalsReceived = t.signalsReceived + 1, activationLevel = t.activationLevel + s.value )
+
+				val o = Array(s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
+				log.debug("Subnet got signal {},  now {}, received {} out of {} ", o)
 
 
-			if (newT.signalsReceived == newT.connections.inputs.length) {
-				val resetT = t.copy(signalsReceived = 0, activationLevel = 0)
+				if (newT.signalsReceived == newT.connections.inputs.filter(!_.recurrent).length) {
+					val resetT = t.copy(signalsReceived = 0, activationLevel = 0)
 
-				generatedActors.in.nodes.foreach {i => i.actor ! s.copy(value = newT.activationLevel)}
-				stay using resetT
-			}
-			else {
-				stay using newT
+					generatedActors.in.nodes.foreach {i => i.actor ! s.copy(value = newT.activationLevel)}
+					stay using resetT
+				}
+				else {
+					stay using newT
+				}
 			}
 
 
@@ -119,14 +129,17 @@ class SubNetwork(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGen
 			log.debug("subnet received Output signal of {}", s)
 
 			if(t.nodeGenome.layer < 1) {
-					t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = s.value * output.weight.value))
+					t.connections.outputs.foreach(output => output.node.actor ! Neuron.Signal(value = s.value * output.weight.value, recurrent = output.recurrent))
 				} else {
 					// layer = 1, Assume layer > 1 is impossible. send to parent. 
 					log.debug("output neuron sending output")
 					context.parent ! s.copy(nodeId = t.nodeGenome.id)
+					// and any recurrent
+					t.connections.outputs.foreach(output => output.node.actor ! Neuron.Signal(value = s.value * output.weight.value, recurrent = output.recurrent))
 				}
-				
-			stay using t
+			
+			val resetT = t.copy(signalsReceived = 0, activationLevel = 0)	
+			stay using resetT
 
   	}
 

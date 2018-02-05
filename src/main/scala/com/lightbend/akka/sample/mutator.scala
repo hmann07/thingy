@@ -21,9 +21,9 @@ class Mutator {
 
 
 		val mutationFunctions = List(
-				//addNetworkConnection(_), 
-				//addSubNetConnection(_),
-				//addNetworkNode(_),
+				addNetworkConnection(_), 
+				addSubNetConnection(_),
+				addNetworkNode(_),
 				addSubNetworkNode(_)
 			)
 		
@@ -39,18 +39,29 @@ class Mutator {
 	 * make sure they are not connected
 	 */
 
-	def addNetworkConnection(genome: NetworkGenome.NetworkGenome): Innovation.NetworkConnectionInnovation = {
+	def addNetworkConnection(genome: NetworkGenome.NetworkGenome): Innovation.InnovationType = {
 
-		val neuronCount = genome.neurons.size
-		val node1 = genome.neurons.values.toList(Random.nextInt(neuronCount)).id
-		val node2 = genome.neurons.values.toList(Random.nextInt(neuronCount)).id
+		
 
-		if(genome.connections.exists(c => c._2.from == node1 && c._2.to == node2)) {
-			addNetworkConnection(genome) //try again
-		} else {
-			Innovation.NetworkConnectionInnovation(node1,node2)
+		def addNetworkConnectionInt(genome: NetworkGenome.NetworkGenome , tries: Int): Innovation.InnovationType = {
+
+			if(tries == 0) {
+				Innovation.WeightChangeInnovation()
+			} else {
+				
+				val neuronCount = genome.neurons.size
+				val node1 = genome.neurons.values.toList(Random.nextInt(neuronCount))
+				val node2 = genome.neurons.values.toList(Random.nextInt(neuronCount))
+
+				if(genome.connections.exists(c => c._2.from == node1.id && c._2.to == node2.id) || node2.layer == 0) {
+					addNetworkConnectionInt(genome, tries -1) //try again
+				} else {
+					Innovation.NetworkConnectionInnovation(node1.id,node2.id)
+				}
+			}
 		}
 
+		addNetworkConnectionInt(genome, 10)
 	}
 
 
@@ -62,19 +73,31 @@ class Mutator {
 	 * make sure they are not inputs
 	 * make sure they are not connected
 	 */
-	def addSubNetConnection(genome: NetworkGenome.NetworkGenome): Innovation.SubNetConnectionInnovation = {
+	def addSubNetConnection(genome: NetworkGenome.NetworkGenome): Innovation.InnovationType = {
 
-		val subnetCount = genome.subnets.get.size 
-		val subnet = genome.subnets.get.values.toList(Random.nextInt(subnetCount))
-		val neuronCount = subnet.neurons.size
-		val node1 = subnet.neurons.values.toList(Random.nextInt(neuronCount)).id
-		val node2 = subnet.neurons.values.toList(Random.nextInt(neuronCount)).id
+		
 
-		if(subnet.connections.exists(c => c._2.from == node1 && c._2.to == node2)) {
-			addSubNetConnection(genome) //try again
-		} else {
-			Innovation.SubNetConnectionInnovation(node1, node2, subnet.innovationHash, subnet.id, subnet.parentId.get)
+		def addSubNetConnectionInt(genome: NetworkGenome.NetworkGenome , tries: Int): Innovation.InnovationType = {
+
+			if(tries == 0) {
+				Innovation.WeightChangeInnovation()
+			} else {
+
+				val subnetCount = genome.subnets.get.size 
+				val subnet = genome.subnets.get.values.toList(Random.nextInt(subnetCount))
+				val neuronCount = subnet.neurons.size
+				val node1 = subnet.neurons.values.toList(Random.nextInt(neuronCount))
+				val node2 = subnet.neurons.values.toList(Random.nextInt(neuronCount))
+
+				if(subnet.connections.exists(c => c._2.from == node1.id && c._2.to == node2.id) || node2.layer == 0) {
+					addSubNetConnectionInt(genome, tries -1) //try again
+				} else {
+					Innovation.SubNetConnectionInnovation(node1.id, node2.id, subnet.innovationHash, subnet.id, subnet.parentId.get)
+				}
+			}
 		}
+
+		addSubNetConnectionInt(genome, 10)
 	}
 
 	/*
@@ -123,6 +146,7 @@ class Mutator {
 	 	if(connectionToSplit.enabled) {
 	 		Innovation.SubNetNeuronInnovation(connectionToSplit, subnet.innovationHash, subnet.id, subnet.parentId.get )
 	 	} else {
+	 		// yeh this is dogy and may cause overflows....
 			addSubNetworkNode(genome)	 		
 	 	}
 

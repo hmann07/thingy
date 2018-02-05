@@ -32,12 +32,15 @@ object Innovation {
 	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
 	case class NetworkNeuronInnovation(connection: NetworkGenome.ConnectionGenome) extends InnovationType
 	case class SubNetNeuronInnovation(connection: NetworkGenome.ConnectionGenome, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
-	
+	case class WeightChangeInnovation() extends InnovationType
+
+
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
 	case class SubnetConnectionInnovationConfirmation(updatedNetTracker: Int, updatedConnectionTracker: Int, originalRequest: SubNetConnectionInnovation)
 	case class NetworkNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int)
 	case class SubNetNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, subnetId: Int, priorconnectionId: Int, postconnectionId: Int, originalRequest: SubNetNeuronInnovation)
-	
+	case class WeightChangeInnovationConfirmation()
+
 	case class SubnetLookupResult(id: Int, tracker: SubnetConnectionTracker)
 	case class NetworkLookupResult(id: Int, tracker: NetworkConnectionTracker)
 	case class NetworkNeuronLookupResult(id: Int, tracker: NetworkNeuronTracker)
@@ -155,11 +158,22 @@ object Innovation {
 class Innovation(networkGenome: NetworkGenome.NetworkGenome) extends FSM[InnovationState, Innovation.InnovationSettings] {
 	import Innovation._
 
-	override def preRestart(reason: Throwable, message: Option[Any]) {
+	override def preRestart(reason: Throwable, message: Option[Any]) = {
         log.debug("ivvo8: preRestart. MESSAGE: {} REASON: {}", message.getOrElse(""), reason.getMessage)
        super.preRestart(reason, message)
     }
 	
+	override def postRestart(reason: Throwable) = {
+		log.debug("restarted")
+		super.postRestart(reason)
+	}
+
+	override def postStop() ={
+		log.debug("innovation inexplicably stopped, state is {}, data is {}", stateName, stateData)
+		super.postStop
+	}
+
+	override def preStart  = {log.debug("innovation about to start")}
 
 	val genome = networkGenome
 	val networkConnectionTracker: NetworkConnectionTracker = genome.connections.foldLeft(NetworkConnectionTracker()) { (tracker, current) =>
@@ -258,5 +272,21 @@ class Innovation(networkGenome: NetworkGenome.NetworkGenome) extends FSM[Innovat
 			sender() ! SubNetNeuronInnovationConfirmation(s.connection, updatedTracker.id, updatedNetTracker.id, lookup1.id, lookup2.id, s)
 			stay using t.copy(subnetNeuronTracker = updatedTracker.tracker, subnetConnectionTracker = lookup2.tracker, subnetTracker = updatedNetTracker.tracker)
 	}
+
+	whenUnhandled {
+
+    case Event(e, s) ⇒
+      log.warning("received unhandled request {} in state {}/{}", e, stateName, s)
+      stay
+  	}
+
+
+    onTermination {
+        case StopEvent(FSM.Normal, state, data)     =>  log.debug("normal stop event")
+        case StopEvent(FSM.Shutdown, state, data)     =>  log.debug("shutdwn event")
+        case StopEvent(FSM.Failure(cause), state, data) =>  log.debug("fsm failure")
+      }
+
+  	initialize()
 }
 	

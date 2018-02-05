@@ -46,7 +46,6 @@ class Agent(innovation: ActorRef, ng: ()=> NetworkGenome.NetworkGenome) extends 
 
  		case Event(g: Network.Done, t: AgentSettings) =>
  			
- 			//network ! Network.Mutate()
  			context.parent ! g
 
  			stay
