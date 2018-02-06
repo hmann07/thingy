@@ -36,8 +36,7 @@ object Weight {
 		nextValue
 	}
 
-	def apply(): Weight = Weight(setDefault())
-
+	def apply(): Weight = Weight(setDefault)
 
 }
 
@@ -48,10 +47,8 @@ object Weight {
 	  * companion object
 	  */
 
-	case class Weight (
-			value: Double
-		) {
-
+	case class Weight (value: Double) {
+		import Weight._
 		/** @group mutation */
 
 		/**

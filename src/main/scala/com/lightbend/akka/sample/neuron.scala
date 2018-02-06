@@ -86,7 +86,7 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
     			val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
 				log.debug("{} neuron got signal {},  now {}, received {} out of {} ", o)
 
-				if (newT.signalsReceived == newT.connections.inputs.filter(!_.recurrent).length || newT.connections.inputs.length == 0) {
+				if (newT.signalsReceived == newT.connections.inputs.filter(i=> !i.recurrent).length || newT.connections.inputs.length == 0) {
 				
 					val resetT = t.copy(signalsReceived = 0, activationLevel = 0)
 
