@@ -3,6 +3,7 @@ package com.thingy.subnetwork
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.neuron.{Successor, Predecessor, Neuron}
 import com.thingy.genome.NetworkGenome
+import com.thingy.weight.Weight
 
 
 sealed trait SubNetworkState
@@ -67,7 +68,7 @@ class SubNetwork(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGen
 			//val recurrent = {updatedGenome.neurons(s.from).layer < updatedGenome.neurons(s.to).layer}
 
 			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(node = fromActor, recurrent = cu.newConnection.recurrent)))
-			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, recurrent = cu.newConnection.recurrent)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = cu.newConnection.weight.value(), recurrent = cu.newConnection.recurrent)))
 
 			stay using t.copy(genome = cu.newGenome)
 
@@ -129,13 +130,13 @@ class SubNetwork(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGen
 			log.debug("subnet received Output signal of {}", s)
 
 			if(t.nodeGenome.layer < 1) {
-					t.connections.outputs.foreach(output => output.node.actor ! Neuron.Signal(value = s.value * output.weight.value, recurrent = output.recurrent))
+					t.connections.outputs.foreach(output => output.node.actor ! Neuron.Signal(value = s.value * output.weight, recurrent = output.recurrent))
 				} else {
 					// layer = 1, Assume layer > 1 is impossible. send to parent. 
 					log.debug("output neuron sending output")
 					context.parent ! s.copy(nodeId = t.nodeGenome.id)
 					// and any recurrent
-					t.connections.outputs.foreach(output => output.node.actor ! Neuron.Signal(value = s.value * output.weight.value, recurrent = output.recurrent))
+					t.connections.outputs.foreach(output => output.node.actor ! Neuron.Signal(value = s.value * output.weight, recurrent = output.recurrent))
 				}
 			
 			val resetT = t.copy(signalsReceived = 0, activationLevel = 0)	

@@ -4,7 +4,7 @@
 		module="thingy-build"
 		revision="0.1-SNAPSHOT"
 		status="integration"
-		publication="20180128175938"
+		publication="20180207224421"
 		e:sbtVersion="0.13" e:scalaVersion="2.10"
 	>
 		<description>

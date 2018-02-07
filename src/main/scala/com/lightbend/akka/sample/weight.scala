@@ -36,7 +36,7 @@ object Weight {
 		nextValue
 	}
 
-	def apply(): Weight = Weight(setDefault)
+	def apply(): Weight = Weight(() => setDefault)
 
 }
 
@@ -47,7 +47,7 @@ object Weight {
 	  * companion object
 	  */
 
-	case class Weight (value: Double) {
+	case class Weight (value: () => Double) {
 		import Weight._
 		/** @group mutation */
 
@@ -57,7 +57,7 @@ object Weight {
 		  * @todo make it jiggle by some amount in a positive or negative direction. (rather than fixed to 0.1)
 		  */
 
-		 def jiggle = Weight(value = value + 0.1)
+		 def jiggle = Weight(value = () => value() + 0.1)
 
 		 /** @group mutation */
 

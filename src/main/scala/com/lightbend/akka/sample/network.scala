@@ -199,7 +199,7 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 
 			val updatedGenome = t.genome.updateNetworkGenome(s)
 			val updatedSettings = t.copy(genome = updatedGenome)
-
+			val newlyupdatedconnectionGenome = updatedGenome.connections(s.id)
 			log.debug("new genome is {}", updatedGenome)
 			
 			// tell to neuron it has a new Predecessor, tell from neuron it has a new Successor
@@ -210,7 +210,7 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 			val trecurrent = {updatedGenome.neurons(s.to).layer <= updatedGenome.neurons(s.from).layer}
 
 			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor, recurrent = trecurrent)))
-			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, recurrent = trecurrent)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = newlyupdatedconnectionGenome.weight.value(), recurrent = trecurrent)))
 
 			goto(Ready) using updatedSettings
 

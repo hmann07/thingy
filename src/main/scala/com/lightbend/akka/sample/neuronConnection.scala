@@ -23,5 +23,5 @@ case class Predecessor(
 
 case class Successor(
 	node: Node,
-	weight: Weight = Weight(),
+	weight: Double,
   recurrent: Boolean) extends AdjacentNeuron

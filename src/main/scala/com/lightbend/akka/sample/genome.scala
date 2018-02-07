@@ -293,7 +293,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
   	 		if (currentObj.enabled) {
 	 			// If the connection is enabled update the config obj. 
 		 		val pre = Predecessor(neuronActors.allNodes(currentObj.from), currentObj.recurrent)
-		 		val suc = Successor(neuronActors.allNodes(currentObj.to), Weight(), currentObj.recurrent)
+		 		val suc = Successor(neuronActors.allNodes(currentObj.to), currentObj.weight.value(), currentObj.recurrent)
 
 		 		// Create configs for all inputs
 		 		val updateIncoming: Map[ActorRef, Neuron.ConnectionConfig] = acc get neuronActors.allNodes(currentObj.to).actor match {
@@ -331,7 +331,7 @@ implicit val weightReads: Reads[Weight] = (
 */
 
 implicit val weightWrites: Writes[Weight] = new Writes[Weight] {
-    def writes(w: Weight): JsValue = JsNumber(w.value)
+    def writes(w: Weight): JsValue = JsNumber(w.value())
 }
 /*
 
@@ -365,7 +365,7 @@ implicit val connectionReads: Reads[ConnectionGenome] = (
  (JsPath \ "id").read[Int] and
  (JsPath  \ "from").read[Int] and
  (JsPath  \ "to").read[Int] and
- (JsPath  \ "weight").read[Double].map(w=> Weight(w)).orElse(Reads.pure(Weight())) and
+ (JsPath  \ "weight").read[Double].map(w=> Weight(()=>w)).orElse(Reads.pure(Weight())) and
  (JsPath  \ "enabled").read[Boolean] and 
  (JsPath  \ "recurrent").read[Boolean].orElse(Reads.pure(false))
 ) (ConnectionGenome.apply _)
