@@ -145,7 +145,7 @@ object Innovation {
 		val networkNeuronTracker: NetworkNeuronTracker = NetworkNeuronTracker(),
 		val subnetNeuronTracker: SubNetNeuronTracker = SubNetNeuronTracker()
 		)
-	def props(networkGenome: NetworkGenome.NetworkGenome): Props = {
+	def props(networkGenome: NetworkGenome): Props = {
 
 		Props(classOf[Innovation], networkGenome)
 	}
@@ -155,7 +155,7 @@ object Innovation {
 }
 
 
-class Innovation(networkGenome: NetworkGenome.NetworkGenome) extends FSM[InnovationState, Innovation.InnovationSettings] {
+class Innovation(networkGenome: NetworkGenome) extends FSM[InnovationState, Innovation.InnovationSettings] {
 	import Innovation._
 
 	override def preRestart(reason: Throwable, message: Option[Any]) = {

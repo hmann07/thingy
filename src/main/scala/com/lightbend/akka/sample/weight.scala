@@ -10,13 +10,35 @@ import akka.actor.{ ActorRef, FSM }
   * allow control over the weight ranges and also specific mutations
   * related to it.
   */
-
 object Weight {
 
 	implicit val config = ConfigFactory.load()
 
+	val weightRange: Double = config.getConfig("thingy").getDouble("weight-range")
 
-}		
+	def rGen = scala.util.Random
+
+
+	/**
+	  * nextValue should return a new randomised Double.
+	  * It should sit between the range specified via config centred on zero.
+	  */
+
+	def nextValue = rGen.nextDouble() * (weightRange - (weightRange / 2))
+
+
+	/**
+	  * setDefault is used by the weight case class to create a random weight when none has been specified.
+	  * @return A double to be used as a connection weight.
+	  */
+
+	def setDefault(): Double = {
+		nextValue
+	}
+
+	def apply(): Weight = Weight(setDefault)
+
+}
 
 	/** @groupname mutation Mutation */
 
@@ -25,14 +47,8 @@ object Weight {
 	  * companion object
 	  */
 
-	case class Weight (value: Double = 0.0) {
+	case class Weight (value: Double) {
 		import Weight._
-
-		
-		val weightRange: Double = config.getConfig("thingy").getDouble("weight-range")
-		
-		def init: Weight = Weight(Random.nextDouble() * (weightRange - (weightRange / 2))) 
-
 		/** @group mutation */
 
 		/**
@@ -49,7 +65,7 @@ object Weight {
 		   * reset should will return a new Weight with a newly randomised weight
 		   * not based on its previous value.
 		   */
-		 def reset = Weight().init
+		 def reset = Weight()
 
 
 		}

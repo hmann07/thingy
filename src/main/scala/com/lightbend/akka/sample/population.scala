@@ -3,7 +3,8 @@ package com.thingy.population
 import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.genome.NetworkGenomeBuilder
-import com.thingy.genome.NetworkGenome.NetworkGenome
+import com.thingy.genome.NetworkGenome
+import com.thingy.genome.GenomeIO
 import com.thingy.network.Network
 import com.thingy.subnetwork.SubNetwork
 import com.thingy.innovation._
@@ -43,7 +44,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
 	val nb: NetworkGenomeBuilder = new NetworkGenomeBuilder
 
- 	val innovation = context.actorOf(Innovation.props(nb), "innov8")
+ 	val innovation = context.actorOf(Innovation.props(new GenomeIO(Some(nb.json), None).generate), "innov8")
  	val generations = config.getConfig("thingy").getInt("generations")
  	
  	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef]) = {

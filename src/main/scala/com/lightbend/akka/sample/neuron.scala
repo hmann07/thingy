@@ -91,13 +91,13 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
 					val resetT = t.copy(signalsReceived = 0, activationLevel = 0)
 
 					t.genome.layer match {
-						case 0 => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = s.value * output.weight))
+						case 0 => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = s.value * output.weight.value))
 						case 1 => {
 							context.parent ! Output(t.genome.id, t.activationFunction.function(s.value), s.batchId, s.flags)
-							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight, recurrent = output.recurrent))
+							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight.value, recurrent = output.recurrent))
 						}
 						case _ => {
-							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight, recurrent = output.recurrent))
+							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight.value, recurrent = output.recurrent))
 						}
 					}
 					stay using resetT

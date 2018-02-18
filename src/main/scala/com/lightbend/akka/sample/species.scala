@@ -2,7 +2,7 @@ package com.thingy.species
 
 
 import com.typesafe.config.ConfigFactory
-import com.thingy.genome.NetworkGenome.NetworkGenome
+import com.thingy.genome.NetworkGenome
 import scala.util.Random
 import com.thingy.selection.TournamentSelection
 import play.api.libs.json._

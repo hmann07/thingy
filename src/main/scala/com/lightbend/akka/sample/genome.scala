@@ -208,7 +208,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	  */
 	 def updateNetworkGenome(s: Innovation.InnovationConfirmation): NetworkGenome  = {
 	 	val recurrent = if(neurons(s.from).layer < neurons(s.to).layer) {false} else {true}
-	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, Weight().init, true, recurrent))
+	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, Weight(), true, recurrent))
 	 	this.copy(connections =  connections + newConnection )
 	 }
 
@@ -222,9 +222,9 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	val neuronLayer = (neurons(s.connectionToBeSplit.from).layer + neurons(s.connectionToBeSplit.to).layer) / 2
 	 	val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
 	 	val recurrentPrior = if(neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
-	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight().init, true, recurrentPrior))
+	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight(), true, recurrentPrior))
 	 	val recurrentPost = if(neuronLayer < neurons(s.connectionToBeSplit.to).layer) {false} else {true}
-	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight().init, true, recurrentPost))
+	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight(), true, recurrentPost))
 	 	val updatedConnectionList = connections + (s.connectionToBeSplit.id -> connections(s.connectionToBeSplit.id).copy(enabled = false))
 	 		 	
 	 	this.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
@@ -236,7 +236,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 		val currentObj = current._2
 	 		val updatedNet = if(currentObj.id == s.originalRequest.existingNetId) {
 	 			val recurrent = if(currentObj.neurons(s.originalRequest.from).layer < currentObj.neurons(s.originalRequest.to).layer) {false} else {true}
-	 			val newConnection = (s.updatedConnectionTracker -> ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, Weight().init, true, recurrent))
+	 			val newConnection = (s.updatedConnectionTracker -> ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, Weight(), true, recurrent))
 	 			(s.updatedNetTracker ->  currentObj.copy(id = s.updatedNetTracker, connections = currentObj.connections + newConnection))
 	 		} else {
 	 			current
@@ -264,9 +264,9 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 			val neuronLayer = (subnet.neurons(s.connectionToBeSplit.from).layer + subnet.neurons(s.connectionToBeSplit.to).layer) / 2
 	 		val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
 	 		val recurrentPrior = if(subnet.neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
-	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight().init, true, recurrentPrior))
+	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight(), true, recurrentPrior))
 	 		val recurrentPost = if(neuronLayer < subnet.neurons(s.connectionToBeSplit.to).layer) {false} else {true}
-	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight().init, true, recurrentPost))
+	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight(), true, recurrentPost))
 	 		val updatedConnectionList = subnet.connections + (s.connectionToBeSplit.id -> subnet.connections(s.connectionToBeSplit.id).copy(enabled = false)) 
 	 		val updatedSubnet = subnet.copy(id = s.subnetId, connections = updatedConnectionList + newPrior + newPost, neurons =  subnet.neurons + newNeuron  )
 	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet) - {if(s.originalRequest.existingNetId != updatedSubnet.id) {s.originalRequest.existingNetId} else{ -1}}

@@ -26,7 +26,7 @@ case object Mutating extends NetworkState
 final case class NetworkSettings(
 		id: Int = 1, 
 		genome:  NetworkGenome, 
-		networkSchema: NetworkNodeSchema,
+		networkSchema: NetworkGenome.NetworkNodeSchema,
 		rCount: Int = 0,
 		expectedOutputs: Map[Int, Representation] = Map.empty, // Map[Batchid, Representation]
 		actualOutputs: Map[Int, Map[Int, Double]] = Map.empty, // Map[Batchid, Map[OuputputId, ActualOutputValue]]

@@ -2,6 +2,7 @@ package com.thingy.genome
 
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
+import play.api.libs.json.JsSuccess
 import java.io.FileInputStream
 import play.api.libs.functional.syntax._
 
@@ -25,11 +26,19 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 
 
 
-	implicit def connectionReads: Reads[ConnectionGenome] = (
+	implicit def weightReads = new Reads[Weight] {
+  		def reads(js: JsValue): JsResult[Weight] = js match {
+  					case JsNumber(d) => JsSuccess(Weight(d.toDouble))
+  					case _ => JsSuccess(Weight())
+  				}
+    }
+
+
+	implicit lazy val connectionReads: Reads[ConnectionGenome] = (
 	 (JsPath \ "id").read[Int] and
 	 (JsPath  \ "from").read[Int] and
 	 (JsPath  \ "to").read[Int] and
-	 (JsPath  \ "weight").read[Weight].orElse(Reads.pure(Weight().init)) and
+	 (JsPath  \ "weight").read[Weight].orElse(Reads.pure(Weight())) and
 	 (JsPath  \ "enabled").read[Boolean] and 
 	 (JsPath  \ "recurrent").read[Boolean].orElse(Reads.pure(false))
 	) (ConnectionGenome.apply _)
@@ -61,7 +70,7 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 				val genome = g.get
 				genome
 			}}
-		})
+		}).get
 	}
 
 }
