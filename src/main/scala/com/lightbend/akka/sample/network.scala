@@ -25,8 +25,8 @@ case object Mutating extends NetworkState
 // State Data holder
 final case class NetworkSettings(
 		id: Int = 1, 
-		genome:  NetworkGenome.NetworkGenome, 
-		networkSchema: NetworkGenome.NetworkNodeSchema,
+		genome:  NetworkGenome, 
+		networkSchema: NetworkNodeSchema,
 		rCount: Int = 0,
 		expectedOutputs: Map[Int, Representation] = Map.empty, // Map[Batchid, Representation]
 		actualOutputs: Map[Int, Map[Int, Double]] = Map.empty, // Map[Batchid, Map[OuputputId, ActualOutputValue]]
@@ -43,21 +43,21 @@ object Network {
 	final case class Mutate()
 	final case class Perceive()
 	case class Mutated()
-	case class NetworkUpdate(f: () => NetworkGenome.NetworkGenome)
-	case class Done(performanceValue: Double, genome: NetworkGenome.NetworkGenome)
+	case class NetworkUpdate(f: GenomeIO)
+	case class Done(performanceValue: Double, genome: NetworkGenome)
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
-	def props(name: String, networkGenome: ()=> NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef): Props = {
+	def props(name: String, networkGenome: NetworkGenome, innovation: ActorRef, environment: ActorRef): Props = {
 
 		Props(classOf[Network], name, networkGenome, innovation, environment)
 	}
 }
 
-class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: ActorRef, environment: ActorRef) extends FSM[NetworkState, NetworkSettings] {
+class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment: ActorRef) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
-	val networkGenome = ng()
+	val networkGenome = ng
 
 	log.debug("network: {} created with genome {}", name, networkGenome)
 
@@ -147,7 +147,7 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 			}
 
 		case Event(ng: NetworkUpdate, t: NetworkSettings) =>
-      		val updatedGenome = ng.f()
+      		val updatedGenome = ng.f.generate
 			
       		// Here we should decide whether or not to mutate the new genome... 
       		// if we mutate - > go to status mutating
@@ -210,7 +210,7 @@ class Network(name: String, ng: ()=> NetworkGenome.NetworkGenome, innovation: Ac
 			val trecurrent = {updatedGenome.neurons(s.to).layer <= updatedGenome.neurons(s.from).layer}
 
 			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor, recurrent = trecurrent)))
-			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = newlyupdatedconnectionGenome.weight.value(), recurrent = trecurrent)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = newlyupdatedconnectionGenome.weight, recurrent = trecurrent)))
 
 			goto(Ready) using updatedSettings
 

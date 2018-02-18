@@ -30,15 +30,15 @@ object Innovation {
 	trait InnovationType
 	case class NetworkConnectionInnovation(from: Int, to: Int) extends InnovationType
 	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
-	case class NetworkNeuronInnovation(connection: NetworkGenome.ConnectionGenome) extends InnovationType
-	case class SubNetNeuronInnovation(connection: NetworkGenome.ConnectionGenome, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
+	case class NetworkNeuronInnovation(connection: ConnectionGenome) extends InnovationType
+	case class SubNetNeuronInnovation(connection: ConnectionGenome, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
 	case class WeightChangeInnovation() extends InnovationType
 
 
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)
 	case class SubnetConnectionInnovationConfirmation(updatedNetTracker: Int, updatedConnectionTracker: Int, originalRequest: SubNetConnectionInnovation)
-	case class NetworkNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int)
-	case class SubNetNeuronInnovationConfirmation(connectionToBeSplit: NetworkGenome.ConnectionGenome, nodeid: Int, subnetId: Int, priorconnectionId: Int, postconnectionId: Int, originalRequest: SubNetNeuronInnovation)
+	case class NetworkNeuronInnovationConfirmation(connectionToBeSplit: ConnectionGenome, nodeid: Int, priorconnectionId: Int, postconnectionId: Int)
+	case class SubNetNeuronInnovationConfirmation(connectionToBeSplit: ConnectionGenome, nodeid: Int, subnetId: Int, priorconnectionId: Int, postconnectionId: Int, originalRequest: SubNetNeuronInnovation)
 	case class WeightChangeInnovationConfirmation()
 
 	case class SubnetLookupResult(id: Int, tracker: SubnetConnectionTracker)

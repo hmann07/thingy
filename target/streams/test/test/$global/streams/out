@@ -1,20 +1,8 @@
-[0m[[0mdebug[0m] [0mRunning TaskDef(com.lightbend.akka.sample.TestInnovation, org.scalatest.tools.Framework$$anon$1@5ae08095, false, [SuiteSelector])[0m
-[0m[[0mdebug[0m] [0mRunning TaskDef(com.lightbend.akka.sample.TestGenome, org.scalatest.tools.Framework$$anon$1@5ae08095, false, [SuiteSelector])[0m
-[0m[[0mdebug[0m] [0mRunning TaskDef(com.lightbend.akka.sample.TestWeight, org.scalatest.tools.Framework$$anon$1@5ae08095, false, [SuiteSelector])[0m
-[0m[[0mdebug[0m] [0mRunning TaskDef(com.lightbend.akka.sample.TestConnection, org.scalatest.tools.Framework$$anon$1@5ae08095, false, [SuiteSelector])[0m
-[0m[[0mdebug[0m] [0mRunning TaskDef(com.lightbend.akka.sample.TestNeuron, org.scalatest.tools.Framework$$anon$1@5ae08095, false, [SuiteSelector])[0m
-[0m[[0minfo[0m] [0m[36mRun completed in 1 second, 801 milliseconds.[0m[0m
-[0m[[0minfo[0m] [0m[36mTotal number of tests run: 19[0m[0m
-[0m[[0minfo[0m] [0m[36mSuites: completed 4, aborted 1[0m[0m
-[0m[[0minfo[0m] [0m[36mTests: succeeded 17, failed 2, canceled 0, ignored 0, pending 0[0m[0m
-[0m[[0minfo[0m] [0m[31m*** 1 SUITE ABORTED ***[0m[0m
-[0m[[0minfo[0m] [0m[31m*** 2 TESTS FAILED ***[0m[0m
+[0m[[0mdebug[0m] [0mRunning TaskDef(com.lightbend.akka.sample.TestWeight, org.scalatest.tools.Framework$$anon$1@214ddc83, false, [SuiteSelector])[0m
+[0m[[0minfo[0m] [0m[36mRun completed in 682 milliseconds.[0m[0m
+[0m[[0minfo[0m] [0m[36mTotal number of tests run: 6[0m[0m
+[0m[[0minfo[0m] [0m[36mSuites: completed 1, aborted 0[0m[0m
+[0m[[0minfo[0m] [0m[36mTests: succeeded 6, failed 0, canceled 0, ignored 0, pending 0[0m[0m
+[0m[[0minfo[0m] [0m[32mAll tests passed.[0m[0m
 [0m[[0mdebug[0m] [0mPassed tests:[0m
-[0m[[0mdebug[0m] [0m	com.lightbend.akka.sample.TestNeuron[0m
 [0m[[0mdebug[0m] [0m	com.lightbend.akka.sample.TestWeight[0m
-[0m[[0mdebug[0m] [0m	com.lightbend.akka.sample.TestGenome[0m
-[0m[[31merror[0m] [0mFailed tests:[0m
-[0m[[31merror[0m] [0m	com.lightbend.akka.sample.TestInnovation[0m
-[0m[[31merror[0m] [0mError during tests:[0m
-[0m[[31merror[0m] [0m	com.lightbend.akka.sample.TestConnection[0m
-[0m[[31merror[0m] [0m(test:[31mtest[0m) sbt.TestsFailedException: Tests unsuccessful[0m

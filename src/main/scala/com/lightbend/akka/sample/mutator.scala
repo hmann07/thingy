@@ -17,7 +17,7 @@ class Mutator {
 	 */
 
 
-	def mutate(genome: NetworkGenome.NetworkGenome): Innovation.InnovationType = {
+	def mutate(genome: NetworkGenome): Innovation.InnovationType = {
 
 
 		val mutationFunctions = List(
@@ -39,11 +39,11 @@ class Mutator {
 	 * make sure they are not connected
 	 */
 
-	def addNetworkConnection(genome: NetworkGenome.NetworkGenome): Innovation.InnovationType = {
+	def addNetworkConnection(genome: NetworkGenome): Innovation.InnovationType = {
 
 		
 
-		def addNetworkConnectionInt(genome: NetworkGenome.NetworkGenome , tries: Int): Innovation.InnovationType = {
+		def addNetworkConnectionInt(genome: NetworkGenome , tries: Int): Innovation.InnovationType = {
 
 			if(tries == 0) {
 				Innovation.WeightChangeInnovation()
@@ -73,11 +73,11 @@ class Mutator {
 	 * make sure they are not inputs
 	 * make sure they are not connected
 	 */
-	def addSubNetConnection(genome: NetworkGenome.NetworkGenome): Innovation.InnovationType = {
+	def addSubNetConnection(genome: NetworkGenome): Innovation.InnovationType = {
 
 		
 
-		def addSubNetConnectionInt(genome: NetworkGenome.NetworkGenome , tries: Int): Innovation.InnovationType = {
+		def addSubNetConnectionInt(genome: NetworkGenome , tries: Int): Innovation.InnovationType = {
 
 			if(tries == 0) {
 				Innovation.WeightChangeInnovation()
@@ -108,7 +108,7 @@ class Mutator {
 	 */
 
 
-	 def addNetworkNode(genome: NetworkGenome.NetworkGenome): Innovation.NetworkNeuronInnovation = {
+	 def addNetworkNode(genome: NetworkGenome): Innovation.NetworkNeuronInnovation = {
 
 	 	val connectionCount = genome.connections.size
 	 	val connectionToSplit = genome.connections.values.toList(Random.nextInt(connectionCount))
@@ -133,7 +133,7 @@ class Mutator {
 	 * soft delete exisitng connection. Such that it may be enabled again at some point.
 	 */
 
-	 def addSubNetworkNode(genome: NetworkGenome.NetworkGenome): Innovation.SubNetNeuronInnovation = {
+	 def addSubNetworkNode(genome: NetworkGenome): Innovation.SubNetNeuronInnovation = {
 
 	 	val subnetCount = genome.subnets.get.size 
 		val subnet = genome.subnets.get.values.toList(Random.nextInt(subnetCount))

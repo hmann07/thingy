@@ -2,7 +2,7 @@
 
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.activationfunctions.ActivationFunction
-import com.thingy.genome.NetworkGenome.NeuronGenome
+import com.thingy.genome.NeuronGenome
 
 // States of Neuron
 sealed trait NeuronState

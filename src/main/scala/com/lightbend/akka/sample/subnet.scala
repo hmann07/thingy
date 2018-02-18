@@ -2,7 +2,7 @@ package com.thingy.subnetwork
 
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.neuron.{Successor, Predecessor, Neuron}
-import com.thingy.genome.NetworkGenome
+import com.thingy.genome._
 import com.thingy.weight.Weight
 
 
@@ -17,8 +17,8 @@ final case class SubNetworkSettings(
 	activationLevel: Double = 0,
 	signalsReceived: Int = 0,
 	connections: Neuron.ConnectionConfig = Neuron.ConnectionConfig(),
-	nodeGenome:  NetworkGenome.NeuronGenome,
-	genome: NetworkGenome.NetworkGenome,
+	nodeGenome:  NeuronGenome,
+	genome: NetworkGenome,
 	networkSchema: NetworkGenome.NetworkNodeSchema)
 
 
@@ -27,15 +27,15 @@ object SubNetwork {
 
 	// Messages it can receive
 		// Imported from NEURON TODO. split connections and signal into packages.
-	case class ConnectionUpdate(newGenome: NetworkGenome.NetworkGenome, newConnection: NetworkGenome.ConnectionGenome)
+	case class ConnectionUpdate(newGenome: NetworkGenome, newConnection: ConnectionGenome)
     // an override of props to allow Actor to take constructor args
-	def props(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGenome: NetworkGenome.NetworkGenome): Props = {
+	def props(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGenome): Props = {
 
 		Props(classOf[SubNetwork], name, nodeGenome, subnetGenome)
 	}
 }
 
-class SubNetwork(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGenome: NetworkGenome.NetworkGenome) extends FSM[SubNetworkState, SubNetworkSettings] {
+class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGenome) extends FSM[SubNetworkState, SubNetworkSettings] {
 
 	import SubNetwork._
 	log.debug("sub-network: {} created", name)
@@ -68,11 +68,11 @@ class SubNetwork(name: String, nodeGenome: NetworkGenome.NeuronGenome, subnetGen
 			//val recurrent = {updatedGenome.neurons(s.from).layer < updatedGenome.neurons(s.to).layer}
 
 			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(node = fromActor, recurrent = cu.newConnection.recurrent)))
-			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = cu.newConnection.weight.value(), recurrent = cu.newConnection.recurrent)))
+			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = cu.newConnection.weight, recurrent = cu.newConnection.recurrent)))
 
 			stay using t.copy(genome = cu.newGenome)
 
-		case Event(g: NetworkGenome.NetworkGenome, t: SubNetworkSettings) =>
+		case Event(g: NetworkGenome, t: SubNetworkSettings) =>
 			log.debug("subnet received new NetworkGenome, now need to inform neurons and connections of new status ")
 			val updatedSchema = g.generateActors(context, t.networkSchema)
 			log.debug("subnets updated schema {}", updatedSchema)

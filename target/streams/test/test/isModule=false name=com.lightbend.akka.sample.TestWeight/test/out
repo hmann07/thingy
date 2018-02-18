@@ -9,7 +9,5 @@
 [0m[[0minfo[0m] [0m[32m- should remain independent[0m[0m
 [0m[[0minfo[0m] [0m[32mWhen two instances of weight exist the values[0m[0m
 [0m[[0minfo[0m] [0m[32m- should remain independent when the random values are automatically generated[0m[0m
-[0m[[0minfo[0m] [0m[32mjiggling the weight[0m[0m
-[0m[[0minfo[0m] [0m[32m- should change value by 0.1[0m[0m
 [0m[[0minfo[0m] [0m[32mmanually setting the weight to 3[0m[0m
 [0m[[0minfo[0m] [0m[32m- should set the weight to 3[0m[0m

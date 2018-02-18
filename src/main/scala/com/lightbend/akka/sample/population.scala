@@ -39,8 +39,11 @@ object Population {
 class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 	import Population._
 
-	val gNet = () => {new NetworkGenomeBuilder()}.generateFromSeed
- 	val innovation = context.actorOf(Innovation.props(gNet()), "innov8")
+	//val gNet = () => {new NetworkGenomeBuilder(None)}.generate
+
+	val nb: NetworkGenomeBuilder = new NetworkGenomeBuilder
+
+ 	val innovation = context.actorOf(Innovation.props(nb), "innov8")
  	val generations = config.getConfig("thingy").getInt("generations")
  	
  	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef]) = {
@@ -49,7 +52,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef]):List[ActorRef] ={
 		g.headOption.map(gnew=>{
-			val evalG = gnew
+			val evalG = new GenomeIO(None, Some(gnew))
 			c.headOption.map(cnew=> {
 				cnew ! Network.NetworkUpdate(evalG)
 				rep(g.tail, c.tail, cnew :: cummulate)
@@ -64,7 +67,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  		i <- 1 to p
  	}
  	yield {
- 		context.actorOf(Agent.props(innovation, gNet), "agent" + i)
+ 		context.actorOf(Agent.props(innovation,  new GenomeIO(Some(nb.json), None)), "agent" + i)
 	}
 
 	log.info("population created with {} children", context.children.size) 

@@ -1,5 +1,5 @@
 #Successful Tests
-#Sat Jan 06 17:37:25 GMT 2018
+#Sun Feb 11 13:28:56 GMT 2018
 com.lightbend.akka.sample.TestNeuron=1515260245048
 com.lightbend.akka.sample.TestGenome=1515260244944
-com.lightbend.akka.sample.TestWeight=1515260244192
+com.lightbend.akka.sample.TestWeight=1518355736323

@@ -8,45 +8,77 @@ import akka.actor.{ ActorRef, FSM, Props, ActorContext }
 import com.thingy.neuron.Neuron
 import com.thingy.network._
 import com.thingy.subnetwork._
-import play.api.libs.json._
 import com.thingy.neuron.{Successor, Predecessor}
 import com.thingy.weight.Weight
 import com.thingy.node._
 import com.thingy.innovation.Innovation
 import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json._
+import java.io.FileInputStream
+import play.api.libs.functional.syntax._
 import scala.util.Random
 
 
 
 object NetworkGenome {
 
-
-case class NetworkNodeSchema(
-	in: InputNodes = InputNodes(),
-	out: OutputNodes = OutputNodes(),
-	hidden: HiddenNodes = HiddenNodes(),
-	allNodes: Map[Int, Node] = Map.empty){
-
-	def update(n: NeuronGenome, a: ActorRef): NetworkNodeSchema = {
-		val newnode = Node(n.id, a)
-		n.layer match {
-		case 0 => NetworkNodeSchema(
-			in.copy(nodes = newnode :: in.nodes),
-			out,
-			hidden,
-			allNodes + (n.id -> newnode))
-		case 1 => NetworkNodeSchema(in, out.copy(nodes = newnode :: out.nodes ), hidden, allNodes + (n.id -> newnode))
-		case _ => NetworkNodeSchema(in, out, hidden.copy(nodes = newnode :: hidden.nodes ), allNodes + (n.id -> newnode))
-		}
+	implicit val weightWrites: Writes[Weight] = new Writes[Weight] {
+    	def writes(w: Weight): JsValue = JsNumber(w.value)
 	}
 
+	implicit val neuronWrites: Writes[NeuronGenome] = (
+	 (JsPath \ "id").write[Int] and
+	 (JsPath  \ "name").write[String] and
+	 (JsPath  \ "layer").write[Double] and
+	 (JsPath  \ "activationFunction").writeNullable[String] and
+	 (JsPath  \ "subnetid").writeNullable[Int]
 
+	) (unlift(NeuronGenome.unapply))
+
+
+	implicit lazy val connectionWrites: Writes[ConnectionGenome] = (
+	 (JsPath \ "id").write[Int] and
+	 (JsPath  \ "from").write[Int] and
+	 (JsPath  \ "to").write[Int] and
+	 (JsPath  \ "weight").write[Weight] and
+	 (JsPath  \ "enabled").write[Boolean] and 
+	 (JsPath  \ "recurrent").write[Boolean]
+	) (unlift(ConnectionGenome.unapply))
+
+	implicit val netWrites: Writes[NetworkGenome] = new Writes[NetworkGenome] {
+	    def writes(net: NetworkGenome): JsValue = Json.obj(
+	    	"id" -> net.id,
+	    	"neurons" -> net.neurons.values.map(n => Json.toJson(n)), 
+	    	"connections" -> net.connections.values.map(c => Json.toJson(c)), 
+	    	"subnets" -> net.subnets.map(os=> os.values.map(s => Json.toJson(s))),
+	    	"parent" -> net.parentId
+	        //bar.key -> Json.obj("value" -> bar.value)
+	    )
+	}
+
+	case class NetworkNodeSchema(
+		in: InputNodes = InputNodes(),
+		out: OutputNodes = OutputNodes(),
+		hidden: HiddenNodes = HiddenNodes(),
+		allNodes: Map[Int, Node] = Map.empty){
+
+		def update(n: NeuronGenome, a: ActorRef): NetworkNodeSchema = {
+			val newnode = Node(n.id, a)
+			n.layer match {
+			case 0 => NetworkNodeSchema(
+				in.copy(nodes = newnode :: in.nodes),
+				out,
+				hidden,
+				allNodes + (n.id -> newnode))
+			case 1 => NetworkNodeSchema(in, out.copy(nodes = newnode :: out.nodes ), hidden, allNodes + (n.id -> newnode))
+			case _ => NetworkNodeSchema(in, out, hidden.copy(nodes = newnode :: hidden.nodes ), allNodes + (n.id -> newnode))
+			}
+		}
+	}
 }
 
-case class NeuronGenome(id: Int, name: String, layer: Double, activationFunction: Option[String] = Some("SIGMOID"), subnetId: Option[Int])
-case class ConnectionGenome(id: Int, from: Int, to: Int, weight: Weight, enabled: Boolean = true, recurrent: Boolean = false)
 case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int]) {
-
+	import NetworkGenome._
 	 def innovationHash: Set[Int] = {
 	 	connections.values.map(_.id).toSet
 	 }
@@ -176,7 +208,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	  */
 	 def updateNetworkGenome(s: Innovation.InnovationConfirmation): NetworkGenome  = {
 	 	val recurrent = if(neurons(s.from).layer < neurons(s.to).layer) {false} else {true}
-	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, Weight(), true, recurrent))
+	 	val newConnection = (s.id -> ConnectionGenome(s.id, s.from, s.to, Weight().init, true, recurrent))
 	 	this.copy(connections =  connections + newConnection )
 	 }
 
@@ -190,9 +222,9 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	val neuronLayer = (neurons(s.connectionToBeSplit.from).layer + neurons(s.connectionToBeSplit.to).layer) / 2
 	 	val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
 	 	val recurrentPrior = if(neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
-	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight(), true, recurrentPrior))
+	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight().init, true, recurrentPrior))
 	 	val recurrentPost = if(neuronLayer < neurons(s.connectionToBeSplit.to).layer) {false} else {true}
-	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight(), true, recurrentPost))
+	 	val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight().init, true, recurrentPost))
 	 	val updatedConnectionList = connections + (s.connectionToBeSplit.id -> connections(s.connectionToBeSplit.id).copy(enabled = false))
 	 		 	
 	 	this.copy(connections = updatedConnectionList + newPrior + newPost, neurons =  neurons + newNeuron  )
@@ -204,7 +236,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 		val currentObj = current._2
 	 		val updatedNet = if(currentObj.id == s.originalRequest.existingNetId) {
 	 			val recurrent = if(currentObj.neurons(s.originalRequest.from).layer < currentObj.neurons(s.originalRequest.to).layer) {false} else {true}
-	 			val newConnection = (s.updatedConnectionTracker -> ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, Weight(), true, recurrent))
+	 			val newConnection = (s.updatedConnectionTracker -> ConnectionGenome(s.updatedConnectionTracker, s.originalRequest.from, s.originalRequest.to, Weight().init, true, recurrent))
 	 			(s.updatedNetTracker ->  currentObj.copy(id = s.updatedNetTracker, connections = currentObj.connections + newConnection))
 	 		} else {
 	 			current
@@ -232,9 +264,9 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 			val neuronLayer = (subnet.neurons(s.connectionToBeSplit.from).layer + subnet.neurons(s.connectionToBeSplit.to).layer) / 2
 	 		val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
 	 		val recurrentPrior = if(subnet.neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
-	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight(), true, recurrentPrior))
+	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, Weight().init, true, recurrentPrior))
 	 		val recurrentPost = if(neuronLayer < subnet.neurons(s.connectionToBeSplit.to).layer) {false} else {true}
-	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight(), true, recurrentPost))
+	 		val newPost = (s.postconnectionId -> ConnectionGenome(s.postconnectionId, s.nodeid, s.connectionToBeSplit.to, Weight().init, true, recurrentPost))
 	 		val updatedConnectionList = subnet.connections + (s.connectionToBeSplit.id -> subnet.connections(s.connectionToBeSplit.id).copy(enabled = false)) 
 	 		val updatedSubnet = subnet.copy(id = s.subnetId, connections = updatedConnectionList + newPrior + newPost, neurons =  subnet.neurons + newNeuron  )
 	 		val updatedSubnetList = subnetList + (updatedSubnet.id -> updatedSubnet) - {if(s.originalRequest.existingNetId != updatedSubnet.id) {s.originalRequest.existingNetId} else{ -1}}
@@ -293,7 +325,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
   	 		if (currentObj.enabled) {
 	 			// If the connection is enabled update the config obj. 
 		 		val pre = Predecessor(neuronActors.allNodes(currentObj.from), currentObj.recurrent)
-		 		val suc = Successor(neuronActors.allNodes(currentObj.to), currentObj.weight.value(), currentObj.recurrent)
+		 		val suc = Successor(neuronActors.allNodes(currentObj.to), currentObj.weight, currentObj.recurrent)
 
 		 		// Create configs for all inputs
 		 		val updateIncoming: Map[ActorRef, Neuron.ConnectionConfig] = acc get neuronActors.allNodes(currentObj.to).actor match {
@@ -324,120 +356,3 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
    	}
 }
 
-/*
-implicit val weightReads: Reads[Weight] = (
- (__).read[Double]
-)(Weight.apply(_: Double))
-*/
-
-implicit val weightWrites: Writes[Weight] = new Writes[Weight] {
-    def writes(w: Weight): JsValue = JsNumber(w.value())
-}
-/*
-
-implicit val weightWrites: Writes[Weight] = (
- (JsPath \ "weight").write[Double] and
-) (unlift(Weight.unapply))
-*/
-implicit val neuronReads: Reads[NeuronGenome] = (
- (JsPath \ "id").read[Int] and
- (JsPath  \ "name").read[String] and
- (JsPath  \ "layer").read[Double] and
- (JsPath  \ "activationFunction").readNullable[String] and
- (JsPath  \ "subnetid").readNullable[Int]
-
-) (NeuronGenome.apply _)
-
-
-implicit val neuronWrites: Writes[NeuronGenome] = (
- (JsPath \ "id").write[Int] and
- (JsPath  \ "name").write[String] and
- (JsPath  \ "layer").write[Double] and
- (JsPath  \ "activationFunction").writeNullable[String] and
- (JsPath  \ "subnetid").writeNullable[Int]
-
-) (unlift(NeuronGenome.unapply))
-
-
-
-
-implicit val connectionReads: Reads[ConnectionGenome] = (
- (JsPath \ "id").read[Int] and
- (JsPath  \ "from").read[Int] and
- (JsPath  \ "to").read[Int] and
- (JsPath  \ "weight").read[Double].map(w=> Weight(()=>w)).orElse(Reads.pure(Weight())) and
- (JsPath  \ "enabled").read[Boolean] and 
- (JsPath  \ "recurrent").read[Boolean].orElse(Reads.pure(false))
-) (ConnectionGenome.apply _)
-
-
-implicit val connectionWrites: Writes[ConnectionGenome] = (
- (JsPath \ "id").write[Int] and
- (JsPath  \ "from").write[Int] and
- (JsPath  \ "to").write[Int] and
- (JsPath  \ "weight").write[Weight] and
- (JsPath  \ "enabled").write[Boolean] and 
- (JsPath  \ "recurrent").write[Boolean]
-) (unlift(ConnectionGenome.unapply))
-
-
-implicit lazy val networkReads: Reads[NetworkGenome] = (
- (JsPath \ "id").read[Int] and
- (JsPath \ "neurons").read[Seq[NeuronGenome]].map{_.foldLeft(Map[Int, NeuronGenome]()){(acc, current) => acc + (current.id -> current)}} and
- (JsPath \ "connections").read[Seq[ConnectionGenome]].map{_.foldLeft(Map[Int, ConnectionGenome]()){(acc, current) => acc + (current.id -> current)}} and
- (JsPath \ "subnets").lazyReadNullable[Seq[NetworkGenome]](Reads.seq(networkReads)).map{_.map{_.foldLeft(Map[Int, NetworkGenome]()){(acc, current) => acc + (current.id -> current)}}} and
- (JsPath  \ "parentId").readNullable[Int]
-) (NetworkGenome.apply _)
-
-
-
-/*
-implicit lazy val networkWrites: Writes[NetworkGenome] = (
- (JsPath \ "id").write[Int] and
- (JsPath \ "neurons").write[Seq[NeuronGenome]] and
- (JsPath \ "connections").write[Seq[ConnectionGenome]] and
- (JsPath \ "subnets").lazyWriteNullable[Seq[NetworkGenome]](Writes.seq(networkWrites)) and
- (JsPath  \ "parentId").writeNullable[Int]
-) (unlift(NetworkGenome.unapply))
-*/
-
-implicit val netWrites: Writes[NetworkGenome] = new Writes[NetworkGenome] {
-    def writes(net: NetworkGenome): JsValue = Json.obj(
-    	"id" -> net.id,
-    	"neurons" -> net.neurons.values.map(n => Json.toJson(n)), 
-    	"connections" -> net.connections.values.map(c => Json.toJson(c)), 
-    	"subnets" -> net.subnets.map(os=> os.values.map(s => Json.toJson(s))),
-    	"parent" -> net.parentId
-        //bar.key -> Json.obj("value" -> bar.value)
-    )
-}
-
-
-}
-
-
-
-class NetworkGenomeBuilder {
-
-	import NetworkGenome._
-	implicit val config = ConfigFactory.load()
-	
-	
-
-	val file = config.getConfig("thingy").getString("seed-network")
-	val stream = new FileInputStream(file)
-	val json = try {  Json.using[Json.WithDefaultValues].parse(stream) } finally { stream.close() }
-
-	//log.debug("loaded json file {}", json)
-
-	def generateFromSeed: NetworkGenome = {
-
-		json.validate[NetworkGenome] match {
-
-		  case g: JsSuccess[NetworkGenome] => {
-				val genome = g.get
-				genome
-			}
-		}
-	}
-}
