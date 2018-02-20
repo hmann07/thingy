@@ -24,7 +24,7 @@ object Weight {
 	  * It should sit between the range specified via config centred on zero.
 	  */
 
-	def nextValue = rGen.nextDouble() * (weightRange - (weightRange / 2))
+	def nextValue = (weightRange / 2) - (rGen.nextDouble() *  weightRange)
 
 
 	/**

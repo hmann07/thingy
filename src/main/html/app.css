@@ -67,6 +67,11 @@ rect.c0 {
 }
 
 .link {
+  stroke-width:3px;
   fill: none;
   stroke: #bbb;
+}
+
+#end-arrow {
+  stroke-width:1px;
 }

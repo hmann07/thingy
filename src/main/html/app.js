@@ -36,9 +36,11 @@ svg.append('svg:defs').append('svg:marker')
     .attr('markerWidth', 13)
     .attr('markerHeight', 12)
     .attr('orient', 'auto')
+    .attr('markerUnits',"userSpaceOnUse")
   .append('svg:path')
     .attr('d', 'M0,-5L10,0L0,5')
-    .attr('fill', '#666666');
+    .attr('fill', '#666666')
+    .attr('stroke-width', '1px');
 
 svg.append('svg:defs').append('svg:marker')
     .attr('id', 'start-arrow')
@@ -66,13 +68,15 @@ svg.append('svg:defs').append('svg:marker')
   var xPosScale =  d3.scaleLinear().range([50, width - 50]).domain([0,1])
   var actFnColourScale = d3.scaleOrdinal().domain(["SIGMOID", "GAUSSIAN", "SINE", "TANH", "BIPOLARSIGMOID", "IDENTITY"]).range(d3.schemeCategory20);
   var nodeSize = 20
-  var color = d3.scaleOrdinal(d3.schemeCategory20);
+  var color = d3.scaleLinear().range(["#d73027", "#4575b4"]).domain([-5,5]);
   var link = svg.selectAll(".link")
     .data(links)
     .enter().append("path")
       .attr("class", "link")
-     // .style("stroke-width", function(d){ return linkWidthScale(d.weight) + "px"})
+      //.style("stroke-width", function(d){ return linkWidthScale(d.weight) + "px"})
+      .style("stroke", function(d){ return color(d.weight) })
       .style('marker-mid', 'url(#end-arrow)')
+
       //.style('marker-start', function(d) { return d.left ? 'url(#start-arrow)' : ''; })
     //.style('marker-end', function(d) { return d.right ? 'url(#end-arrow)' : ''; })
       ;
