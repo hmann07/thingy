@@ -32,7 +32,7 @@ object Innovation {
 	case class SubNetConnectionInnovation(from: Int, to: Int, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
 	case class NetworkNeuronInnovation(connection: ConnectionGenome) extends InnovationType
 	case class SubNetNeuronInnovation(connection: ConnectionGenome, existingStructure: Set[Int], existingNetId: Int, neuronId: Int) extends InnovationType
-	case class WeightChangeInnovation() extends InnovationType
+	case class WeightChangeInnovation(genome: NetworkGenome) extends InnovationType
 
 
 	case class InnovationConfirmation(id: Int, from: Int, to: Int)

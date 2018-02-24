@@ -1,6 +1,7 @@
 package com.thingy.mutator
 
 import com.thingy.genome.NetworkGenome
+import com.thingy.genome.ConnectionGenome
 import com.thingy.innovation.Innovation
 import scala.util.Random
 
@@ -24,7 +25,8 @@ class Mutator {
 				addNetworkConnection(_), 
 				addSubNetConnection(_),
 				addNetworkNode(_),
-				addSubNetworkNode(_)
+				addSubNetworkNode(_),
+				mutateWeights(_)
 			)
 		
 		mutationFunctions(Random.nextInt(mutationFunctions.length))(genome)
@@ -46,7 +48,7 @@ class Mutator {
 		def addNetworkConnectionInt(genome: NetworkGenome , tries: Int): Innovation.InnovationType = {
 
 			if(tries == 0) {
-				Innovation.WeightChangeInnovation()
+				mutateWeights(genome)
 			} else {
 				
 				val neuronCount = genome.neurons.size
@@ -80,7 +82,7 @@ class Mutator {
 		def addSubNetConnectionInt(genome: NetworkGenome , tries: Int): Innovation.InnovationType = {
 
 			if(tries == 0) {
-				Innovation.WeightChangeInnovation()
+				mutateWeights(genome)
 			} else {
 
 				val subnetCount = genome.subnets.get.size 
@@ -150,6 +152,16 @@ class Mutator {
 			addSubNetworkNode(genome)	 		
 	 	}
 
+	 }
+
+	 def mutateWeights(genome: NetworkGenome): Innovation.WeightChangeInnovation = {
+	 	val newG = genome.connections.foldLeft(Map[Int, ConnectionGenome]()){
+	 		(acc, current) => {
+	 			val (key, genome) = current
+	 			acc + (key -> genome.copy(weight = genome.weight.mutate))
+	 		}
+	 	}
+	 	Innovation.WeightChangeInnovation(genome.copy(connections= newG))
 	 }
 
 

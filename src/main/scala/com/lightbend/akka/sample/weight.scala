@@ -49,7 +49,13 @@ object Weight {
 
 	case class Weight (value: Double) {
 		import Weight._
+		val jigres = config.getConfig("thingy").getDouble("jiggle-over-reset")
 		/** @group mutation */
+
+		/** Mutate, with some probability, jiggle the weight or, reset it completely
+		 *
+		 */
+		 def mutate = if(Random.nextDouble < jigres) jiggle else reset
 
 		/**
 		  * Jiggle is a mutation function that will return a new weight with value
@@ -57,7 +63,7 @@ object Weight {
 		  * @todo make it jiggle by some amount in a positive or negative direction. (rather than fixed to 0.1)
 		  */
 
-		 def jiggle = Weight(value = value + 0.1)
+		 def jiggle = Weight(value = value + {if(Random.nextDouble<0.5)-1 else 1} * 0.05)
 
 		 /** @group mutation */
 

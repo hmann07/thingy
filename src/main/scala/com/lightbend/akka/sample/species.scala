@@ -89,36 +89,36 @@ case class SpeciesDirectory (
 			
 		}
 
-		def allocate(f: NetworkGenome, performanceValue: Double): SpeciesDirectory = {
+		def allocate(f: NetworkGenome, performanceValue: Double): (Int, SpeciesDirectory) = {
 			if (currentSpeciesId == 0) {
 
 				// Then no species have been created yet. 
 				// Create one at location 1.
 				
-				this.copy(totalFitness = totalFitness + performanceValue, 
+				(currentSpeciesId, this.copy(totalFitness = totalFitness + performanceValue, 
 						  currentSpeciesId = 1, 
 						  species = species + (1 -> Species(
 						  								memberCount = 1, 
 						  								speciesTotalFitness = performanceValue, 
 						  								archetype = f, 
-						  								members = List(SpeciesMember(f, performanceValue)))))
+						  								members = List(SpeciesMember(f, performanceValue))))))
 			} else {
 
 				// iterate through the dir listing and add if compatible
 				
 
-				val newSpeciesList = findSpecies(f, performanceValue, species, species)
+				val (allocatedSpecies, newSpeciesList) = findSpecies(f, performanceValue, species, species)
 				
 				// Increase the species Id. and create new list.
 
-				this.copy(totalFitness = totalFitness + performanceValue,
+				(allocatedSpecies, this.copy(totalFitness = totalFitness + performanceValue,
 						  currentSpeciesId = if(newSpeciesList.size > currentSpeciesId){currentSpeciesId + 1} else {currentSpeciesId},
-						  species = newSpeciesList)
+						  species = newSpeciesList))
 			}
 		
 		}
 
-		def findSpecies(c: NetworkGenome, performanceValue: Double, sList: Map[Int, Species], staticList: Map[Int, Species]): Map[Int, Species] = {
+		def findSpecies(c: NetworkGenome, performanceValue: Double, sList: Map[Int, Species], staticList: Map[Int, Species]): (Int, Map[Int, Species]) = {
 
 			sList.headOption.map(current => {
 				
@@ -127,7 +127,7 @@ case class SpeciesDirectory (
 				if(current._2.memberCount  == 1 && d > speciesStartingThreshold) {
 					// this is a compatible species
 					//println("Species match rule 1")
-					staticList + (current._1 -> current._2.add(c, performanceValue))
+					(current._1, staticList + (current._1 -> current._2.add(c, performanceValue)))
 
 				} else {
 
@@ -138,7 +138,7 @@ case class SpeciesDirectory (
 
 					//println("Species match rule 2")
 
-					staticList + (current._1 -> current._2.add(c, performanceValue))
+					(current._1, staticList + (current._1 -> current._2.add(c, performanceValue)))
 				} else {
 
 					//println("check next species")
@@ -147,7 +147,7 @@ case class SpeciesDirectory (
 				}}
 			}).getOrElse({
 					//println("No Matched Species Create new")
-					staticList + (currentSpeciesId + 1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, members = List(SpeciesMember(c, performanceValue)))
+					(currentSpeciesId + 1, staticList + (currentSpeciesId + 1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, members = List(SpeciesMember(c, performanceValue))))
 				)})
 		}
 

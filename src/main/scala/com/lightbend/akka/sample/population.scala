@@ -81,12 +81,13 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  			
  			val completed = s.agentsCompleteCount + 1
 			
-			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.toJson, sender(), completed, s.currentPopulationSize)	
-			log.debug("generation {} population received Performance value of {} for genome: {} from {}. received {} of {} ", logParams)
-
 			// decide species.
 
-			val newSpeciesDir = s.speciesDirectory.allocate(d.genome, d.performanceValue)
+			val (allocatedSpecies, newSpeciesDir) = s.speciesDirectory.allocate(d.genome, d.performanceValue)
+			
+			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.copy(species= allocatedSpecies).toJson, sender(), completed, s.currentPopulationSize)
+
+			log.debug("generation {} population received Performance value of {} for genome: {} from {}. received {} of {} ", logParams)
 			log.debug("speciesDirectory id number is {}", s.speciesDirectory.currentSpeciesId)
  			
 

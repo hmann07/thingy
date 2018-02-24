@@ -2,6 +2,10 @@ package com.thingy.genome
 
 import com.thingy.weight.Weight
 
+object ConnectionGenome {
+
+}
+
 case class ConnectionGenome(
 	id: Int, 
 	from: Int, 

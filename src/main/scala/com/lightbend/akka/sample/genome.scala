@@ -51,7 +51,8 @@ object NetworkGenome {
 	    	"neurons" -> net.neurons.values.map(n => Json.toJson(n)), 
 	    	"connections" -> net.connections.values.map(c => Json.toJson(c)), 
 	    	"subnets" -> net.subnets.map(os=> os.values.map(s => Json.toJson(s))),
-	    	"parent" -> net.parentId
+	    	"parent" -> net.parentId,
+	    	"species" -> net.species
 	        //bar.key -> Json.obj("value" -> bar.value)
 	    )
 	}
@@ -77,7 +78,7 @@ object NetworkGenome {
 	}
 }
 
-case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int]) {
+case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int], species: Int = 0) {
 	import NetworkGenome._
 	 def innovationHash: Set[Int] = {
 	 	connections.values.map(_.id).toSet
