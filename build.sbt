@@ -27,3 +27,5 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.1.7"
 libraryDependencies += "org.scalatest" % "scalatest_2.11" % "3.0.4" % "test"
 
 libraryDependencies += "com.typesafe.play" %% "play-json" % "2.6.6"
+
+libraryDependencies += "org.reactivemongo" %% "reactivemongo" % "0.13.0"

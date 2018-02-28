@@ -27,7 +27,17 @@
 [0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\com.fasterxml.jackson.core\jackson-databind\bundles\jackson-databind-2.8.9.jar[0m
 [0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\com.fasterxml.jackson.datatype\jackson-datatype-jdk8\bundles\jackson-datatype-jdk8-2.8.9.jar[0m
 [0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\com.fasterxml.jackson.datatype\jackson-datatype-jsr310\bundles\jackson-datatype-jsr310-2.8.9.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\org.reactivemongo\reactivemongo_2.11\jars\reactivemongo_2.11-0.13.0.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\org.reactivemongo\reactivemongo-bson-macros_2.11\jars\reactivemongo-bson-macros_2.11-0.13.0.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\org.reactivemongo\reactivemongo-bson_2.11\jars\reactivemongo-bson_2.11-0.13.0.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\org.reactivemongo\reactivemongo-shaded\jars\reactivemongo-shaded-0.13.0.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\com.typesafe.play\play-iteratees_2.11\jars\play-iteratees_2.11-2.6.1.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\org.scala-stm\scala-stm_2.11\jars\scala-stm_2.11-0.8.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\commons-codec\commons-codec\jars\commons-codec-1.10.jar[0m
+[0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\org.apache.logging.log4j\log4j-api\jars\log4j-api-2.5.jar[0m
 [0m[[0mdebug[0m] [0m	C:\Users\Henry\.ivy2\cache\org.aspectj\aspectjrt\jars\aspectjrt-1.8.6.jar[0m
 [0m[[0mdebug[0m] [0mWaiting for thread run-main-0 to terminate.[0m
 [0m[[0mdebug[0m] [0m	Thread run-main-0 exited.[0m
 [0m[[0mdebug[0m] [0mWaiting for thread default-akka.actor.default-dispatcher-5 to terminate.[0m
+[0m[[0mdebug[0m] [0m	Thread default-akka.actor.default-dispatcher-5 exited.[0m
+[0m[[0mdebug[0m] [0mWaiting for thread default-akka.actor.default-dispatcher-6 to terminate.[0m

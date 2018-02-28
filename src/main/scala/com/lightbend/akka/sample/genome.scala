@@ -107,23 +107,32 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	val flattenedGenome1 = flattenGenome
 	 	val flattenedGenome2 = genome.flattenGenome
 
+
 	 	// whats the count of the union.
-	 	val unionSize = (flattenedGenome1 | flattenedGenome2).size
+	 	val union = (flattenedGenome1 | flattenedGenome2)
+	 	val unionSize = union.size
 
 	 	// size of symetric complement. 
 	 	// val diffSize = ((flattenedGenome1 &~ flattenedGenome2) | (flattenedGenome2 &~ flattenedGenome1)).size
 
 	 	// size of intersection
-	 	val intersection = (flattenedGenome1 & flattenedGenome2).size
+	 	val intersection = (flattenedGenome1 & flattenedGenome2)
+	 	val intersectionSize = intersection.size
 
-	 	val pctSimilar = intersection / unionSize
+	 	// find the Disjoint
+
+	 	val disjoint = union.diff(intersection)
+
+	 	//val averageWeightDiff = intersection.foldLeft(0.0)((r,c) => r + math.abs(connections(c).weight - genome.connections(c).weight).toDouble ))
+
+	 	val pctSimilar = intersectionSize / unionSize
 
 	 	pctSimilar
 
 	 	// find the excess
 
 
-	 	// find the Disjoint
+	 
 
 
 	 	// find the common to both but calculate variance in weights.

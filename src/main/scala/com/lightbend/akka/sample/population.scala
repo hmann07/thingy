@@ -4,6 +4,9 @@ import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.genome.NetworkGenomeBuilder
 import com.thingy.genome.NetworkGenome
+import com.thingy.genome.NeuronGenome
+import com.thingy.genome.ConnectionGenome
+import com.thingy.weight.Weight
 import com.thingy.genome.GenomeIO
 import com.thingy.network.Network
 import com.thingy.subnetwork.SubNetwork
@@ -13,6 +16,12 @@ import com.thingy.species.Species
 import com.thingy.species.SpeciesDirectory
 import play.api.libs.json._
 
+import scala.concurrent.Future
+import scala.concurrent.ExecutionContext.Implicits.global
+import reactivemongo.api.{ DefaultDB, MongoConnection, MongoDriver }
+import reactivemongo.bson.{
+  BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
+}
 
 sealed trait PopulationState
 case object Initialising extends PopulationState
@@ -23,6 +32,42 @@ object Population {
 
 	implicit val config = ConfigFactory.load()
 	val p = config.getConfig("thingy").getInt("population-size")
+	
+	val mongoUri = "mongodb://localhost:27017/mydb?authMode=scram-sha1"
+
+ 
+ 	 // Connect to the database: Must be done only once per application
+  	val driver = MongoDriver()
+  	val parsedUri = MongoConnection.parseURI(mongoUri)
+  	val connection = parsedUri.map(driver.connection(_))
+  	
+  	// Database and collections: Get references
+  	val futureConnection = Future.fromTry(connection)
+  	def db1: Future[DefaultDB] = futureConnection.flatMap(_.database("genomeData"))
+  	
+  	def genomeCollection = db1.map(_.collection("genomes"))
+
+  	// Write Documents: insert or update
+  	implicit object weightWriter extends BSONWriter[Weight, BSONDouble] {
+ 		def write(weight: Weight): BSONDouble = BSONDouble(weight.value)
+	}
+
+  	implicit def neuronWriter: BSONDocumentWriter[NeuronGenome] = Macros.writer[NeuronGenome]
+  	implicit def connectionWriter: BSONDocumentWriter[ConnectionGenome] = Macros.writer[ConnectionGenome]
+  	
+  	
+  	implicit object genomeWriter extends BSONDocumentWriter[NetworkGenome] {
+  		def write(net: NetworkGenome): BSONDocument =
+    		BSONDocument(
+    				"id" -> net.id,
+    				"connections" -> net.connections.values, 
+    				"neurons" -> net.neurons.values,
+    				"subnets" -> net.subnets.map(slist=>slist.values).getOrElse(List.empty),
+    				"parent" -> net.parentId,
+	    			"species" -> net.species)
+	}
+  	
+  	
 
 	case class PopulationSettings(
 			currentGeneration: Int = 1,
@@ -87,6 +132,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 			
 			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.copy(species= allocatedSpecies).toJson, sender(), completed, s.currentPopulationSize)
 
+			val t = genomeCollection.flatMap(_.insert(d.genome.copy(species= allocatedSpecies)).map(_ => {}))
 			log.debug("generation {} population received Performance value of {} for genome: {} from {}. received {} of {} ", logParams)
 			log.debug("speciesDirectory id number is {}", s.speciesDirectory.currentSpeciesId)
  			

@@ -66,6 +66,10 @@ object SpeciesDirectory {
     	"totalFitness" -> speciesDir.totalFitness
         //bar.key -> Json.obj("value" -> bar.value)
     )
+
+    def describe = {
+    	
+    }
 }
 
 }
@@ -160,8 +164,14 @@ case class SpeciesDirectory (
 				// crossover
 				// Here we should pick candidates from the species members x times based on fitness
 					1.to(speciesCandidates).map(i => {
+							
+							if(Random.nextDouble < config.getConfig("thingy").getDouble("crossover-rate")){
+							// crossover
 							generationFunction(s._2)
-				// mutation only
+							} else {
+							// mutation only
+							() => TournamentSelection.select(s._2.members).genome
+							}
 					})
 			})
 		}
