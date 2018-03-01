@@ -14,9 +14,9 @@ trait Evaluator {
 }
 case class XOREvaluator(
 	val epochLength: Int = 0,
-	val aggregatedIterationValue: Double = 0,
-	val fitness: Double = 0,
-	val auxValue: Double = 0) extends Evaluator {
+	val aggregatedIterationValue: Double = 0.0,
+	val fitness: Double = 0.0,
+	val auxValue: Double = 0.0) extends Evaluator {
 	
 	override def evaluateIteration(networkInput: Representation, networkOutput: Map[Int, Double]): Evaluator = {
 		  
@@ -29,13 +29,13 @@ case class XOREvaluator(
 
 	override def evaluateEpoch() = {
 		
-		val evalfitness = 1 / aggregatedIterationValue
+		val evalfitness = 4.0 / aggregatedIterationValue
 		
 		this.copy(fitness = evalfitness, auxValue = aggregatedIterationValue)
 	}
 
 	override def reset = {
-		this.copy(aggregatedIterationValue = 0, fitness = 0, auxValue = 0)
+		this.copy(aggregatedIterationValue = 0.0, fitness = 0.0, auxValue = 0.0)
 	}
 
 } 

@@ -24,10 +24,10 @@ object Environment {
 class Environment() extends FSM[EnvironmentState, Environment.EnvironmentSettings] {
 	import Environment._
 	val experienceStream = Experience(List(
-										Representation(List.empty, Map(1->1, 2->0), Map(3 -> 1)),
-										Representation(List.empty, Map(1->0, 2->1), Map(3 -> 1)),
-										Representation(List.empty, Map(1->1, 2->1), Map(3 -> 0)),
-										Representation(List("FINAL"), Map(1 -> 0, 2 -> 0), Map(3 -> 0))
+										Representation(List.empty, Map(1->1.0, 2->0.0), Map(3 -> 1.0)),
+										Representation(List.empty, Map(1->0.0, 2->1.0), Map(3 -> 1.0)),
+										Representation(List.empty, Map(1->1.0, 2->1.0), Map(3 -> 0.0)),
+										Representation(List("FINAL"), Map(1 -> 0.0, 2 -> 0.0), Map(3 -> 0.0))
 									))
 
 	startWith(Active, EnvironmentSettings(experienceStream.representations.head, experienceStream.representations.tail))

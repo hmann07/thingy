@@ -52,7 +52,17 @@ object Population {
  		def write(weight: Weight): BSONDouble = BSONDouble(weight.value)
 	}
 
-  	implicit def neuronWriter: BSONDocumentWriter[NeuronGenome] = Macros.writer[NeuronGenome]
+  	//implicit def neuronWriter: BSONDocumentWriter[NeuronGenome] = Macros.writer[NeuronGenome]
+  	implicit object neuronWriter extends BSONDocumentWriter[NeuronGenome] {
+  		def write(n: NeuronGenome): BSONDocument =
+    		BSONDocument(
+			"id" -> n.id,
+			"name" -> n.name, 
+			"layer" -> n.layer,
+			"activationFunction" -> n.activationFunction,
+			"subnetid" -> n.subnetId)
+    }
+
   	implicit def connectionWriter: BSONDocumentWriter[ConnectionGenome] = Macros.writer[ConnectionGenome]
   	
   	

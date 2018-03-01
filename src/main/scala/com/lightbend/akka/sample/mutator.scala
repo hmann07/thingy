@@ -23,9 +23,9 @@ class Mutator {
 
 		val mutationFunctions = List(
 				addNetworkConnection(_), 
-				addSubNetConnection(_),
+				//addSubNetConnection(_),
 				addNetworkNode(_),
-				addSubNetworkNode(_),
+				//addSubNetworkNode(_),
 				mutateWeights(_)
 			)
 		
@@ -55,7 +55,7 @@ class Mutator {
 				val node1 = genome.neurons.values.toList(Random.nextInt(neuronCount))
 				val node2 = genome.neurons.values.toList(Random.nextInt(neuronCount))
 
-				if(genome.connections.exists(c => c._2.from == node1.id && c._2.to == node2.id) || node2.layer == 0) {
+				if(genome.connections.exists(c => c._2.from == node1.id && c._2.to == node2.id) || node2.layer == 0.00000) {
 					addNetworkConnectionInt(genome, tries -1) //try again
 				} else {
 					Innovation.NetworkConnectionInnovation(node1.id,node2.id)
@@ -63,7 +63,7 @@ class Mutator {
 			}
 		}
 
-		addNetworkConnectionInt(genome, 10)
+		addNetworkConnectionInt(genome, 30)
 	}
 
 
