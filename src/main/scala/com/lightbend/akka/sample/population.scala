@@ -74,7 +74,8 @@ object Population {
     				"neurons" -> net.neurons.values,
     				"subnets" -> net.subnets.map(slist=>slist.values).getOrElse(List.empty),
     				"parent" -> net.parentId,
-	    			"species" -> net.species)
+	    			"species" -> net.species,
+	    			"generation" -> net.generation)
 	}
   	
   	
@@ -140,9 +141,9 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
 			val (allocatedSpecies, newSpeciesDir) = s.speciesDirectory.allocate(d.genome, d.performanceValue)
 			
-			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.copy(species= allocatedSpecies).toJson, sender(), completed, s.currentPopulationSize)
+			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.copy(species= allocatedSpecies, generation = s.currentGeneration).toJson, sender(), completed, s.currentPopulationSize)
 
-			val t = genomeCollection.flatMap(_.insert(d.genome.copy(species= allocatedSpecies)).map(_ => {}))
+			val insertDBRecord = genomeCollection.flatMap(_.insert(d.genome.copy(species= allocatedSpecies,generation = s.currentGeneration)).map(_ => {}))
 			log.debug("generation {} population received Performance value of {} for genome: {} from {}. received {} of {} ", logParams)
 			log.debug("speciesDirectory id number is {}", s.speciesDirectory.currentSpeciesId)
  			
@@ -154,8 +155,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  					
  				//log.debug("population: All Agents Completed")
  				log.debug("generation {} completed", s.currentGeneration)
- 				// time to select or allocate the best genomes for mating..
- 				val resetSpeciesDir = s.speciesDirectory.reset
+ 				
  				// check to see if we have done all generations
 
  				if (s.currentGeneration == generations) {
@@ -166,6 +166,9 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  				val gestatable = s.speciesDirectory.selectGenerationSurvivors
  				log.debug("gestatable. find a better name. : {}", gestatable)
 
+ 				// time to reset the species.
+ 				val resetSpeciesDir = s.speciesDirectory.reset
+ 				
  				// Now we have a load of functions to run we need to send them to available agents. 
  				//creating new ones if required and shutting down old ones..
 

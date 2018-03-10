@@ -78,7 +78,7 @@ object NetworkGenome {
 	}
 }
 
-case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int], species: Int = 0) {
+case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: Map[Int, ConnectionGenome], subnets: Option[Map[Int, NetworkGenome]], parentId: Option[Int], species: Int = 0, generation: Int = 0) {
 	import NetworkGenome._
 	 def innovationHash: Set[Int] = {
 	 	connections.values.map(_.id).toSet
@@ -89,9 +89,9 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 }
 
 
-	 def flattenGenome: Set[String] = {
-	 	val connList: Set[String] = connections.map(parentId.get.toString + ":" + _._1).toSet
-	 	val subnetConnList: Set[String] = subnets.map(_.foldLeft(Set[String]()){(acc, current)=>(acc ++ current._2.flattenGenome)}).getOrElse(Set.empty)
+	 def flattenGenome: Map[(Int, Int), Double] = {
+	 	val connList: Map[(Int, Int), Double] = connections.foldLeft(Map[(Int, Int), Double]() ){(acc, current) => acc + ((parentId.get,current._1) -> current._2.weight.value)}
+	 	val subnetConnList: Map[(Int, Int), Double] = subnets.map(_.foldLeft(Map[(Int, Int), Double]()){(acc, current)=>(acc ++ current._2.flattenGenome)}).getOrElse(Map.empty)
 	 	connList ++ subnetConnList
 	 }
 
@@ -104,28 +104,31 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	  */
 
 	 def distance(genome: NetworkGenome) = {
-	 	val flattenedGenome1 = flattenGenome
-	 	val flattenedGenome2 = genome.flattenGenome
+	 	val g1 = flattenGenome
+	 	val g2 = genome.flattenGenome
 
+	 	val (biggest, smallest) = {if (g1.size > g2.size) (g1,g2) else (g2,g1)}
+	 	
 
 	 	// whats the count of the union.
-	 	val union = (flattenedGenome1 | flattenedGenome2)
+	 	//val union = (g1 | g2)
+	 	
+	 	val (union, intersection, weightDiff): (Map[(Int, Int), Double],Map[(Int, Int), Double], Double) = smallest.foldLeft((Map[(Int, Int), Double](),Map[(Int, Int), Double](),0.0)) { (acc, current) =>
+	 		val (inter, wd): (Map[(Int, Int), Double], Double) = biggest.get(current._1).map(matchedG => (acc._2 + current, acc._3 + math.abs(matchedG - current._2))).getOrElse((acc._2, acc._3)) 
+	 		val uni = acc._1 + current
+	 		(uni, inter, wd)
+	 	}
+
 	 	val unionSize = union.size
-
-	 	// size of symetric complement. 
-	 	// val diffSize = ((flattenedGenome1 &~ flattenedGenome2) | (flattenedGenome2 &~ flattenedGenome1)).size
-
-	 	// size of intersection
-	 	val intersection = (flattenedGenome1 & flattenedGenome2)
 	 	val intersectionSize = intersection.size
 
 	 	// find the Disjoint
 
-	 	val disjoint = union.diff(intersection)
+	 	//val disjoint = union.diff(intersection)
 
 	 	//val averageWeightDiff = intersection.foldLeft(0.0)((r,c) => r + math.abs(connections(c).weight - genome.connections(c).weight).toDouble ))
 
-	 	val pctSimilar = intersectionSize / unionSize
+	 	val pctSimilar = intersectionSize / biggest.size
 
 	 	pctSimilar
 

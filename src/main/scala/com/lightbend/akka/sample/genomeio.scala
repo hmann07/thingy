@@ -51,7 +51,8 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 	 (JsPath \ "connections").read[Seq[ConnectionGenome]].map{_.foldLeft(Map[Int, ConnectionGenome]()){(acc, current) => acc + (current.id -> current)}} and
 	 (JsPath \ "subnets").lazyReadNullable[Seq[NetworkGenome]](Reads.seq(networkReads)).map{_.map{_.foldLeft(Map[Int, NetworkGenome]()){(acc, current) => acc + (current.id -> current)}}} and
 	 (JsPath  \ "parentId").readNullable[Int] and
-	 (JsPath  \ "species").read[Int].orElse(Reads.pure(0))
+	 (JsPath  \ "species").read[Int].orElse(Reads.pure(0)) and
+	 (JsPath  \ "generation").read[Int].orElse(Reads.pure(0))
 	) (NetworkGenome.apply _)
 
 	//log.debug("loaded json file {}", json)
