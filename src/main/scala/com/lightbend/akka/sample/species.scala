@@ -29,6 +29,7 @@ case class Species(totalDistance: Double = 0.0,
 				   speciesTotalFitness: Double = 0,
 				   averageDistance: Double = 0.0,
 				   archetype: NetworkGenome,
+				   archetypePF: Double = 0.0,
 				   members: List[SpeciesMember]) {
 	
 	def reset = {
@@ -40,14 +41,16 @@ case class Species(totalDistance: Double = 0.0,
 		val newtotalDist = totalDistance + g.distance(archetype)
 		val newMemberCount = memberCount + 1
 		val newMembers = SpeciesMember(g, performanceValue) :: members
-		val newArchetype = newMembers(Random.nextInt(newMemberCount))
+		val (newArchetype, newArchetypePF) = if(performanceValue> archetypePF) (g,performanceValue) else (archetype, archetypePF)
+
 		val updatedTotalFitness = speciesTotalFitness + performanceValue
 
 		this.copy(
 			totalDistance = newtotalDist,
 			averageDistance = newtotalDist / newMemberCount,
 			speciesTotalFitness = updatedTotalFitness,
-			archetype = newArchetype.genome,
+			archetype = newArchetype,
+			archetypePF = newArchetypePF,
 			members = newMembers, 
 			memberCount = newMemberCount)
 
@@ -105,6 +108,7 @@ case class SpeciesDirectory (
 						  								memberCount = 1, 
 						  								speciesTotalFitness = performanceValue, 
 						  								archetype = f, 
+						  								archetypePF = performanceValue,
 						  								members = List(SpeciesMember(f, performanceValue))))))
 			} else {
 
@@ -128,7 +132,9 @@ case class SpeciesDirectory (
 				
 				val d = c.distance(current._2.archetype)
 
-				if(current._2.memberCount  == 1 && d > speciesStartingThreshold) {
+				//log.debug("genome {} is {} from {}", c, d, current._2.archetype )
+
+				if(current._2.memberCount  == 1 && d < speciesStartingThreshold) {
 					// this is a compatible species
 					//println("Species match rule 1")
 					(current._1, staticList + (current._1 -> current._2.add(c, performanceValue)))
@@ -136,7 +142,7 @@ case class SpeciesDirectory (
 				} else {
 
 				// if(d > (current._2.averageDistance * speciesExpansionFactor)) { 
-				if(d > speciesStartingThreshold) {
+				if(d < speciesStartingThreshold) {
 
 					// this is a compatible species
 
@@ -151,7 +157,7 @@ case class SpeciesDirectory (
 				}}
 			}).getOrElse({
 					//println("No Matched Species Create new")
-					(currentSpeciesId + 1, staticList + (currentSpeciesId + 1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, members = List(SpeciesMember(c, performanceValue))))
+					(currentSpeciesId + 1, staticList + (currentSpeciesId + 1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, archetypePF=  performanceValue,  members = List(SpeciesMember(c, performanceValue))))
 				)})
 		}
 

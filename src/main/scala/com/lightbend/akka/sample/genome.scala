@@ -52,7 +52,8 @@ object NetworkGenome {
 	    	"connections" -> net.connections.values.map(c => Json.toJson(c)), 
 	    	"subnets" -> net.subnets.map(os=> os.values.map(s => Json.toJson(s))),
 	    	"parent" -> net.parentId,
-	    	"species" -> net.species
+	    	"species" -> net.species,
+	    	"generation" -> net.generation
 	        //bar.key -> Json.obj("value" -> bar.value)
 	    )
 	}
@@ -90,7 +91,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 
 
 	 def flattenGenome: Map[(Int, Int), Double] = {
-	 	val connList: Map[(Int, Int), Double] = connections.foldLeft(Map[(Int, Int), Double]() ){(acc, current) => acc + ((parentId.get,current._1) -> current._2.weight.value)}
+	 	val connList: Map[(Int, Int), Double] = connections.foldLeft(Map[(Int, Int), Double]() ){(acc, current) => if(current._2.enabled) acc + ((parentId.get,current._1) -> current._2.weight.value) else acc}
 	 	val subnetConnList: Map[(Int, Int), Double] = subnets.map(_.foldLeft(Map[(Int, Int), Double]()){(acc, current)=>(acc ++ current._2.flattenGenome)}).getOrElse(Map.empty)
 	 	connList ++ subnetConnList
 	 }
@@ -113,10 +114,11 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	// whats the count of the union.
 	 	//val union = (g1 | g2)
 	 	
-	 	val (union, intersection, weightDiff): (Map[(Int, Int), Double],Map[(Int, Int), Double], Double) = smallest.foldLeft((Map[(Int, Int), Double](),Map[(Int, Int), Double](),0.0)) { (acc, current) =>
+	 	val (union, intersection, weightDiff, compliment): (Map[(Int, Int), Double],Map[(Int, Int), Double], Double, Map[(Int, Int), Double]) = smallest.foldLeft((biggest,Map[(Int, Int), Double](),0.0, biggest)) { (acc, current) =>
 	 		val (inter, wd): (Map[(Int, Int), Double], Double) = biggest.get(current._1).map(matchedG => (acc._2 + current, acc._3 + math.abs(matchedG - current._2))).getOrElse((acc._2, acc._3)) 
 	 		val uni = acc._1 + current
-	 		(uni, inter, wd)
+	 		val com = acc._4.get(current._1).map(matchedG => acc._4 - current._1).getOrElse(acc._4 + current)
+	 		(uni, inter, wd, com)
 	 	}
 
 	 	val unionSize = union.size
@@ -128,7 +130,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 
 	 	//val averageWeightDiff = intersection.foldLeft(0.0)((r,c) => r + math.abs(connections(c).weight - genome.connections(c).weight).toDouble ))
 
-	 	val pctSimilar = intersectionSize / biggest.size
+	 	val pctSimilar = (compliment.size  / biggest.size) + ((weightDiff / intersectionSize) * 0.3)
 
 	 	pctSimilar
 
@@ -154,8 +156,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	// by lineing them up.
 
 	 	val newConnections = connections.foldLeft(Map[Int, ConnectionGenome]()){ (acc, current) =>
-	 		val conn: ConnectionGenome = partner.connections(current._1) match {
-	 			case c: ConnectionGenome => 
+	 		val conn: ConnectionGenome = partner.connections.get(current._1).map { c: ConnectionGenome => 
 	 				// then return one or other of the connections (i.e. from one or other of the genomes) with some probablity
 	 				// one of he connections could be disabled we will enable with some P
 	 				if(Random.nextDouble < 0.5) {
@@ -163,10 +164,8 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 				} else {
 	 					current._2
 	 				}
-	 			case _ => 
-	 				// the connection didn't exist in the other genome so we have to take this one.
-	 				current._2
-	 		}
+	 			
+	 		}.getOrElse(current._2)
 	 		acc + (conn.id -> conn)
 	 	}
 

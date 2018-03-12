@@ -167,7 +167,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
       				case _ => {
       					log.debug("mutating genome, request will be {}", mutationAction)
 						innovation ! mutationAction
-						goto(Mutating) using t
+						goto(Mutating) using t.copy(genome = updatedGenome)
       				}
       			}
       			
