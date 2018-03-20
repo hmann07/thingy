@@ -14,10 +14,10 @@ class TestWeight extends FlatSpec {
 
 val config = ConfigFactory.load()
 
-val w = Weight().init
+val w = Weight()
 
 "A weight" should "have a value that's a double" in {
-        assert(w.value > 0)
+        assert(w.value != 0)
   }
 
  "The weight" should "not be greater or less than specified boundary" in {
@@ -36,7 +36,7 @@ val w = Weight().init
  }
 
  "When two instances of weight exist the values" should "remain independent when the random values are automatically generated" in {
- 		val w2 = Weight().init
+ 		val w2 = Weight()
 		assert(w2.value != w.value)
  }
 /*

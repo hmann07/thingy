@@ -82,6 +82,7 @@ object Population {
 
 	case class PopulationSettings(
 			currentGeneration: Int = 1,
+			currentFamily: Int = 1,
 			currentPopulation: List[ActorRef],
 			currentPopulationSize: Int = p,
 			agentsCompleteCount: Int = 0, 
@@ -139,12 +140,12 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 			
 			// decide species.
 
-			val (allocatedSpecies, newSpeciesDir) = s.speciesDirectory.allocate(d.genome, d.performanceValue)
+			val (allocatedSpecies, newSpeciesDir) = s.speciesDirectory.allocate(d.genome, d.evaluator.fitness)
 			
-			val logParams = Array(s.currentGeneration, d.performanceValue, d.genome.copy(species= allocatedSpecies, generation = s.currentGeneration).toJson, sender(), completed, s.currentPopulationSize)
+			val logParams = Array(s.currentGeneration, d.evaluator.fitness, d.evaluator.auxValue, d.genome.copy(species= allocatedSpecies, generation = s.currentGeneration).toJson, sender(), completed, s.currentPopulationSize)
 
 			val insertDBRecord = genomeCollection.flatMap(_.insert(d.genome.copy(species= allocatedSpecies,generation = s.currentGeneration)).map(_ => {}))
-			log.debug("generation {} population received Performance value of {} for genome: {} from {}. received {} of {} ", logParams)
+			log.debug("generation {} population received Performance value of {}, auxValue: {} for genome: {} from {}. received {} of {} ", logParams)
 			log.debug("speciesDirectory id number is {}", s.speciesDirectory.currentSpeciesId)
  			
 
@@ -189,9 +190,4 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  				stay using s.copy(agentsCompleteCount = completed, 	speciesDirectory = newSpeciesDir)
  			}
  	}
-
-
-
-
- 	
 }

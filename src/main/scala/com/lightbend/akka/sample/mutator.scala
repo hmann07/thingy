@@ -4,7 +4,7 @@ import com.thingy.genome.NetworkGenome
 import com.thingy.genome.ConnectionGenome
 import com.thingy.innovation.Innovation
 import scala.util.Random
-
+import com.typesafe.config.ConfigFactory
 
 class Mutator {
 
@@ -16,20 +16,26 @@ class Mutator {
 	 * Add Neuron to SubNetwork
 	 * Change weight
 	 */
-
+	val config = ConfigFactory.load()
 
 	def mutate(genome: NetworkGenome): Innovation.InnovationType = {
 
 
 		val mutationFunctions = List(
-				addNetworkConnection(_), 
+				(addNetworkConnection(_),0.03), 
 				//addSubNetConnection(_),
-				addNetworkNode(_),
+				(addNetworkNode(_),0.05),
 				//addSubNetworkNode(_),
-				mutateWeights(_)
+				(mutateWeights(_), 1.0)
 			)
 		
-		mutationFunctions(Random.nextInt(mutationFunctions.length))(genome)
+		val mThrow = Random.nextDouble()
+
+		def getfn(fnList: List[(NetworkGenome => Innovation.InnovationType, Double)]): NetworkGenome => Innovation.InnovationType = {
+			fnList.headOption.map(fnItem => if(mThrow < fnItem._2) fnItem._1 else getfn(fnList.tail)).getOrElse(mutateWeights(_))
+		}
+
+		getfn(mutationFunctions)(genome)
 	}
 
 
@@ -157,8 +163,13 @@ class Mutator {
 	 def mutateWeights(genome: NetworkGenome): Innovation.WeightChangeInnovation = {
 	 	val newG = genome.connections.foldLeft(Map[Int, ConnectionGenome]()){
 	 		(acc, current) => {
+	 			if(Random.nextDouble < config.getConfig("thingy").getDouble("weight-mutation-likelihood")) {
 	 			val (key, genome) = current
 	 			acc + (key -> genome.copy(weight = genome.weight.mutate))
+	 			} else {
+	 			acc + current
+	 			}
+
 	 		}
 	 	}
 	 	Innovation.WeightChangeInnovation(genome.copy(connections= newG))

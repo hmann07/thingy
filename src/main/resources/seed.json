@@ -3,7 +3,7 @@
 "neurons":[
 		{"id":1, "layer": 0, "name": "input1"},
 		{"id":2, "layer": 0, "name": "input2"},
-		{"id":3, "layer": 1, "name": "subnetoutput1", "subnetid": 1}],
+		{"id":3, "layer": 1, "name": "subnetoutput1", "subnetid": 1, "biasWeight": null}],
 
 "connections": [
 		{"id": 1, "from":1, "to": 3, "weight":null, "enabled": true},
@@ -15,8 +15,8 @@
 	"parentId": 3,
 	"neurons":[
 		{"id": 1, "layer": 0, "name": "input1"},
-		{"id": 2, "layer": 1, "name": "ouput1", "activationFunction": "SIGMOID"}],
+		{"id": 2, "layer": 1, "name": "ouput1", "activationFunction": "SIGMOID", "biasWeight": null}],
 	"connections": [
-			{"id": 1, "from":1, "to": 2,"weight":null, "enabled": true}]
+			{"id": 1, "from":1, "to": 2,"weight":1, "enabled": true}]
 	}]
 }

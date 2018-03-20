@@ -29,7 +29,7 @@ case class XOREvaluator(
 
 	override def evaluateEpoch() = {
 		
-		val evalfitness = 4.0 / aggregatedIterationValue
+		val evalfitness = 1.0 / aggregatedIterationValue
 		
 		this.copy(fitness = evalfitness, auxValue = aggregatedIterationValue)
 	}

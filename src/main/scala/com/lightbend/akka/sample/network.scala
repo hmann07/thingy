@@ -44,7 +44,7 @@ object Network {
 	final case class Perceive()
 	case class Mutated()
 	case class NetworkUpdate(f: GenomeIO)
-	case class Done(performanceValue: Double, genome: NetworkGenome)
+	case class Done(evaluator: Evaluator, genome: NetworkGenome)
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
@@ -133,7 +133,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 					log.debug("Epoch finished. Fitness is {}", ep.fitness)
 
 					val resetT = t.copy(expectedOutputs = Map.empty, actualOutputs = Map.empty, evaluator = ep.reset)
-					context.parent ! Done(ep.fitness, t.genome)
+					context.parent ! Done(ep, t.genome)
 					stay using resetT
 				} else {
 					val newT = t.copy(actualOutputs = updateOutputs, evaluator = e)
@@ -149,6 +149,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 		case Event(ng: NetworkUpdate, t: NetworkSettings) =>
       		val updatedGenome = ng.f.generate
 			
+			log.debug("New network generated: {}",updatedGenome)
       		// Here we should decide whether or not to mutate the new genome... 
       		// if we mutate - > go to status mutating
       		// if we don't mutate, go to ready and perceive

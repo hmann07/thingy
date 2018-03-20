@@ -63,7 +63,7 @@ object Weight {
 		  * @todo make it jiggle by some amount in a positive or negative direction. (rather than fixed to 0.1)
 		  */
 
-		 def jiggle = Weight(value = value + {if(Random.nextDouble<0.5)-1 else 1} * 0.05)
+		 def jiggle = Weight(value = value + {if(Random.nextDouble<0.5)-1 else 1} * (0.5 * Random.nextDouble))
 
 		 /** @group mutation */
 

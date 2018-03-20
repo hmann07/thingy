@@ -7,5 +7,6 @@ case class NeuronGenome(
 				name: String, 
 				layer: Double, 
 				activationFunction: Option[String] = Some("SIGMOID"), 
-				subnetId: Option[Int]
+				subnetId: Option[Int],
+				biasWeight: Option[Double]
 			)

@@ -13,8 +13,10 @@ case object Active extends NeuronState
 
 // State Data holder
 final case class NeuronSettings(
+	firstRun: Boolean = true,
 	activationFunction: ActivationFunction = ActivationFunction("SIGMOID"),
 	activationLevel: Double = 0,
+	recurrentSignal: Double = 0.0,
 	signalsReceived: Int = 0,
 	connections: Neuron.ConnectionConfig = Neuron.ConnectionConfig(),
 	genome: NeuronGenome)
@@ -77,7 +79,9 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
 
     		if(s.recurrent) {
 
+
     			stay
+
 
     		} else {
         		

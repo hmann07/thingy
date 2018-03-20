@@ -59,7 +59,7 @@ case class Species(totalDistance: Double = 0.0,
 
 object SpeciesDirectory {
 	implicit val config = ConfigFactory.load()
-	val speciesExpansionFactor = config.getConfig("thingy").getDouble("species-expansion-factor")
+	
 	val speciesStartingThreshold = config.getConfig("thingy").getDouble("species-starting-threshold")
 	val populationSize =  config.getConfig("thingy").getDouble("population-size")
 
@@ -128,37 +128,39 @@ case class SpeciesDirectory (
 
 		def findSpecies(c: NetworkGenome, performanceValue: Double, sList: Map[Int, Species], staticList: Map[Int, Species]): (Int, Map[Int, Species]) = {
 
-			sList.headOption.map(current => {
+			// probably worth checking if still compatible with exisiting species.
+			if(c.species != 0 && c.distance(sList(c.species).archetype) < speciesStartingThreshold) {
+				// then 
+			    val species = sList(c.species)
+			    val updatedspec = species.add(c, performanceValue)
+			    
+			    (c.species, sList + (c.species -> updatedspec))
+			    //else {}
+			 } else {
+			
+				sList.headOption.map(current => {
 				
-				val d = c.distance(current._2.archetype)
+					val d = c.distance(current._2.archetype)
 
-				//log.debug("genome {} is {} from {}", c, d, current._2.archetype )
+					// if(d > (current._2.averageDistance * speciesExpansionFactor)) { 
+					if(d < speciesStartingThreshold) {
 
-				if(current._2.memberCount  == 1 && d < speciesStartingThreshold) {
-					// this is a compatible species
-					//println("Species match rule 1")
-					(current._1, staticList + (current._1 -> current._2.add(c, performanceValue)))
+						// this is a compatible species
 
-				} else {
+						//println("Species match rule 2")
 
-				// if(d > (current._2.averageDistance * speciesExpansionFactor)) { 
-				if(d < speciesStartingThreshold) {
+						(current._1, staticList + (current._1 -> current._2.add(c, performanceValue)))
+					} else {
 
-					// this is a compatible species
-
-					//println("Species match rule 2")
-
-					(current._1, staticList + (current._1 -> current._2.add(c, performanceValue)))
-				} else {
-
-					//println("check next species")
-					// this species is not compatible at all, so go to next
-					findSpecies(c, performanceValue, sList.tail, staticList)
-				}}
-			}).getOrElse({
+						//println("check next species")
+						// this species is not compatible at all, so go to next
+						findSpecies(c, performanceValue, sList.tail, staticList)
+					}
+				}).getOrElse({
 					//println("No Matched Species Create new")
 					(currentSpeciesId + 1, staticList + (currentSpeciesId + 1 -> Species(memberCount = 1, speciesTotalFitness = performanceValue, archetype = c, archetypePF=  performanceValue,  members = List(SpeciesMember(c, performanceValue))))
 				)})
+			}
 		}
 
 		def selectGenerationSurvivors = {

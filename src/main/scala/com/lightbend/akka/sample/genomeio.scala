@@ -20,7 +20,8 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 	 (JsPath  \ "name").read[String] and
 	 (JsPath  \ "layer").read[Double] and
 	 (JsPath  \ "activationFunction").readNullable[String] and
-	 (JsPath  \ "subnetid").readNullable[Int]
+	 (JsPath  \ "subnetid").readNullable[Int] and
+	 (JsPath  \ "biasWeight").readNullable[Double]
 
 	) (NeuronGenome.apply _)
 
