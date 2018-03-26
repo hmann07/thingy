@@ -14,6 +14,7 @@ case object Active extends NeuronState
 // State Data holder
 final case class NeuronSettings(
 	firstRun: Boolean = true,
+	recurrentSignalsReceived: Int = 0,
 	activationFunction: ActivationFunction = ActivationFunction("SIGMOID"),
 	activationLevel: Double = 0,
 	recurrentSignal: Double = 0.0,
@@ -63,53 +64,132 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
 			log.debug("received settings config of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
 			// Overwrite all existing connection details.
 			val updatedConfig = t.connections.copy(inputs = d.inputs, outputs = d.outputs)
-			stay using t.copy(connections = updatedConfig)
+			// assumethis is a new epoch, clear recurrent received.. (won't have fired on last pattern so won't have reset counts)
+			stay using t.copy(connections = updatedConfig, firstRun = true, recurrentSignalsReceived = 0, recurrentSignal = 0.0)
 
 		case Event(d: ConnectionConfigUpdate, t: NeuronSettings) =>
 
 			log.debug("received settings config update of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
 			// Append to list of connections
 			val updatedConfig = t.connections.copy(inputs = d.inputs ++ t.connections.inputs, outputs = d.outputs ++ t.connections.outputs)
-			stay using t.copy(connections = updatedConfig)
+			stay using t.copy(connections = updatedConfig, firstRun = true, recurrentSignalsReceived = 0, recurrentSignal = 0.0)
 
 
     	case Event(s: Signal, t: NeuronSettings) =>
 
-    		
+    		if(t.firstRun){
+    			// then no need to wait for rec before firing
+    			// but we should accumulate the signal
+    			if(s.recurrent) {
+    				val newT = t.copy(
+    					recurrentSignal = t.recurrentSignal + s.value, 
+    					recurrentSignalsReceived = t.recurrentSignalsReceived + 1
+    					)
 
-    		if(s.recurrent) {
+    				val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
+					log.debug("{} neuron on first run got recurrent signal {},  now {}, received {} out of {} ", o)
+    				stay using newT
+    			} else {
+    				val newT = t.copy(
+    					signalsReceived = t.signalsReceived + 1, 
+    					activationLevel = t.activationLevel + s.value )
 
+    				val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
+					log.debug("{} neuron on first run got normal signal {},  now {}, received {} out of {} ", o)
 
-    			stay
-
-
+					// check if we've had all normal signals
+					if (newT.signalsReceived == newT.connections.inputs.filter(i=> !i.recurrent).length || newT.connections.inputs.length == 0) {
+						// reset the neuron
+						val resetT = t.copy(signalsReceived = 0, activationLevel = 0, firstRun = false)
+						log.debug("Neuron Firing")
+						// Decide what to do next
+						t.genome.nodeType match {
+							case "input" => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = newT.activationLevel * output.weight.value))
+							case "output" => {
+								context.parent ! Output(t.genome.id, t.activationFunction.function(newT.activationLevel + (t.genome.biasWeight.value * -1))  , s.batchId, s.flags)
+								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
+							}
+							case "hidden" => {
+								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
+							}
+						}
+						// reset the neuron
+						stay using resetT
+    				} else {
+    					// not had all signals, keep waiting
+    					stay using newT
+    				}
+    			}
     		} else {
-        		
-        		val newT = t.copy(signalsReceived = t.signalsReceived + 1, activationLevel = t.activationLevel + s.value )
+    			// this isn't the first run.
+    			// do more or less the same thing... bu tthe check for completion is different
 
-    			val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
-				log.debug("{} neuron got signal {},  now {}, received {} out of {} ", o)
+    			if(s.recurrent) {
 
-				if (newT.signalsReceived == newT.connections.inputs.filter(i=> !i.recurrent).length || newT.connections.inputs.length == 0) {
-				
-					val resetT = t.copy(signalsReceived = 0, activationLevel = 0)
-
-					t.genome.layer match {
-						case 0 => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = s.value * output.weight.value))
-						case 1 => {
-							context.parent ! Output(t.genome.id, t.activationFunction.function(s.value), s.batchId, s.flags)
-							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight.value, recurrent = output.recurrent))
+    				val newT = t.copy(
+    					recurrentSignal = t.recurrentSignal + s.value, 
+    					recurrentSignalsReceived = t.recurrentSignalsReceived + 1
+    					)
+    				val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
+    				log.debug("{} neuron on non-first run got recurrent signal {},  now {}, received {} out of {} ", o)
+    				// this could in fact be the last signal received, despite being the first sent..
+    				// so we should check and handle
+    				if (((newT.signalsReceived + newT.recurrentSignalsReceived) == newT.connections.inputs.length) || newT.connections.inputs.length == 0) {
+						// reset the neuron
+						val resetT = t.copy(signalsReceived = 0, activationLevel = 0.0, recurrentSignalsReceived = 0, recurrentSignal = 0.0)
+						log.debug("Neuron Firing")
+						// Decide what to do next
+						t.genome.nodeType match {
+							case "input" => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = newT.activationLevel * output.weight.value))
+							case "output" => {
+								context.parent ! Output(t.genome.id, t.activationFunction.function(newT.activationLevel + newT.recurrentSignal + (t.genome.biasWeight.value * -1))  , s.batchId, s.flags)
+								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + newT.recurrentSignal + (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
+							}
+							case "hidden" => {
+								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + newT.recurrentSignal +  (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
+							}
 						}
-						case _ => {
-							t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(s.value) * output.weight.value, recurrent = output.recurrent))
-						}
+						// reset the neuron
+						stay using resetT
+					} else {
+						// not had all signals, keep waiting
+						stay using newT
 					}
-					stay using resetT
+
+    			} else {
+    				
+    				// not a recurrentSignal
+    				val newT = t.copy(
+    					signalsReceived = t.signalsReceived + 1, 
+    					activationLevel = t.activationLevel + s.value )
+
+    				val o = Array(t.genome, s, newT.activationLevel, newT.signalsReceived, newT.connections.inputs.length)
+					log.debug("{} neuron on non-first run got signal {},  now {}, received {} out of {} ", o)
+
+					// check if we've had all normal signals
+					if (((newT.signalsReceived + newT.recurrentSignalsReceived) == newT.connections.inputs.length) || newT.connections.inputs.length == 0) {
+						// reset the neuron
+						val resetT = t.copy(signalsReceived = 0, activationLevel = 0.0, recurrentSignalsReceived = 0, recurrentSignal = 0.0)
+						log.debug("neruon firing")
+						// Decide what to do next
+						t.genome.nodeType match {
+							case "input" => t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = newT.activationLevel * output.weight.value))
+							case "output" => {
+								context.parent ! Output(t.genome.id, t.activationFunction.function(newT.activationLevel + newT.recurrentSignal + (t.genome.biasWeight.value * -1))  , s.batchId, s.flags)
+								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + newT.recurrentSignal + (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
+							}
+							case "hidden" => {
+								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + newT.recurrentSignal +  (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
+							}
+						}
+						// reset the neuron
+						stay using resetT
+					} else {
+					// not had all signals, keep waiting
+					stay using newT
+					} 
 				}
-			
-				else {stay using newT}
-    		}
-			
+			}
   	}
 
 	initialize()

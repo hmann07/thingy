@@ -1,6 +1,6 @@
 package com.thingy.genome
 
-
+import com.thingy.weight.Weight
 
 case class NeuronGenome(
 				id: Int, 
@@ -8,5 +8,6 @@ case class NeuronGenome(
 				layer: Double, 
 				activationFunction: Option[String] = Some("SIGMOID"), 
 				subnetId: Option[Int],
-				biasWeight: Option[Double]
+				biasWeight: Weight,
+				nodeType: String
 			)

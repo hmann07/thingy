@@ -14,6 +14,13 @@ import com.thingy.weight.Weight
 
 case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 
+	implicit def weightReads = new Reads[Weight] {
+  		def reads(js: JsValue): JsResult[Weight] = js match {
+  					case JsNumber(d) => JsSuccess(Weight(d.toDouble))
+  					case _ => JsSuccess(Weight())
+  				}
+    }
+
 
 	implicit val neuronReads: Reads[NeuronGenome] = (
 	 (JsPath \ "id").read[Int] and
@@ -21,18 +28,14 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 	 (JsPath  \ "layer").read[Double] and
 	 (JsPath  \ "activationFunction").readNullable[String] and
 	 (JsPath  \ "subnetid").readNullable[Int] and
-	 (JsPath  \ "biasWeight").readNullable[Double]
+	 (JsPath  \ "biasWeight").read[Weight].orElse(Reads.pure(Weight())) and 
+	 (JsPath  \ "type").read[String]
 
 	) (NeuronGenome.apply _)
 
 
 
-	implicit def weightReads = new Reads[Weight] {
-  		def reads(js: JsValue): JsResult[Weight] = js match {
-  					case JsNumber(d) => JsSuccess(Weight(d.toDouble))
-  					case _ => JsSuccess(Weight())
-  				}
-    }
+	
 
 
 	implicit lazy val connectionReads: Reads[ConnectionGenome] = (

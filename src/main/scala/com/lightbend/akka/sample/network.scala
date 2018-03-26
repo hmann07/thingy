@@ -146,8 +146,15 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 				stay using newT	
 			}
 
+		// network update comes as a result of crossover
 		case Event(ng: NetworkUpdate, t: NetworkSettings) =>
       		val updatedGenome = ng.f.generate
+      		// do this here because crossover may introduce a neruon isn't in this schema.. possibly?
+
+      		// this schema is not up to date... we must update the schema based on the new, crossed genome...
+      		log.debug("new genome {}, to schema {}, chilren for context: {}", updatedGenome.toJson, t.networkSchema, context.children)
+      		
+      		val updatedSettings = t.copy(genome = updatedGenome)
 			
 			log.debug("New network generated: {}",updatedGenome)
       		// Here we should decide whether or not to mutate the new genome... 
@@ -160,25 +167,32 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
       			val mutationAction = mutator.mutate(updatedGenome) 
       			mutationAction match {
       				case m: Innovation.WeightChangeInnovation => {
-      					log.debug("mutating genome weights, currently has no effect")
+      					val newGenome = m.genome
+      					val updatedSchemaWeight = newGenome.generateActors(context, t.networkSchema)
+      					val updatedSettingsWeight = updatedSettings.copy(genome = newGenome, networkSchema = updatedSchemaWeight)
+
+      					// log.debug("mutating genome weights, currently has no effect")
+
       					environment ! Perceive()
-						stay
+						stay using updatedSettingsWeight
       				}
 
       				case _ => {
       					log.debug("mutating genome, request will be {}", mutationAction)
 						innovation ! mutationAction
-						goto(Mutating) using t.copy(genome = updatedGenome)
+						goto(Mutating) using updatedSettings
       				}
       			}
       			
       		
       		} else {
-      			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
-				val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
+      			
+				val updatedSchemaNoMut = updatedGenome.generateActors(context, t.networkSchema)
+     			val updatedSettingsNoMut = updatedSettings.copy(networkSchema = updatedSchemaNoMut)
+
       			log.debug("new network received and actors updated")
       			environment ! Perceive()
-				stay using updatedSettings	
+				stay using updatedSettingsNoMut	
       		}
 			
 
@@ -199,19 +213,21 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 			log.debug("received connection innovation confirmation, will update genome. innovation id: {}, from {}, to {}", s.id, s.from, s.to)
 
 			val updatedGenome = t.genome.updateNetworkGenome(s)
-			val updatedSettings = t.copy(genome = updatedGenome)
-			val newlyupdatedconnectionGenome = updatedGenome.connections(s.id)
-			log.debug("new genome is {}", updatedGenome)
+			// update schema, remember this has got a net it knows nothing about.. in theory..
+			val updatedSchema = updatedGenome.generateActors(context,t.networkSchema)
+			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
+			//val newlyupdatedconnectionGenome = updatedGenome.connections(s.id)
+			log.debug("new genome is {}", updatedGenome.toJson)
 			
 			// tell to neuron it has a new Predecessor, tell from neuron it has a new Successor
 
-			val fromActor = t.networkSchema.allNodes(s.from)
-			val toActor = t.networkSchema.allNodes(s.to)
+			//val fromActor = updatedSettings.networkSchema.allNodes(s.from)
+			//val toActor = updatedSettings.networkSchema.allNodes(s.to)
 
-			val trecurrent = {updatedGenome.neurons(s.to).layer <= updatedGenome.neurons(s.from).layer}
+			//val trecurrent = {updatedGenome.neurons(s.to).layer <= updatedGenome.neurons(s.from).layer}
 
-			toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor, recurrent = trecurrent)))
-			fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = newlyupdatedconnectionGenome.weight, recurrent = trecurrent)))
+			//toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor, recurrent = trecurrent)))
+			//fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = newlyupdatedconnectionGenome.weight, recurrent = trecurrent)))
 
 			goto(Ready) using updatedSettings
 
@@ -225,13 +241,14 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 			// then create the connections and send to neuron actors. or rather to the subnetwork actor.
 			
 			val updatedGenome = t.genome.updateSubnet(s)
-			val updatedSettings = t.copy(genome = updatedGenome)
+			val updatedSchema = updatedGenome.generateActors(context,t.networkSchema)
+			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
 
 			val newlyupdatedsubnetGenome = updatedGenome.subnets.get(s.updatedNetTracker)
 			val newlyupdatedconnectionGenome = newlyupdatedsubnetGenome.connections(s.updatedConnectionTracker)
-			log.debug("updated the subnet and network genome now: {}, going to send to node {} which is {}", updatedGenome, s.originalRequest.neuronId, generatedActors.allNodes(s.originalRequest.neuronId).actor)
+			log.debug("updated the subnet and network genome now: {}, going to send to node {} which is {}", updatedGenome.toJson, s.originalRequest.neuronId, generatedActors.allNodes(s.originalRequest.neuronId).actor)
 
-			t.networkSchema.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)
+			updatedSettings.networkSchema.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)
 
 			goto(Ready) using updatedSettings
 
@@ -244,7 +261,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 			val updatedSchema = updatedGenome.generateActors(context, t.networkSchema)
 			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
 			// need to tell two neurons that they have a disabled connection and a new one.
-			log.debug("genome updated now: {}, represented as : {}", updatedGenome, updatedGenome.toJson)
+			log.debug("genome updated now: {}, represented as : {}", updatedGenome.toJson, updatedGenome.toJson)
 			goto(Ready) using updatedSettings
 
 		case Event(s: Innovation.SubNetNeuronInnovationConfirmation, t: NetworkSettings) =>

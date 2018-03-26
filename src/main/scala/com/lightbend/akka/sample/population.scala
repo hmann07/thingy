@@ -60,7 +60,8 @@ object Population {
 			"name" -> n.name, 
 			"layer" -> n.layer,
 			"activationFunction" -> n.activationFunction,
-			"subnetid" -> n.subnetId)
+			"subnetid" -> n.subnetId,
+			"biasWeight" -> n.biasWeight)
     }
 
   	implicit def connectionWriter: BSONDocumentWriter[ConnectionGenome] = Macros.writer[ConnectionGenome]
@@ -108,6 +109,8 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  		rep(gestatable, population, List.empty)
  	}
 
+
+
  	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef]):List[ActorRef] ={
 		g.headOption.map(gnew=>{
 			val evalG = new GenomeIO(None, Some(gnew))
@@ -145,9 +148,8 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 			val logParams = Array(s.currentGeneration, d.evaluator.fitness, d.evaluator.auxValue, d.genome.copy(species= allocatedSpecies, generation = s.currentGeneration).toJson, sender(), completed, s.currentPopulationSize)
 
 			val insertDBRecord = genomeCollection.flatMap(_.insert(d.genome.copy(species= allocatedSpecies,generation = s.currentGeneration)).map(_ => {}))
-			log.debug("generation {} population received Performance value of {}, auxValue: {} for genome: {} from {}. received {} of {} ", logParams)
-			log.debug("speciesDirectory id number is {}", s.speciesDirectory.currentSpeciesId)
- 			
+			log.info("generation {} population received Performance value of {}, auxValue: {} for genome: {} from {}. received {} of {} ", logParams)
+			
 
 
  			if(completed == s.currentPopulationSize) {
@@ -156,6 +158,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
  					
  				//log.debug("population: All Agents Completed")
  				log.debug("generation {} completed", s.currentGeneration)
+ 				log.debug("speciesDirectory {}", s.speciesDirectory)
  				
  				// check to see if we have done all generations
 

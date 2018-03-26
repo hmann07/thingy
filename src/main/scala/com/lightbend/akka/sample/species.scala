@@ -185,12 +185,13 @@ case class SpeciesDirectory (
 		}
 
 		def generationFunction(s: Species): () => NetworkGenome = {
-		val genome1 = TournamentSelection.select(s.members).genome
-		val genome2 = TournamentSelection.select(s.members).genome
+		val genome1 = TournamentSelection.select(s.members)
+		val genome2 = TournamentSelection.select(s.members)
 
+		val orderedGenome = (if(genome1.performanceValue > genome2.performanceValue) genome1 else genome2, if(genome1.performanceValue > genome2.performanceValue) genome2 else genome1)
 		
 		val f = () => {
-			genome1.crossover(genome2)
+			orderedGenome._1.genome.crossover(orderedGenome._2.genome)
 		}
 
 		f

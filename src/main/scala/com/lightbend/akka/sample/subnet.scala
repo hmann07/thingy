@@ -129,7 +129,7 @@ class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGe
 
 			log.debug("subnet received Output signal of {}", s)
 
-			if(t.nodeGenome.layer < 1) {
+			if(t.nodeGenome.nodeType != "output") {
 					t.connections.outputs.foreach(output => output.node.actor ! Neuron.Signal(value = s.value * output.weight.value, recurrent = output.recurrent))
 				} else {
 					// layer = 1, Assume layer > 1 is impossible. send to parent. 

@@ -2,6 +2,7 @@ package com.thingy.mutator
 
 import com.thingy.genome.NetworkGenome
 import com.thingy.genome.ConnectionGenome
+import com.thingy.genome.NeuronGenome
 import com.thingy.innovation.Innovation
 import scala.util.Random
 import com.typesafe.config.ConfigFactory
@@ -22,9 +23,9 @@ class Mutator {
 
 
 		val mutationFunctions = List(
-				(addNetworkConnection(_),0.03), 
+				(addNetworkNode(_),0.1), 
 				//addSubNetConnection(_),
-				(addNetworkNode(_),0.05),
+				(addNetworkConnection(_),0.3),
 				//addSubNetworkNode(_),
 				(mutateWeights(_), 1.0)
 			)
@@ -172,7 +173,18 @@ class Mutator {
 
 	 		}
 	 	}
-	 	Innovation.WeightChangeInnovation(genome.copy(connections= newG))
+	 	val newN = genome.neurons.foldLeft(Map[Int, NeuronGenome]()){
+	 		(acc, current) => {
+	 			if(Random.nextDouble < config.getConfig("thingy").getDouble("weight-mutation-likelihood")) {
+	 			val (key, genome) = current
+	 			acc + (key -> genome.copy(biasWeight = genome.biasWeight.mutate))
+	 			} else {
+	 			acc + current
+	 			}
+
+	 		}
+	 	}
+	 	Innovation.WeightChangeInnovation(genome.copy(connections= newG, neurons = newN))
 	 }
 
 

@@ -32,7 +32,8 @@ object NetworkGenome {
 	 (JsPath  \ "layer").write[Double] and
 	 (JsPath  \ "activationFunction").writeNullable[String] and
 	 (JsPath  \ "subnetid").writeNullable[Int] and
-	 (JsPath  \ "biasWeight").writeNullable[Weight]
+	 (JsPath  \ "biasWeight").write[Weight] and
+	 (JsPath  \ "type").write[String]
 	) (unlift(NeuronGenome.unapply))
 
 
@@ -162,10 +163,16 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 				// one of he connections could be disabled we will enable with some P
 	 				// there's potetntial for completely destroying networks with un-enabled connections
 	 				// therefore enable all.
-	 				if(Random.nextDouble < 0.5) {
-	 					c.copy(enabled = true)
+
+	 				// select one or other
+					val newConn: ConnectionGenome = {if(Random.nextDouble < 0.5) c else current._2}
+	 				 				
+
+	 				if((!c.enabled || !current._2.enabled) && Random.nextDouble < 0.75) {
+	 					newConn.copy(enabled = true)
 	 				} else {
-	 					current._2.copy(enabled = true)
+	 					// we could leave this disabled (if it were) but network may die...
+	 					newConn.copy(enabled = true)
 	 				}
 	 			
 	 		}.getOrElse(current._2)
@@ -235,7 +242,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	  */
 	 def updateNetworkGenome(s: Innovation.NetworkNeuronInnovationConfirmation): NetworkGenome = {
 	 	val neuronLayer = (neurons(s.connectionToBeSplit.from).layer + neurons(s.connectionToBeSplit.to).layer) / 2
-	 	val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
+	 	val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None, Weight(), "hidden"))
 	 	val recurrentPrior = if(neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
 	 	// use weight from old connection
 	 	val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, s.connectionToBeSplit.weight, true, recurrentPrior))
@@ -279,7 +286,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 		
 			val subnet = subnetList(s.originalRequest.existingNetId)
 			val neuronLayer = (subnet.neurons(s.connectionToBeSplit.from).layer + subnet.neurons(s.connectionToBeSplit.to).layer) / 2
-	 		val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None))
+	 		val newNeuron = (s.nodeid -> NeuronGenome(s.nodeid, "newNeuron" + s.nodeid, neuronLayer, Some("SIGMOID"), None,Weight(), "hidden"))
 	 		val recurrentPrior = if(subnet.neurons(s.connectionToBeSplit.from).layer < neuronLayer) {false} else {true}
 	 		// use old weight
 	 		val newPrior = (s.priorconnectionId -> ConnectionGenome(s.priorconnectionId, s.connectionToBeSplit.from, s.nodeid, s.connectionToBeSplit.weight, true, recurrentPrior))
@@ -331,13 +338,17 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 			 		// already an actor for this genome?
 				 	{if(!schemaObj.allNodes.contains(currentObj.id)){
 
-				 		val ar: ActorRef =  context.actorOf(Neuron.props(currentObj), currentObj.name)
+				 		val ar: ActorRef =  context.actorOf(Neuron.props(currentObj), currentObj.name )
 				 		schemaObj.update(currentObj, ar)
 		 	 		} else {
 				 		schemaObj
 				 	}}
 	 		}
 	 	}
+
+	 	// now close down any neurons not used.
+
+	 	context.children.foreach(c=> if(!neuronActors.allNodes.values.exists(x	=> x.actor.path.name == c.path.name)) context.stop(c))
 
 	 	val connectionConfigs = connections.foldLeft(Map[ActorRef, Neuron.ConnectionConfig]()) { (acc, current) =>
 	 		val currentObj = current._2

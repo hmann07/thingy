@@ -169,3 +169,61 @@ function dragended(d) {
   //d.fy = null;
 
 }
+
+
+var Network = function() {
+this.layers = [];
+this.connections;
+this.inputLayer;
+this.outputLayer;
+}
+
+var Neuron = function(nn){
+  this.network = nn
+  this.activationFunction = nn.globalActivationFn
+  this.bias = 1;
+  this.outgoingConnections = [];
+  this.incomingConnections = [];
+  this.output = 0;
+  this.error = 0;
+  this.errorGradient = 0;
+  this.learningRate = nn.learningRate;
+
+}
+
+var NeuronLayer = function(numberofnodes,layernumber,network){
+  this.network = network
+  this.numberofnodes = numberofnodes
+  this.layerNumber = layernumber;
+  this.neurons = {};
+
+  for(var a = 0;a<numberofnodes;a++){
+    var n = new Neuron(this.network)
+    this.neurons.push(n)
+    console.log("   adding " + a + " neuron to layer " + layernumber)
+  }
+}
+
+Network.prototype.build = function(genome){
+  console.log("building layers...")
+  var layerspec = {}
+  genome.neurons.forEach(function(n){layerspec[n.layer]?layerspec[n.layer] = layerspec[n.layer] + 1:layerspec[n.layer] = 1 })
+
+  nn = this
+  Object.values(layerspec).forEach(function(l,i){
+    console.log(" adding layer...")
+    var nl = new NeuronLayer(l,i,nn)
+    nn.layers.push(nl)
+
+  })
+}
+
+Network.prototype.connect = function(genome){
+  console.log("connecting layers...")
+  nn = this
+
+
+
+}
+
+

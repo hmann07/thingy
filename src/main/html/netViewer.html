@@ -20,9 +20,16 @@
 </div>
 <script type="text/javascript">
 	
-	var genome = {"id":1,"neurons":[{"id":2,"name":"input2","layer":0},{"id":5,"name":"newNeuron5","layer":0.5,"activationFunction":"SIGMOID"},{"id":1,"name":"input1","layer":0},{"id":3,"name":"subnetoutput1","layer":1,"subnetid":1}],"connections":[{"id":25,"from":2,"to":5,"weight":2.2678013788875777,"enabled":true,"recurrent":false},{"id":1,"from":1,"to":3,"weight":-0.2386585339216003,"enabled":true,"recurrent":false},{"id":6,"from":1,"to":5,"weight":0.3862938777781828,"enabled":true,"recurrent":false},{"id":2,"from":2,"to":3,"weight":-0.27577901621986634,"enabled":true,"recurrent":false},{"id":7,"from":5,"to":3,"weight":1,"enabled":true,"recurrent":false},{"id":19,"from":5,"to":5,"weight":-3.580488507198556,"enabled":true,"recurrent":true}],"subnets":[{"id":1,"neurons":[{"id":1,"name":"input1","layer":0},{"id":2,"name":"ouput1","layer":1,"activationFunction":"SIGMOID"}],"connections":[{"id":1,"from":1,"to":2,"weight":1,"enabled":true,"recurrent":false}],"subnets":[],"parent":3,"species":0,"generation":0}],"parent":0,"species":42,"generation":21}
+	var genome = {"id":1,"neurons":[{"id":1,"name":"input1","layer":0,"biasWeight":0.8943503887686588,"type":"input"},{"id":3,"name":"subnetoutput1","layer":1,"subnetid":1,"biasWeight":2.3423985592909236,"type":"output"},{"id":2,"name":"input2","layer":0,"biasWeight":-3.53208189850053,"type":"input"},{"id":5,"name":"newNeuron5","layer":0.5,"activationFunction":"SIGMOID","biasWeight":3.7021989952177887,"type":"hidden"}],"connections":[{"id":1,"from":1,"to":3,"weight":-0.6249566017051191,"enabled":true,"recurrent":false},{"id":2,"from":2,"to":3,"weight":2.2620623437592533,"enabled":true,"recurrent":false},{"id":6,"from":1,"to":5,"weight":-0.6337437611004769,"enabled":true,"recurrent":false},{"id":7,"from":5,"to":3,"weight":-0.5082018602150553,"enabled":true,"recurrent":false}],"subnets":[{"id":1,"neurons":[{"id":1,"name":"input1","layer":0,"biasWeight":3.3370862782343664,"type":"input"},{"id":2,"name":"ouput1","layer":1,"activationFunction":"SIGMOID","biasWeight":3.1485400023312256,"type":"output"}],"connections":[{"id":1,"from":1,"to":2,"weight":1,"enabled":true,"recurrent":false}],"subnets":[],"parent":3,"species":0,"generation":0}],"parent":0,"species":0,"generation":0}
 </script>
 <script src="d3-v4.js"></script>
-<script src="app.js"></script>
+<script src="app.js">
+  
+</script>
+<script>
+  var f = new Network()
+  f.build(genome)
+  f.connect()
+</script>
 </body>
 </html>
