@@ -362,7 +362,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 			 		case Some(existingConfig) => {
 				 		acc + (neuronActors.allNodes(currentObj.to).actor -> existingConfig.copy(inputs = pre :: existingConfig.inputs))
 				 	}
-			 		case None => acc + (neuronActors.allNodes(currentObj.to).actor -> Neuron.ConnectionConfig(inputs = List(pre)))
+			 		case None => acc + (neuronActors.allNodes(currentObj.to).actor -> Neuron.ConnectionConfig(inputs = List(pre), neuronGenome = neurons(currentObj.to)))
 		 		}
 
 		 		// create config for all outputs
@@ -370,7 +370,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 			 		case Some(existingConfig) => {
 				 		updateIncoming + (neuronActors.allNodes(currentObj.from).actor ->  existingConfig.copy(outputs = suc :: existingConfig.outputs))
 				 	}
-			 		case None => updateIncoming + (neuronActors.allNodes(currentObj.from).actor -> Neuron.ConnectionConfig(outputs = List(suc)))
+			 		case None => updateIncoming + (neuronActors.allNodes(currentObj.from).actor -> Neuron.ConnectionConfig(outputs = List(suc), neuronGenome = neurons(currentObj.from)))
 			 	}
 	 	} else {
 			acc

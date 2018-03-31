@@ -117,20 +117,31 @@ class Mutator {
 	 */
 
 
-	 def addNetworkNode(genome: NetworkGenome): Innovation.NetworkNeuronInnovation = {
+	 def addNetworkNode(genome: NetworkGenome): Innovation.InnovationType = {
 
-	 	val connectionCount = genome.connections.size
-	 	val connectionToSplit = genome.connections.values.toList(Random.nextInt(connectionCount))
+	 	def addNetworkNodeInt(genome: NetworkGenome , tries: Int): Innovation.InnovationType = {
 
-	 	// no point evolving disabled connections right?
-	 	
-	 	if(connectionToSplit.enabled) {
-	 		Innovation.NetworkNeuronInnovation(connectionToSplit)
-	 	} else {
-			addNetworkNode(genome)	 		
+			if(tries == 0) {
+				mutateWeights(genome)
+			} else {
+
+			 	val connectionCount = genome.connections.size
+			 	val connectionToSplit = genome.connections.values.toList(Random.nextInt(connectionCount))
+
+			 	// no point evolving disabled connections right?
+			 	// temporarily... let's not add neurons on recursive connections.. it's a headache... 
+			 	if(connectionToSplit.enabled && !connectionToSplit.recurrent && (connectionToSplit.from != connectionToSplit.to) ) {
+			 		Innovation.NetworkNeuronInnovation(connectionToSplit)
+			 	} else {
+					addNetworkNodeInt(genome, tries)	 		
+			 	}
+		 	}
+
 	 	}
 
-	 }
+	 	addNetworkNodeInt(genome, 100)
+
+	}
 
 	 
 

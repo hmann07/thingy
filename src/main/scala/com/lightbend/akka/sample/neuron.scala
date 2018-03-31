@@ -20,7 +20,11 @@ final case class NeuronSettings(
 	recurrentSignal: Double = 0.0,
 	signalsReceived: Int = 0,
 	connections: Neuron.ConnectionConfig = Neuron.ConnectionConfig(),
-	genome: NeuronGenome)
+	genome: NeuronGenome) {
+	def reset {
+		this.copy()
+	}
+}
 
 object Neuron {
 
@@ -31,7 +35,7 @@ object Neuron {
 	// Messages it can receive
 	final case class Signal(value: Double, flags:List[String] = List.empty, batchId: Int = 0, recurrent: Boolean = false)
 	final case class Output(nodeId: Int, value: Double, batchId: Int = 0,  flags: List[String] = List.empty)
-	final case class ConnectionConfig(inputs: List[Predecessor] = List.empty, outputs: List[Successor] = List.empty)
+	final case class ConnectionConfig(inputs: List[Predecessor] = List.empty, outputs: List[Successor] = List.empty, neuronGenome: NeuronGenome= null)
 	final case class ConnectionConfigUpdate(inputs: List[Predecessor] = List.empty, outputs: List[Successor] = List.empty)
 	
 	def props(genome: NeuronGenome): Props = {
@@ -64,16 +68,35 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
 			log.debug("received settings config of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
 			// Overwrite all existing connection details.
 			val updatedConfig = t.connections.copy(inputs = d.inputs, outputs = d.outputs)
+			
+			val updatedSettings = t.copy(
+				connections = updatedConfig,
+				firstRun = true,
+				recurrentSignalsReceived = 0,
+				activationLevel = 0,
+				recurrentSignal = 0.0,
+				signalsReceived = 0,
+				genome = d.neuronGenome
+			)
 			// assumethis is a new epoch, clear recurrent received.. (won't have fired on last pattern so won't have reset counts)
-			stay using t.copy(connections = updatedConfig, firstRun = true, recurrentSignalsReceived = 0, recurrentSignal = 0.0)
+			stay using updatedSettings
 
 		case Event(d: ConnectionConfigUpdate, t: NeuronSettings) =>
 
 			log.debug("received settings config update of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)
 			// Append to list of connections
 			val updatedConfig = t.connections.copy(inputs = d.inputs ++ t.connections.inputs, outputs = d.outputs ++ t.connections.outputs)
-			stay using t.copy(connections = updatedConfig, firstRun = true, recurrentSignalsReceived = 0, recurrentSignal = 0.0)
-
+			
+			val updatedSettings = t.copy(
+				connections = updatedConfig,
+				firstRun = true,
+				recurrentSignalsReceived = 0,
+				activationLevel = 0,
+				recurrentSignal = 0.0,
+				signalsReceived = 0
+			)
+			// assumethis is a new epoch, clear recurrent received.. (won't have fired on last pattern so won't have reset counts)
+			stay using updatedSettings
 
     	case Event(s: Signal, t: NeuronSettings) =>
 
