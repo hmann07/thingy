@@ -6,8 +6,8 @@
 		module="akka-quickstart-scala_2.11"
 		revision="1.0"
 		conf="provided"
-		confs="compile, runtime, test, provided, optional, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool, weaver-compile-configuration, weaver-scope"
-		date="20180316105619"/>
+		confs="universal, universal-docs, universal-src, compile, runtime, test, provided, optional, windows, docker, linux, rpm, debian, compile-internal, runtime-internal, test-internal, plugin, sources, docs, pom, scala-tool, weaver-compile-configuration, weaver-scope"
+		date="20180425212907"/>
 	<dependencies>
 	</dependencies>
 </ivy-report>
