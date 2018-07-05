@@ -1,9 +1,0 @@
-[0m[[0minfo[0m] [0m[32mTestGenome:[0m[0m
-[0m[[0minfo[0m] [0m[32mthe genome[0m[0m
-[0m[[0minfo[0m] [0m[32m- should create a flat representation of its connections[0m[0m
-[0m[[0minfo[0m] [0m[32mthe same genomes[0m[0m
-[0m[[0minfo[0m] [0m[32m- should have a distance of 0[0m[0m
-[0m[[0minfo[0m] [0m[32mmutated genomes[0m[0m
-[0m[[0minfo[0m] [0m[32m- should have longer connection list[0m[0m
-[0m[[0minfo[0m] [0m[32mdifferent genomes[0m[0m
-[0m[[0minfo[0m] [0m[32m- should have a distance > 0.0[0m[0m

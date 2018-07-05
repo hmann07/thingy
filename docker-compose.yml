@@ -1,0 +1,24 @@
+version: '3.1'
+
+services:
+
+  mongo:
+    image: mongo:3.6
+    restart: always
+    ports: 
+      - "27017:27017"
+
+  mongo-express:
+    image: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+
+  train-engine:
+    image: train-engine
+    restart: always
+    ports: 
+      - "9000:9000"
+    environment:
+      - MACHINEHOST="192.168.99.101"
+    

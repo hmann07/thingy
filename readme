@@ -1,0 +1,3 @@
+
+#run the stack
+docker stack deploy -c docker-compose.yml thingy
