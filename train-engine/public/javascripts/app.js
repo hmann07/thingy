@@ -21,8 +21,9 @@ var width  = 500,
 //})
 
 
-function drawSim(genome,rootObj) {
+function drawSim(genomeData,rootObj) {
 
+var genome = genomeData.genome
 
 var simulation = d3.forceSimulation()
     .force("link", d3.forceLink().id(function(d) { return d.id; }))
@@ -35,7 +36,7 @@ var simulation = d3.forceSimulation()
   .attr('width', width)
   .attr('height', height);
 
-  var titleTxt = svg.append("text").text("species " + genome.species + ", generation " + genome.generation).attr("y",20)
+  var titleTxt = svg.append("text").text("species " + genome.species + ", generation " + genome.generation +". Fitness: " + genomeData.fitness).attr("y",20)
 
 svg.append('svg:defs').append('svg:marker')
     .attr('id', 'end-arrow')
@@ -117,7 +118,7 @@ svg.append('svg:defs').append('svg:marker')
 
   node.append("title")
       .text(function(d) {
-          return d.activationFunction;
+          return d.activationFunction + " bias: " + d.biasWeight;
            });
 
   simulation

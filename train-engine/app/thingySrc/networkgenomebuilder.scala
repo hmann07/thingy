@@ -10,14 +10,13 @@ object NetworkGenomeBuilder {
 
 	
 	implicit val config = ConfigFactory.load()
-	
 	val file = config.getConfig("thingy").getString("seed-network")
-	val stream = new FileInputStream(file)
-	
 		
 }
 
 class NetworkGenomeBuilder {
 	import NetworkGenomeBuilder._
+
+	val stream = new FileInputStream(file)
 	val json = try {  Json.using[Json.WithDefaultValues].parse(stream) } finally { stream.close() }
 }

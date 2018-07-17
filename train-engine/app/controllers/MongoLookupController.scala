@@ -55,15 +55,16 @@ class MongoLookupController @Inject()(cc: ControllerComponents)(val reactiveMong
     }
   }
 
-  def getSpeciesByGeneration(generation: String) = Action.async {
+  def getSpeciesByGeneration(runId: String, generation: String) = Action.async {
     // let's do our query
     val convGen = generation.toInt
+    //val convRun = runId.toInt
 
     def collection: JSONCollection = db.collection[JSONCollection]("species")
     
     val cursor: Cursor[JsObject] = collection.
       // find all people with name `name`
-      find(Json.obj("generation" -> convGen)).
+      find(Json.obj("generation" -> convGen, "runId" -> runId )).
       // sort them by creation date
       //sort(Json.obj("spec" -> 1)).
       // perform the query and get a cursor of JsObject
@@ -78,7 +79,7 @@ class MongoLookupController @Inject()(cc: ControllerComponents)(val reactiveMong
     }
   }
 
-  def findBySpeciesandGen (generation: String, species: String) = Action.async {
+  def findBySpeciesandGen (runId: String, generation: String, species: String) = Action.async {
     // let's do our query
     val convGen = generation.toInt
     val convSpec = species.toInt
@@ -87,7 +88,7 @@ class MongoLookupController @Inject()(cc: ControllerComponents)(val reactiveMong
     
     val cursor: Cursor[JsObject] = collection.
       // find all people with name `name`
-      find(Json.obj("generation" -> convGen, "species" -> convSpec )).
+      find(Json.obj("runId"-> runId, "generation" -> convGen, "species" -> convSpec )).
       // sort them by creation date
       //sort(Json.obj("spec" -> 1)).convSpec
       // perform the query and get a cursor of JsObject
@@ -122,6 +123,51 @@ class MongoLookupController @Inject()(cc: ControllerComponents)(val reactiveMong
     // everything's ok! Let's reply with the array
     futureUsersList.map { persons =>
       Ok(Json.toJson(persons))
+    }
+  }
+
+  def getRuns = Action.async {
+    // let's do our query
+    def collection: JSONCollection = db.collection[JSONCollection]("runs")
+    
+    val cursor: Cursor[JsObject] = collection.
+      // find all people with name `name`
+      find(Json.obj()).
+      // sort them by creation date
+      //sort(Json.obj("generation" -> -1)).
+      // perform the query and get a cursor of JsObject
+      cursor[JsObject]()
+
+    // gather all the JsObjects in a list
+    val futureUsersList: Future[List[JsObject]] = cursor.collect[List]()
+
+    // everything's ok! Let's reply with the array
+    futureUsersList.map { run =>
+      Ok(Json.toJson(run))
+    }
+  }
+
+
+  def getGenerationsByRun(runId: String) = Action.async {
+    // let's do our query
+    val convRun = runId
+
+    def collection: JSONCollection = db.collection[JSONCollection]("generations")
+    
+    val cursor: Cursor[JsObject] = collection.
+      // find all people with name `name`
+      find(Json.obj("runId" -> convRun)).
+      // sort them by creation date
+      //sort(Json.obj("spec" -> 1)).
+      // perform the query and get a cursor of JsObject
+      cursor[JsObject]()
+
+    // gather all the JsObjects in a list
+    val futureGenList: Future[List[JsObject]] = cursor.collect[List]()
+
+    // everything's ok! Let's reply with the array
+    futureGenList.map { gens =>
+      Ok(Json.toJson(gens))
     }
   }
 

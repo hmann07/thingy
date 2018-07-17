@@ -1,0 +1,20 @@
+@(logoutUrl: Call)(implicit flash: Flash)
+
+	<html>
+	<head>
+		  <link rel="stylesheet" media="screen" href="@routes.Assets.versioned("lib/bootstrap/css/bootstrap.min.css")">
+	</head>
+	<body>
+		<div>
+			@navbar(logoutUrl)
+    	<h1>Welcome @flash.get("info").getOrElse("")</h1>
+
+    	@* show the flash message (Option 1) *@
+    	@flash.get("info").getOrElse("")
+
+    	<div>
+        	
+    	</div>
+    </div>
+	</body>
+    </html>

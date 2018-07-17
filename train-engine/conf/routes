@@ -3,28 +3,41 @@
 # ~~~~
 
 # An example controller showing a sample home page
-GET     /                           controllers.HomeController.index
-
+GET     /                           controllers.LandingPageController.showLandingPage
 # the net viewer
 GET     /netviewer                  controllers.NetViewerController.index
 
 GET     /mongolookup/:speciesId		controllers.MongoLookupController.findBySpecies(speciesId)
 
-GET     /getSpeciesByGeneration/:generationId		controllers.MongoLookupController.getSpeciesByGeneration(generationId)
+GET     /getSpeciesByGeneration/:runId/:generationId		controllers.MongoLookupController.getSpeciesByGeneration(runId, generationId)
 
+GET     /config						controllers.ConfigController.viewConfig
 
-GET /getNetByGenerationAndSpecies/:generationId/:speciesId controllers.MongoLookupController.findBySpeciesandGen(generationId, speciesId)
+POST     /userPost						controllers.ConfigController.userPost
+
+GET /getNetByGenerationAndSpecies/:runId/:generationId/:speciesId controllers.MongoLookupController.findBySpeciesandGen(runId, generationId, speciesId)
 
 GET     /generations 				controllers.MongoLookupController.getGenerations
 
+GET     /generations/:runId 		controllers.MongoLookupController.getGenerationsByRun(runId)
+
+GET     /runs 						controllers.MongoLookupController.getRuns
+
 GET     /start 						controllers.StartEvolveController.start
 
-# An example controller showing how to use dependency injection
-GET     /count                      controllers.CountController.count
-# An example controller showing how to write asynchronous code
-GET     /message                    controllers.AsyncController.message
+GET /startWS						controllers.StartEvolveController.startWS
 
 # Map static resources from the /public folder to the /assets URL path
 GET     /assets/*file               controllers.Assets.versioned(file)
+
+
+# user/admin stuff
+GET  /users/login               controllers.UserController.showLoginForm
+POST /users/doLogin             controllers.UserController.processLoginAttempt
+
+# pages for authenticated users
+GET  /users/logout              controllers.AuthenticatedUserController.logout
+GET  /landingPage               controllers.LandingPageController.showLandingPage
+
 
 ->     /webjars                	webjars.Routes

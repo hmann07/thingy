@@ -15,6 +15,7 @@ object Weight {
 	implicit val config = ConfigFactory.load()
 
 	val weightRange: Double = config.getConfig("thingy").getDouble("weight-range")
+	val maxJiggleAmount: Double = config.getConfig("thingy").getDouble("max-jiggle-amount")
 
 	def rGen = scala.util.Random
 
@@ -64,7 +65,7 @@ object Weight {
 		  */
 
 		 def jiggle = {
-		 	val newval = value + {if(Random.nextDouble<0.5)-1 else 1} * (0.4 * Random.nextDouble)
+		 	val newval = value + {if(Random.nextDouble<0.5)-1 else 1} * (maxJiggleAmount * Random.nextDouble)
 		 	val limitval = if(Math.abs(newval) > (weightRange / 2)) {weightRange / 2} else newval
 		 	Weight(value = limitval)
 

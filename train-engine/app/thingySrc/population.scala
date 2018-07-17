@@ -1,5 +1,6 @@
 package com.thingy.population
 
+import com.thingy.config.ConfigDataClass.ConfigData
 import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.genome.NetworkGenomeBuilder
@@ -17,6 +18,7 @@ import com.thingy.species.Species
 import com.thingy.species.SpeciesDirectory
 import play.api.libs.json._
 import play.api.libs.iteratee._
+import java.util.Calendar
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -32,10 +34,12 @@ case object Active extends PopulationState
 
 object Population {
 
+	def props(out: ActorRef, configData: ConfigData) = Props(new Population(out, configData)) 
+
 	implicit val config = ConfigFactory.load()
 	val p = config.getConfig("thingy").getInt("population-size")
 	
-	val mongoUri = "mongodb://mongo:27017/genomeData?authMode=scram-sha1"
+	val mongoUri = "mongodb://localhost:27017/genomeData?authMode=scram-sha1"
 
  
  	 // Connect to the database: Must be done only once per application
@@ -52,6 +56,8 @@ object Population {
   	def generationCollection = db1.map(_.collection("generations"))
 
   	def speciesCollection = db1.map(_.collection("species"))
+
+  	def runStatsCollection = db1.map(_.collection("runs"))
 
   	// Write Documents: insert or update
   	implicit object weightWriter extends BSONWriter[Weight, BSONDouble] {
@@ -101,12 +107,16 @@ object Population {
     				)
 	}
 
+	implicit val configWriter: BSONDocumentWriter[ConfigData] = Macros.writer[ConfigData]
+
 	implicit object speciesDirWriter extends BSONDocumentWriter[SpeciesDirectory] {
   		def write(s: SpeciesDirectory): BSONDocument =
     		BSONDocument(
     				"species" -> s.species.values
     				)
 	}
+
+	case class FrontendMessage(msg: String)
   	
   	
 
@@ -124,10 +134,15 @@ object Population {
 	
 }
 
-class Population() extends FSM[PopulationState, Population.PopulationSettings] {
+class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationState, Population.PopulationSettings] {
 	import Population._
 
 	//val gNet = () => {new NetworkGenomeBuilder(None)}.generate
+	val startTime = Calendar.getInstance().getTimeInMillis()
+	val runId = "evolutionrun¬"  + startTime
+
+
+	out ! (runId)
 
 	val nb: NetworkGenomeBuilder = new NetworkGenomeBuilder
 
@@ -154,7 +169,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 	}
 
  	val popList = for {
- 		i <- 1 to p
+ 		i <- 1 to configData.populationSize
  	}
  	yield {
  		context.actorOf(Agent.props(innovation,  new GenomeIO(Some(nb.json), None)), "agent" + i)
@@ -163,7 +178,11 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 	log.info("population created with {} children", context.children.size) 
 
 
-	startWith(Active, PopulationSettings(currentPopulation = popList.toList))
+	startWith(Active, PopulationSettings(
+		currentPopulation = popList.toList, 
+		currentPopulationSize = configData.populationSize,
+		speciesDirectory = SpeciesDirectory(configData = configData)
+		))
 
 	when(Active) {
  		case Event(d: Network.Done, s: PopulationSettings) =>
@@ -178,21 +197,28 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
 			val logParams = Array(s.currentGeneration, d.evaluator.fitness, d.evaluator.auxValue, updateGenome.toJson, sender(), completed, s.currentPopulationSize)
 
-			val insertDBRecord = genomeCollection.flatMap(_.insert(updateGenome).map(_ => {}))
+			val insertDBRecord = genomeCollection.flatMap(_.insert(BSONDocument(
+				"runId" -> runId,
+				"generation" -> s.currentGeneration,
+				"species"-> allocatedSpecies,
+				"fitness" -> d.evaluator.fitness,
+				"genome" -> updateGenome
+			)).map(_ => {}))
 
 			log.info("generation {} population received Performance value of {}, auxValue: {} for genome: {} from {}. received {} of {} ", logParams)
-			
+						
 
 
  			if(completed == s.currentPopulationSize) {
  				// so....  we have got n genomes, each with a Performance value of some sort....
  				// time to select the best in line with their performance and send the genome back to agent whi should forward on to the network
- 				
+ 				out ! ("generation "+ s.currentGeneration +" finished")
  				val speciesList = s.speciesDirectory.species.filter(s=> s._2.memberCount > 0)
  				val activeSpecies = speciesList.size
 
  				//log.debug("population: All Agents Completed")
  				val insertGenRecord = generationCollection.flatMap(_.insert(BSONDocument(
+ 							"runId" -> runId,
 							"generation" -> s.currentGeneration,
 							"currentPopulation" -> s.currentPopulationSize,
 						    "activeSpecies" -> activeSpecies,
@@ -201,6 +227,7 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  				val speciesForInsert = speciesList.values.foreach(species=> {
  					val d = speciesCollection.flatMap(_.insert(BSONDocument(
+ 					"runId" -> runId,
  					"generation" -> s.currentGeneration,
  					"species" -> species.id,
  					"speciesTotalFitness" -> species.speciesTotalFitness
@@ -215,6 +242,18 @@ class Population() extends FSM[PopulationState, Population.PopulationSettings] {
 
  				if (s.currentGeneration == generations) {
  					log.debug("All generations finished")
+ 					val endTime = Calendar.getInstance().getTimeInMillis()
+ 					val duration = (endTime - startTime) / 1000
+ 					out ! (runId + " finished in " + duration + " seconds")
+
+					val insertDBRecord = runStatsCollection.flatMap(_.insert(BSONDocument(
+						"runId" -> runId,
+						"startTime" -> startTime,
+						"settings" -> configData,
+						"endTime" -> endTime,
+						"duration" -> duration
+					)).map(_ => {}))
+
  					context.stop(self)
  					stay
  				} else {

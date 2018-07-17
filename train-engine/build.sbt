@@ -9,6 +9,8 @@ lazy val root = (project in file(".")).enablePlugins(PlayScala, SbtWeb)
 
 libraryDependencies += guice
 
+libraryDependencies += ehcache
+
 libraryDependencies += "org.aspectj" % "aspectjweaver" % "1.8.9"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.4.5"
@@ -37,10 +39,13 @@ libraryDependencies += "org.reactivemongo" % "play2-reactivemongo_2.11" % "0.13.
 
 libraryDependencies += "org.webjars" %% "webjars-play" % "2.6.3"
 
+libraryDependencies += "org.webjars.npm" % "js-tokens" % "4.0.0"
+
 libraryDependencies += 	"org.webjars.npm" % "react" % "16.3.1"
 
-libraryDependencies += 	"org.webjars.npm" % "react-dom" % "16.3.1"
+libraryDependencies += 	"org.webjars.npm" % "react-dom" % "16.3.2"
 
 libraryDependencies += "org.webjars" % "bootstrap" % "4.0.0-2"
 
 libraryDependencies += "org.webjars.npm" % "crossfilter2" % "1.3.14"
+

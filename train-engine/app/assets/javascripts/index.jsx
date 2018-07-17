@@ -3,25 +3,45 @@ class App extends React.Component {
 		super(props);
  	this.state =
  	{
- 		"generationData": this.props.value,
- 		"speciesData": [],
+ 		"generationData": [],
+ 		"runData":[],
+    "speciesData": [],
  		"networksData": [],
  		currentGeneration: 0,
- 		currentSpecies: 0
+ 		currentSpecies: 0,
+    currentRunId: 0
  	}
  }
 
+ componentDidMount(){
+  var t = this
+  $.get( "/runs", function( runData ) {
+    t.setState({runData : runData})
+  })
+ }
+
+
+
+ runClickHandle(runId) {
+  var t = this
+  $.get( "/generations/" + runId, function( generationData ) {
+    t.setState({generationData : generationData, currentRunId : runId})
+  })  
+   
+ }
+
+
  generationClickHandle(generation) {
  	var t = this
- 	$.get( "/getSpeciesByGeneration/" + generation, function( speciesData ) {
+ 	$.get( "/getSpeciesByGeneration/" + t.state.currentRunId + "/" + generation, function( speciesData ) {
 		t.setState({speciesData : speciesData, currentGeneration : generation})
-	})	
+   })	
  	 
  }
 
   speciesClickHandle(species) {
  	var t = this
- 	$.get( "/getNetByGenerationAndSpecies/" + t.state.currentGeneration  + "/" + species, function( netData ) {
+ 	$.get( "/getNetByGenerationAndSpecies/" + t.state.currentRunId + "/" + t.state.currentGeneration  + "/" + species, function( netData ) {
 		t.setState({networksData : netData})
 	})
  }
@@ -33,6 +53,7 @@ class App extends React.Component {
  render(){
  	return (
  		<div>
+      <DataSelector value={this.state.runData} fields={["runId","startTime", "endTime", "duration"]} clickHandler={this.runClickHandle.bind(this)}/>
  			<DataSelector value={this.state.generationData} fields={["generation","bestPerformance", "bestFitness"]} clickHandler={this.generationClickHandle.bind(this)}/>
  			<DataSelector value={this.state.speciesData} fields={["species", "speciesTotalFitness"]} clickHandler={this.speciesClickHandle.bind(this)}/>
  			<DataSelector value={this.state.networksData} fields="all" clickHandler={this.netClickHandle.bind(this)}/>
@@ -153,11 +174,8 @@ class DataSelectorItem extends React.Component {
   }
 }
 
-
-$.get( "/generations", function( generations ) {
-	ReactDOM.render(
-  		<App value={generations} fields="generation"/>,
+ReactDOM.render(
+  		<App />,
   		document.getElementById('root')
 	);
-})
 

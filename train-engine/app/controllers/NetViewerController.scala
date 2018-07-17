@@ -9,7 +9,7 @@ import play.api.mvc._
  * application's home page.
  */
 @Singleton
-class NetViewerController @Inject()(cc: ControllerComponents) (implicit assetsFinder: AssetsFinder)
+class NetViewerController @Inject()(cc: ControllerComponents, authenticatedUserAction: AuthenticatedUserAction) (implicit assetsFinder: AssetsFinder)
   extends AbstractController(cc) {
 
   /**
@@ -18,8 +18,11 @@ class NetViewerController @Inject()(cc: ControllerComponents) (implicit assetsFi
    * will be called when the application receives a `GET` request with
    * a path of `/`.
    */
-  def index = Action {
-    Ok(views.html.netViewer("test"))
+
+   private val logoutUrl = routes.AuthenticatedUserController.logout
+
+  def index = authenticatedUserAction {
+    Ok(views.html.netViewer("test", logoutUrl))
   }
 
 }

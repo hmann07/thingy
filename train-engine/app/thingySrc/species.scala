@@ -6,6 +6,7 @@ import com.thingy.genome.NetworkGenome
 import scala.util.Random
 import com.thingy.selection.TournamentSelection
 import play.api.libs.json._
+import com.thingy.config.ConfigDataClass.ConfigData
 
 
 case class SpeciesMember (
@@ -63,8 +64,7 @@ object SpeciesDirectory {
 	implicit val config = ConfigFactory.load()
 	
 	val speciesStartingThreshold = config.getConfig("thingy").getDouble("species-starting-threshold")
-	val populationSize =  config.getConfig("thingy").getDouble("population-size")
-
+	
 	implicit val speciesDirWrites: Writes[SpeciesDirectory] = new Writes[SpeciesDirectory] {
     def writes(speciesDir: SpeciesDirectory): JsValue = Json.obj(
     	"species" -> speciesDir.species.map(s=> Json.toJson(s._2)),
@@ -80,6 +80,7 @@ object SpeciesDirectory {
 }
 
 case class SpeciesDirectory (
+	val configData: ConfigData = ConfigData(),
 	val currentSpeciesId: Int = 0, 
 	val species: Map[Int, Species] = Map.empty,
 	val totalFitness: Double = 0.0,
@@ -170,6 +171,9 @@ case class SpeciesDirectory (
 		}
 
 		def selectGenerationSurvivors = {
+			val populationSize =  configData.populationSize
+
+
 			species.map(s => {
 
 				val speciesCandidates = ((s._2.speciesTotalFitness / totalFitness) * populationSize).toInt

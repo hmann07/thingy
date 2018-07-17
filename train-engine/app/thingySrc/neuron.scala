@@ -63,6 +63,18 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
 
 	when(Ready) {
 
+		case Event(g: NeuronGenome, t: NeuronSettings) =>
+			val updatedSettings = t.copy(
+				genome = g,
+				firstRun = true,
+				recurrentSignalsReceived = 0,
+				activationLevel = 0,
+				recurrentSignal = 0.0,
+				signalsReceived = 0
+		     )
+
+			stay using updatedSettings
+
 		case Event(d: ConnectionConfig, t: NeuronSettings) =>
 
 			log.debug("received settings config of {} inputs, and {} outputs", d.inputs.length, d.outputs.length)

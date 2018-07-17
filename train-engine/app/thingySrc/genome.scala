@@ -305,7 +305,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 
 
 	/*
-	 * Network genome has a specific method generate Actors so that subnetworks and networks can
+	 * Network genome has a method generate Actors so that subnetworks and networks can
 	 * generate actor networks from the class based genome rather than directly from Json.
 	 * Logic is added to check the schema to see if the node already exists or not.
 	 */
@@ -341,6 +341,9 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 				 		val ar: ActorRef =  context.actorOf(Neuron.props(currentObj), currentObj.name )
 				 		schemaObj.update(currentObj, ar)
 		 	 		} else {
+		 	 			//send the structure to the neuron to update things such as bias
+		 	 			val sn: ActorRef = schemaObj.allNodes(currentObj.id).actor
+		 	 			sn ! currentObj
 				 		schemaObj
 				 	}}
 	 		}
@@ -349,6 +352,8 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 	 	// now close down any neurons not used.
 
 	 	context.children.foreach(c=> if(!neuronActors.allNodes.values.exists(x	=> x.actor.path.name == c.path.name)) context.stop(c))
+
+	 	// Now send down the connections
 
 	 	val connectionConfigs = connections.foldLeft(Map[ActorRef, Neuron.ConnectionConfig]()) { (acc, current) =>
 	 		val currentObj = current._2
