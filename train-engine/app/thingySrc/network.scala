@@ -1,5 +1,6 @@
 package com.thingy.network
 
+import com.thingy.config.ConfigDataClass.ConfigData
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.genome._
 import com.thingy.neuron.Neuron
@@ -48,13 +49,13 @@ object Network {
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
-	def props(name: String, networkGenome: NetworkGenome, innovation: ActorRef, environment: ActorRef): Props = {
+	def props(name: String, networkGenome: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData): Props = {
 
-		Props(classOf[Network], name, networkGenome, innovation, environment)
+		Props(classOf[Network], name, networkGenome, innovation, environment, configData)
 	}
 }
 
-class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment: ActorRef) extends FSM[NetworkState, NetworkSettings] {
+class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
 	val networkGenome = ng
@@ -66,7 +67,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 	// By giving the context the neurons will be created in this context.
 	
 	val generatedActors: NetworkGenome.NetworkNodeSchema  = networkGenome.generateActors(context, NetworkGenome.NetworkNodeSchema())
-	val mutator = new Mutator
+	val mutator = new Mutator(configData)
 
 	log.debug("Network actors are setup as {} ", generatedActors)
 
@@ -161,7 +162,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
       		// if we mutate - > go to status mutating
       		// if we don't mutate, go to ready and perceive
 
-      		val mr = config.getConfig("thingy").getDouble("mutation-rate")
+      		val mr = configData.globalMutationRate
       		if(Random.nextDouble < mr) {
       			
       			val mutationAction = mutator.mutate(updatedGenome) 

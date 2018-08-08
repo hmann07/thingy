@@ -3,7 +3,7 @@
 "neurons":[
 		{"id":1, "layer": 0, "name": "input1", "biasWeight": null, "type": "input"},
 		{"id":2, "layer": 0, "name": "input2", "biasWeight": null, "type": "input"},
-		{"id":3, "layer": 1, "name": "subnetoutput1", "subnetid": 1, "type": "output"}],
+		{"id":3, "layer": 1, "name": "subnetoutput1", "subnetid": 1, "type": "output", "activationFunction": "SIGMOID"}],
 
 "connections": [
 		{"id": 1, "from":1, "to": 3, "weight":null, "enabled": true},

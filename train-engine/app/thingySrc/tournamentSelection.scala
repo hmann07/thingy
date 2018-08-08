@@ -7,7 +7,7 @@ import scala.util.Random
 object TournamentSelection {
 
 	def select(genomes:List[SpeciesMember]): SpeciesMember = {
-			selectAux(genomes, 2, null)
+			selectAux(genomes, 3, null)
 
 	}
 

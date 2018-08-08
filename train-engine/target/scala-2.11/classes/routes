@@ -1,0 +1,43 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# An example controller showing a sample home page
+GET     /                           controllers.LandingPageController.showLandingPage
+# the net viewer
+GET     /netviewer                  controllers.NetViewerController.index
+
+GET     /mongolookup/:speciesId		controllers.MongoLookupController.findBySpecies(speciesId)
+
+GET     /getSpeciesByGeneration/:runId/:generationId		controllers.MongoLookupController.getSpeciesByGeneration(runId, generationId)
+
+GET     /config						controllers.ConfigController.viewConfig
+
+POST     /userPost						controllers.ConfigController.userPost
+
+GET /getNetByGenerationAndSpecies/:runId/:generationId/:speciesId controllers.MongoLookupController.findBySpeciesandGen(runId, generationId, speciesId)
+
+GET     /generations 				controllers.MongoLookupController.getGenerations
+
+GET     /generations/:runId 		controllers.MongoLookupController.getGenerationsByRun(runId)
+
+GET     /runs 						controllers.MongoLookupController.getRuns
+
+GET     /start 						controllers.StartEvolveController.start
+
+GET /startWS						controllers.StartEvolveController.startWS
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(file)
+
+
+# user/admin stuff
+GET  /users/login               controllers.UserController.showLoginForm
+POST /users/doLogin             controllers.UserController.processLoginAttempt
+
+# pages for authenticated users
+GET  /users/logout              controllers.AuthenticatedUserController.logout
+GET  /landingPage               controllers.LandingPageController.showLandingPage
+
+
+->     /webjars                	webjars.Routes

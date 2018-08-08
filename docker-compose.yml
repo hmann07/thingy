@@ -20,5 +20,5 @@ services:
     ports: 
       - "9000:9000"
     environment:
-      - MACHINEHOST="192.168.99.101"
+      - MACHINEHOST="192.168.99.100"
     

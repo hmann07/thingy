@@ -1,5 +1,6 @@
 package com.thingy.agent
 
+import com.thingy.config.ConfigDataClass.ConfigData
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.genome.{NetworkGenomeBuilder, NetworkGenome,GenomeIO}
 import com.thingy.network.Network
@@ -20,20 +21,20 @@ object Agent {
 	case class AgentSettings()
 	case class Performance(performanceValue: Double, genome: NetworkGenome)
 	
-	def props(innovation: ActorRef, network: GenomeIO): Props = {
+	def props(innovation: ActorRef, network: GenomeIO, configData: ConfigData): Props = {
 		
-		Props(classOf[Agent], innovation, network)
+		Props(classOf[Agent], innovation, network, configData)
 	}
 
 }
 
 
 
-class Agent(innovation: ActorRef, ng: GenomeIO) extends FSM[AgentState, Agent.AgentSettings] {
+class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData) extends FSM[AgentState, Agent.AgentSettings] {
 	import Agent._
 	def networkGenome = ng.generate
 	val environment = context.actorOf(Environment.props(), "environment")
-	val network = context.actorOf(Network.props("my network", networkGenome, innovation, environment), "mynetwork")
+	val network = context.actorOf(Network.props("my network", networkGenome, innovation, environment, configData), "mynetwork")
 
  	startWith(Active, AgentSettings())
 

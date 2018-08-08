@@ -181,7 +181,7 @@ case class NetworkGenome(id: Int, neurons: Map[Int, NeuronGenome], connections: 
 
 	 	// now just grab the new neurons.
 	 	// perhaps it's best at this point to cross over any that were subnets, so that we get a crossed version of the "neuron".
-	 	
+	 	// automatically pick from fittest parent.
  
 	 	val newNeurons = newConnections.foldLeft(Map[Int, NeuronGenome]()) { (acc, current) =>
 	 		

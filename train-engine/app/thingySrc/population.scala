@@ -147,7 +147,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 	val nb: NetworkGenomeBuilder = new NetworkGenomeBuilder
 
  	val innovation = context.actorOf(Innovation.props(new GenomeIO(Some(nb.json), None).generate), "innov8")
- 	val generations = config.getConfig("thingy").getInt("generations")
+ 	val generations = configData.maxGenerations
  	
  	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef]) = {
  		rep(gestatable, population, List.empty)
@@ -161,7 +161,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 			c.headOption.map(cnew=> {
 				cnew ! Network.NetworkUpdate(evalG)
 				rep(g.tail, c.tail, cnew :: cummulate)
-			}).getOrElse(context.actorOf(Agent.props(innovation, evalG), "agent" + "weneedtospecanid") :: cummulate)
+			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData), "agent" + "weneedtospecanid") :: cummulate)
 		}).getOrElse({
 			//c.foreach(newc => context.stop(newc))
 			c ++ cummulate
@@ -172,7 +172,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
  		i <- 1 to configData.populationSize
  	}
  	yield {
- 		context.actorOf(Agent.props(innovation,  new GenomeIO(Some(nb.json), None)), "agent" + i)
+ 		context.actorOf(Agent.props(innovation,  new GenomeIO(Some(nb.json), None), configData), "agent" + i)
 	}
 
 	log.info("population created with {} children", context.children.size) 
@@ -212,7 +212,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
  			if(completed == s.currentPopulationSize) {
  				// so....  we have got n genomes, each with a Performance value of some sort....
  				// time to select the best in line with their performance and send the genome back to agent whi should forward on to the network
- 				out ! ("generation "+ s.currentGeneration +" finished")
+ 				out ! ("{\"currentGeneration\": " + s.currentGeneration + ", \"totalGenerations\": " + generations + "}")
  				val speciesList = s.speciesDirectory.species.filter(s=> s._2.memberCount > 0)
  				val activeSpecies = speciesList.size
 
@@ -230,7 +230,8 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
  					"runId" -> runId,
  					"generation" -> s.currentGeneration,
  					"species" -> species.id,
- 					"speciesTotalFitness" -> species.speciesTotalFitness
+ 					"speciesTotalFitness" -> species.speciesTotalFitness,
+ 					"speciesBestFitness" -> species.generationalArchetype.fitnessValue
  				)))})
  				
 
@@ -277,7 +278,8 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
  								  currentPopulationSize = agentFns.length,
  								  agentsCompleteCount = 0, 	
  								  agentSumTotalFitness = 0,
- 								  speciesDirectory = resetSpeciesDir)
+ 								  speciesDirectory = resetSpeciesDir
+ 								)
  				}
  			} else {	 
  			

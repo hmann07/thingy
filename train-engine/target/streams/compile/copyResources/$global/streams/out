@@ -1,0 +1,4 @@
+[0m[[0mdebug[0m] [0mCopy resource mappings: [0m
+[0m[[0mdebug[0m] [0m	(C:\Users\mau\Documents\thingy\train-engine\conf\application.conf,C:\Users\mau\Documents\thingy\train-engine\target\scala-2.11\classes\application.conf)[0m
+[0m[[0mdebug[0m] [0m	(C:\Users\mau\Documents\thingy\train-engine\conf\logback.xml,C:\Users\mau\Documents\thingy\train-engine\target\scala-2.11\classes\logback.xml)[0m
+[0m[[0mdebug[0m] [0m	(C:\Users\mau\Documents\thingy\train-engine\conf\routes,C:\Users\mau\Documents\thingy\train-engine\target\scala-2.11\classes\routes)[0m

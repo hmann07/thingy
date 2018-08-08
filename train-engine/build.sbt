@@ -48,4 +48,3 @@ libraryDependencies += 	"org.webjars.npm" % "react-dom" % "16.3.2"
 libraryDependencies += "org.webjars" % "bootstrap" % "4.0.0-2"
 
 libraryDependencies += "org.webjars.npm" % "crossfilter2" % "1.3.14"
-

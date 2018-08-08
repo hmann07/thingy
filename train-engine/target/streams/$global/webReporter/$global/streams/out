@@ -1,0 +1,4 @@
+[0m[[31merror[0m] [0mC:\Users\mau\Documents\thingy\train-engine\app\assets\javascripts\barchart.jsx:61: Parse Error: Line 61: Unexpected token ,[0m
+[0m[[31merror[0m] [0m      <g x="20", y="20" className="plotarea"></g>[0m
+[0m[[31merror[0m] [0m               ^[0m
+[0m[[31merror[0m] [0mone error found[0m

@@ -1,5 +1,6 @@
 package com.thingy.mutator
 
+import com.thingy.config.ConfigDataClass.ConfigData
 import com.thingy.genome.NetworkGenome
 import com.thingy.genome.ConnectionGenome
 import com.thingy.genome.NeuronGenome
@@ -7,7 +8,7 @@ import com.thingy.innovation.Innovation
 import scala.util.Random
 import com.typesafe.config.ConfigFactory
 
-class Mutator {
+class Mutator(configData: ConfigData) {
 
 	/* 
 	 * Types of Mutation
@@ -17,7 +18,7 @@ class Mutator {
 	 * Add Neuron to SubNetwork
 	 * Change weight
 	 */
-	val config = ConfigFactory.load()
+	
 
 	def mutate(genome: NetworkGenome): Innovation.InnovationType = {
 
@@ -176,7 +177,7 @@ class Mutator {
 	 def mutateWeights(genome: NetworkGenome): Innovation.WeightChangeInnovation = {
 	 	val newG = genome.connections.foldLeft(Map[Int, ConnectionGenome]()){
 	 		(acc, current) => {
-	 			if(Random.nextDouble < config.getConfig("thingy").getDouble("weight-mutation-likelihood")) {
+	 			if(Random.nextDouble < configData.weightMutationRate) {
 	 			val (key, genome) = current
 	 			acc + (key -> genome.copy(weight = genome.weight.mutate))
 	 			} else {
@@ -187,7 +188,7 @@ class Mutator {
 	 	}
 	 	val newN = genome.neurons.foldLeft(Map[Int, NeuronGenome]()){
 	 		(acc, current) => {
-	 			if(Random.nextDouble < config.getConfig("thingy").getDouble("weight-mutation-likelihood")) {
+	 			if(Random.nextDouble < configData.weightMutationRate) {
 	 			val (key, genome) = current
 	 			acc + (key -> genome.copy(biasWeight = genome.biasWeight.mutate))
 	 			} else {
