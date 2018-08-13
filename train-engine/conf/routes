@@ -13,6 +13,12 @@ GET     /getSpeciesByGeneration/:runId/:generationId		controllers.MongoLookupCon
 
 GET     /config						controllers.ConfigController.viewConfig
 
+GET 	/aggregateAnalysis			controllers.AggregateAnalysisController.index
+
+GET     /configFilled				controllers.ConfigController.viewConfigFilled
+
+POST 	/config/reuseConfig			controllers.ConfigController.reuseConfig
+
 POST     /userPost						controllers.ConfigController.userPost
 
 GET /getNetByGenerationAndSpecies/:runId/:generationId/:speciesId controllers.MongoLookupController.findBySpeciesandGen(runId, generationId, speciesId)

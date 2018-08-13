@@ -59,19 +59,35 @@ class ConfigController @Inject()(cache: SyncCacheApi, cc: ControllerComponents)(
 
   val configForm = Form(
     mapping(
-      "Population size" -> number,
-      "Maximum generations" -> number,
-      "Connection weight range" -> number,
-      "Species memebership threshold" -> of(doubleFormat),
-      "Crossover rate" -> of(doubleFormat),
-      "Global mutation rate" -> of(doubleFormat),
-      "Weight mutation rate" -> of(doubleFormat),
-      "Jiggle over reset" -> of(doubleFormat)
+      "populationSize" -> number,
+      "maxGenerations" -> number,
+      "connectionWeightRange" -> number,
+      "speciesMembershipThreshold" -> of(doubleFormat),
+      "crossoverRate" -> of(doubleFormat),
+      "globalMutationRate" -> of(doubleFormat),
+      "weightMutationRate" -> of(doubleFormat),
+      "weightJiggleOverReset" -> of(doubleFormat)
     )(ConfigData.apply)(ConfigData.unapply)
-  ).fill(ConfigData())
+  )
+
+  implicit val configReads = Json.reads[ConfigData]
 
   def viewConfig = Action { implicit request =>
-    Ok(views.html.config(configForm, routes.AuthenticatedUserController.logout))
+    Ok(views.html.config(configForm.fill(ConfigData()), routes.AuthenticatedUserController.logout))
+  }
+
+  def viewConfigFilled = Action { implicit request =>
+    val retrievedForm = cache.get[ConfigData]("config.form").get
+    Ok(views.html.config(configForm.fill(retrievedForm), routes.AuthenticatedUserController.logout))
+  }
+
+
+  def reuseConfig = Action { implicit request =>
+ 
+    val extractedConfig = configForm.bindFromRequest.get
+    println(extractedConfig)
+    val savedForm = cache.set("config.form", extractedConfig)
+    Redirect(routes.ConfigController.viewConfigFilled)
   }
 
   def userPost = Action { implicit request =>
@@ -80,5 +96,6 @@ class ConfigController @Inject()(cache: SyncCacheApi, cc: ControllerComponents)(
     val result = cache.set("item.key", test)
     Redirect(routes.StartEvolveController.start)
   }
+
 
 }

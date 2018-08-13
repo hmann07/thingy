@@ -21,7 +21,7 @@ class NetViewerController @Inject()(cc: ControllerComponents, authenticatedUserA
 
    private val logoutUrl = routes.AuthenticatedUserController.logout
 
-  def index = authenticatedUserAction {
+  def index = authenticatedUserAction { implicit request =>
     Ok(views.html.netViewer("test", logoutUrl))
   }
 

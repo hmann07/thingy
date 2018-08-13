@@ -1,4 +1,4 @@
-@(message: String, logoutUrl: Call)(implicit assetsFinder: AssetsFinder)
+@(message: String, logoutUrl: Call)(implicit assetsFinder: AssetsFinder, request: RequestHeader)
 
 <!DOCTYPE html>
 <html>
@@ -16,7 +16,9 @@
 <body>
 @navbar(logoutUrl)
 <div class="container">
-
+  <div>
+   @helper.CSRF.formField
+  </div>
   <div id="root"></div>
   <div id="speciesData"></div>
   <div class="row">

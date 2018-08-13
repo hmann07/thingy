@@ -32,8 +32,8 @@ Seq[Any](format.raw/*1.19*/("""
 			  <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
 			    <div class="navbar-nav">
 			      <a class="nav-item nav-link active" href="/netviewer">Results <span class="sr-only">(current)</span></a>
-			      <a class="nav-item nav-link" href="/config">Settings</a>
-			      <a class="nav-item nav-link" href="#">Setup</a>
+			      <a class="nav-item nav-link" href="/config">Setup New</a>
+			      <a class="nav-item nav-link" href="/aggregateAnalysis">Parameter Correlation</a>
 			      <a class="nav-item nav-link" href=""""),_display_(/*12.46*/logoutUrl),format.raw/*12.55*/("""">logout</a>
 			    </div>
 			  </div>
@@ -53,10 +53,10 @@ Seq[Any](format.raw/*1.19*/("""
 
               /*
                   -- GENERATED --
-                  DATE: Mon Jul 23 23:01:18 BST 2018
+                  DATE: Mon Aug 13 22:42:51 BST 2018
                   SOURCE: C:/Users/mau/Documents/thingy/train-engine/app/views/navbar.scala.html
-                  HASH: 440d8c1a692dec324efff1d54ea73fd0f093e8d8
-                  MATRIX: 728->1|840->18|868->20|1656->781|1686->790
+                  HASH: ffb26e99fb171b22c417804da88959b78dafd653
+                  MATRIX: 728->1|840->18|868->20|1690->815|1720->824
                   LINES: 21->1|26->1|27->2|37->12|37->12
                   -- GENERATED --
               */

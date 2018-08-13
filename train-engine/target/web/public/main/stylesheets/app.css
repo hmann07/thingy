@@ -3,6 +3,8 @@
   overflow: scroll;
 }
 
+
+
 svg {
   background-color: #FFF;
   cursor: default;
@@ -11,6 +13,31 @@ svg {
   -ms-user-select: none;
   -o-user-select: none;
   user-select: none;
+  border: 1px solid #999999;
+}
+
+.gridLabel{
+  width:80px;
+  height:80px;
+  display: inline-block;
+  font-size: 8px;
+  text-align: center;
+  vertical-align: middle;
+
+}
+
+.gridLabelHead{
+  width:80px;
+  display: inline-block;
+  font-size: 8px;
+  text-align: center;
+  word-wrap: break-word;
+
+}
+
+.gridHeadContainer{
+  margin-left:80px;
+
 }
 
 svg:not(.active):not(.ctrl) {

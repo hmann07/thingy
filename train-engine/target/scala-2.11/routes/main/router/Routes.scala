@@ -1,6 +1,6 @@
 // @GENERATOR:play-routes-compiler
 // @SOURCE:C:/Users/mau/Documents/thingy/train-engine/conf/routes
-// @DATE:Mon Jul 23 23:01:17 BST 2018
+// @DATE:Sun Aug 12 19:41:21 BST 2018
 
 package router
 
@@ -14,22 +14,24 @@ import _root_.controllers.Assets.Asset
 class Routes(
   override val errorHandler: play.api.http.HttpErrorHandler, 
   // @LINE:6
-  LandingPageController_6: controllers.LandingPageController,
+  LandingPageController_7: controllers.LandingPageController,
   // @LINE:8
-  NetViewerController_7: controllers.NetViewerController,
+  NetViewerController_8: controllers.NetViewerController,
   // @LINE:10
-  MongoLookupController_5: controllers.MongoLookupController,
+  MongoLookupController_6: controllers.MongoLookupController,
   // @LINE:14
-  ConfigController_3: controllers.ConfigController,
-  // @LINE:26
+  ConfigController_4: controllers.ConfigController,
+  // @LINE:16
+  AggregateAnalysisController_3: controllers.AggregateAnalysisController,
+  // @LINE:32
   StartEvolveController_0: controllers.StartEvolveController,
-  // @LINE:31
-  Assets_4: controllers.Assets,
-  // @LINE:35
+  // @LINE:37
+  Assets_5: controllers.Assets,
+  // @LINE:41
   UserController_1: controllers.UserController,
-  // @LINE:39
+  // @LINE:45
   AuthenticatedUserController_2: controllers.AuthenticatedUserController,
-  // @LINE:43
+  // @LINE:49
   webjars_Routes_0: webjars.Routes,
   val prefix: String
 ) extends GeneratedRouter {
@@ -37,28 +39,30 @@ class Routes(
    @javax.inject.Inject()
    def this(errorHandler: play.api.http.HttpErrorHandler,
     // @LINE:6
-    LandingPageController_6: controllers.LandingPageController,
+    LandingPageController_7: controllers.LandingPageController,
     // @LINE:8
-    NetViewerController_7: controllers.NetViewerController,
+    NetViewerController_8: controllers.NetViewerController,
     // @LINE:10
-    MongoLookupController_5: controllers.MongoLookupController,
+    MongoLookupController_6: controllers.MongoLookupController,
     // @LINE:14
-    ConfigController_3: controllers.ConfigController,
-    // @LINE:26
+    ConfigController_4: controllers.ConfigController,
+    // @LINE:16
+    AggregateAnalysisController_3: controllers.AggregateAnalysisController,
+    // @LINE:32
     StartEvolveController_0: controllers.StartEvolveController,
-    // @LINE:31
-    Assets_4: controllers.Assets,
-    // @LINE:35
+    // @LINE:37
+    Assets_5: controllers.Assets,
+    // @LINE:41
     UserController_1: controllers.UserController,
-    // @LINE:39
+    // @LINE:45
     AuthenticatedUserController_2: controllers.AuthenticatedUserController,
-    // @LINE:43
+    // @LINE:49
     webjars_Routes_0: webjars.Routes
-  ) = this(errorHandler, LandingPageController_6, NetViewerController_7, MongoLookupController_5, ConfigController_3, StartEvolveController_0, Assets_4, UserController_1, AuthenticatedUserController_2, webjars_Routes_0, "/")
+  ) = this(errorHandler, LandingPageController_7, NetViewerController_8, MongoLookupController_6, ConfigController_4, AggregateAnalysisController_3, StartEvolveController_0, Assets_5, UserController_1, AuthenticatedUserController_2, webjars_Routes_0, "/")
 
   def withPrefix(prefix: String): Routes = {
     router.RoutesPrefix.setPrefix(prefix)
-    new Routes(errorHandler, LandingPageController_6, NetViewerController_7, MongoLookupController_5, ConfigController_3, StartEvolveController_0, Assets_4, UserController_1, AuthenticatedUserController_2, webjars_Routes_0, prefix)
+    new Routes(errorHandler, LandingPageController_7, NetViewerController_8, MongoLookupController_6, ConfigController_4, AggregateAnalysisController_3, StartEvolveController_0, Assets_5, UserController_1, AuthenticatedUserController_2, webjars_Routes_0, prefix)
   }
 
   private[this] val defaultPrefix: String = {
@@ -71,6 +75,9 @@ class Routes(
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """mongolookup/""" + "$" + """speciesId<[^/]+>""", """controllers.MongoLookupController.findBySpecies(speciesId:String)"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """getSpeciesByGeneration/""" + "$" + """runId<[^/]+>/""" + "$" + """generationId<[^/]+>""", """controllers.MongoLookupController.getSpeciesByGeneration(runId:String, generationId:String)"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """config""", """controllers.ConfigController.viewConfig"""),
+    ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """aggregateAnalysis""", """controllers.AggregateAnalysisController.index"""),
+    ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """configFilled""", """controllers.ConfigController.viewConfigFilled"""),
+    ("""POST""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """config/reuseConfig""", """controllers.ConfigController.reuseConfig"""),
     ("""POST""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """userPost""", """controllers.ConfigController.userPost"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """getNetByGenerationAndSpecies/""" + "$" + """runId<[^/]+>/""" + "$" + """generationId<[^/]+>/""" + "$" + """speciesId<[^/]+>""", """controllers.MongoLookupController.findBySpeciesandGen(runId:String, generationId:String, speciesId:String)"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """generations""", """controllers.MongoLookupController.getGenerations"""),
@@ -83,7 +90,7 @@ class Routes(
     ("""POST""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """users/doLogin""", """controllers.UserController.processLoginAttempt"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """users/logout""", """controllers.AuthenticatedUserController.logout"""),
     ("""GET""", this.prefix + (if(this.prefix.endsWith("/")) "" else "/") + """landingPage""", """controllers.LandingPageController.showLandingPage"""),
-    prefixed_webjars_Routes_0_17.router.documentation,
+    prefixed_webjars_Routes_0_20.router.documentation,
     Nil
   ).foldLeft(List.empty[(String,String,String)]) { (s,e) => e.asInstanceOf[Any] match {
     case r @ (_,_,_) => s :+ r.asInstanceOf[(String,String,String)]
@@ -96,7 +103,7 @@ class Routes(
     PathPattern(List(StaticPart(this.prefix)))
   )
   private[this] lazy val controllers_LandingPageController_showLandingPage0_invoker = createInvoker(
-    LandingPageController_6.showLandingPage,
+    LandingPageController_7.showLandingPage,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.LandingPageController",
@@ -114,7 +121,7 @@ class Routes(
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("netviewer")))
   )
   private[this] lazy val controllers_NetViewerController_index1_invoker = createInvoker(
-    NetViewerController_7.index,
+    NetViewerController_8.index,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.NetViewerController",
@@ -132,7 +139,7 @@ class Routes(
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("mongolookup/"), DynamicPart("speciesId", """[^/]+""",true)))
   )
   private[this] lazy val controllers_MongoLookupController_findBySpecies2_invoker = createInvoker(
-    MongoLookupController_5.findBySpecies(fakeValue[String]),
+    MongoLookupController_6.findBySpecies(fakeValue[String]),
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.MongoLookupController",
@@ -150,7 +157,7 @@ class Routes(
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("getSpeciesByGeneration/"), DynamicPart("runId", """[^/]+""",true), StaticPart("/"), DynamicPart("generationId", """[^/]+""",true)))
   )
   private[this] lazy val controllers_MongoLookupController_getSpeciesByGeneration3_invoker = createInvoker(
-    MongoLookupController_5.getSpeciesByGeneration(fakeValue[String], fakeValue[String]),
+    MongoLookupController_6.getSpeciesByGeneration(fakeValue[String], fakeValue[String]),
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.MongoLookupController",
@@ -168,7 +175,7 @@ class Routes(
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("config")))
   )
   private[this] lazy val controllers_ConfigController_viewConfig4_invoker = createInvoker(
-    ConfigController_3.viewConfig,
+    ConfigController_4.viewConfig,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.ConfigController",
@@ -182,11 +189,65 @@ class Routes(
   )
 
   // @LINE:16
-  private[this] lazy val controllers_ConfigController_userPost5_route = Route("POST",
+  private[this] lazy val controllers_AggregateAnalysisController_index5_route = Route("GET",
+    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("aggregateAnalysis")))
+  )
+  private[this] lazy val controllers_AggregateAnalysisController_index5_invoker = createInvoker(
+    AggregateAnalysisController_3.index,
+    play.api.routing.HandlerDef(this.getClass.getClassLoader,
+      "router",
+      "controllers.AggregateAnalysisController",
+      "index",
+      Nil,
+      "GET",
+      this.prefix + """aggregateAnalysis""",
+      """""",
+      Seq()
+    )
+  )
+
+  // @LINE:18
+  private[this] lazy val controllers_ConfigController_viewConfigFilled6_route = Route("GET",
+    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("configFilled")))
+  )
+  private[this] lazy val controllers_ConfigController_viewConfigFilled6_invoker = createInvoker(
+    ConfigController_4.viewConfigFilled,
+    play.api.routing.HandlerDef(this.getClass.getClassLoader,
+      "router",
+      "controllers.ConfigController",
+      "viewConfigFilled",
+      Nil,
+      "GET",
+      this.prefix + """configFilled""",
+      """""",
+      Seq()
+    )
+  )
+
+  // @LINE:20
+  private[this] lazy val controllers_ConfigController_reuseConfig7_route = Route("POST",
+    PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("config/reuseConfig")))
+  )
+  private[this] lazy val controllers_ConfigController_reuseConfig7_invoker = createInvoker(
+    ConfigController_4.reuseConfig,
+    play.api.routing.HandlerDef(this.getClass.getClassLoader,
+      "router",
+      "controllers.ConfigController",
+      "reuseConfig",
+      Nil,
+      "POST",
+      this.prefix + """config/reuseConfig""",
+      """""",
+      Seq()
+    )
+  )
+
+  // @LINE:22
+  private[this] lazy val controllers_ConfigController_userPost8_route = Route("POST",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("userPost")))
   )
-  private[this] lazy val controllers_ConfigController_userPost5_invoker = createInvoker(
-    ConfigController_3.userPost,
+  private[this] lazy val controllers_ConfigController_userPost8_invoker = createInvoker(
+    ConfigController_4.userPost,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.ConfigController",
@@ -199,12 +260,12 @@ class Routes(
     )
   )
 
-  // @LINE:18
-  private[this] lazy val controllers_MongoLookupController_findBySpeciesandGen6_route = Route("GET",
+  // @LINE:24
+  private[this] lazy val controllers_MongoLookupController_findBySpeciesandGen9_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("getNetByGenerationAndSpecies/"), DynamicPart("runId", """[^/]+""",true), StaticPart("/"), DynamicPart("generationId", """[^/]+""",true), StaticPart("/"), DynamicPart("speciesId", """[^/]+""",true)))
   )
-  private[this] lazy val controllers_MongoLookupController_findBySpeciesandGen6_invoker = createInvoker(
-    MongoLookupController_5.findBySpeciesandGen(fakeValue[String], fakeValue[String], fakeValue[String]),
+  private[this] lazy val controllers_MongoLookupController_findBySpeciesandGen9_invoker = createInvoker(
+    MongoLookupController_6.findBySpeciesandGen(fakeValue[String], fakeValue[String], fakeValue[String]),
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.MongoLookupController",
@@ -217,12 +278,12 @@ class Routes(
     )
   )
 
-  // @LINE:20
-  private[this] lazy val controllers_MongoLookupController_getGenerations7_route = Route("GET",
+  // @LINE:26
+  private[this] lazy val controllers_MongoLookupController_getGenerations10_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("generations")))
   )
-  private[this] lazy val controllers_MongoLookupController_getGenerations7_invoker = createInvoker(
-    MongoLookupController_5.getGenerations,
+  private[this] lazy val controllers_MongoLookupController_getGenerations10_invoker = createInvoker(
+    MongoLookupController_6.getGenerations,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.MongoLookupController",
@@ -235,12 +296,12 @@ class Routes(
     )
   )
 
-  // @LINE:22
-  private[this] lazy val controllers_MongoLookupController_getGenerationsByRun8_route = Route("GET",
+  // @LINE:28
+  private[this] lazy val controllers_MongoLookupController_getGenerationsByRun11_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("generations/"), DynamicPart("runId", """[^/]+""",true)))
   )
-  private[this] lazy val controllers_MongoLookupController_getGenerationsByRun8_invoker = createInvoker(
-    MongoLookupController_5.getGenerationsByRun(fakeValue[String]),
+  private[this] lazy val controllers_MongoLookupController_getGenerationsByRun11_invoker = createInvoker(
+    MongoLookupController_6.getGenerationsByRun(fakeValue[String]),
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.MongoLookupController",
@@ -253,12 +314,12 @@ class Routes(
     )
   )
 
-  // @LINE:24
-  private[this] lazy val controllers_MongoLookupController_getRuns9_route = Route("GET",
+  // @LINE:30
+  private[this] lazy val controllers_MongoLookupController_getRuns12_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("runs")))
   )
-  private[this] lazy val controllers_MongoLookupController_getRuns9_invoker = createInvoker(
-    MongoLookupController_5.getRuns,
+  private[this] lazy val controllers_MongoLookupController_getRuns12_invoker = createInvoker(
+    MongoLookupController_6.getRuns,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.MongoLookupController",
@@ -271,11 +332,11 @@ class Routes(
     )
   )
 
-  // @LINE:26
-  private[this] lazy val controllers_StartEvolveController_start10_route = Route("GET",
+  // @LINE:32
+  private[this] lazy val controllers_StartEvolveController_start13_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("start")))
   )
-  private[this] lazy val controllers_StartEvolveController_start10_invoker = createInvoker(
+  private[this] lazy val controllers_StartEvolveController_start13_invoker = createInvoker(
     StartEvolveController_0.start,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
@@ -289,11 +350,11 @@ class Routes(
     )
   )
 
-  // @LINE:28
-  private[this] lazy val controllers_StartEvolveController_startWS11_route = Route("GET",
+  // @LINE:34
+  private[this] lazy val controllers_StartEvolveController_startWS14_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("startWS")))
   )
-  private[this] lazy val controllers_StartEvolveController_startWS11_invoker = createInvoker(
+  private[this] lazy val controllers_StartEvolveController_startWS14_invoker = createInvoker(
     StartEvolveController_0.startWS,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
@@ -307,12 +368,12 @@ class Routes(
     )
   )
 
-  // @LINE:31
-  private[this] lazy val controllers_Assets_versioned12_route = Route("GET",
+  // @LINE:37
+  private[this] lazy val controllers_Assets_versioned15_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("assets/"), DynamicPart("file", """.+""",false)))
   )
-  private[this] lazy val controllers_Assets_versioned12_invoker = createInvoker(
-    Assets_4.versioned(fakeValue[String]),
+  private[this] lazy val controllers_Assets_versioned15_invoker = createInvoker(
+    Assets_5.versioned(fakeValue[String]),
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.Assets",
@@ -325,11 +386,11 @@ class Routes(
     )
   )
 
-  // @LINE:35
-  private[this] lazy val controllers_UserController_showLoginForm13_route = Route("GET",
+  // @LINE:41
+  private[this] lazy val controllers_UserController_showLoginForm16_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("users/login")))
   )
-  private[this] lazy val controllers_UserController_showLoginForm13_invoker = createInvoker(
+  private[this] lazy val controllers_UserController_showLoginForm16_invoker = createInvoker(
     UserController_1.showLoginForm,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
@@ -343,11 +404,11 @@ class Routes(
     )
   )
 
-  // @LINE:36
-  private[this] lazy val controllers_UserController_processLoginAttempt14_route = Route("POST",
+  // @LINE:42
+  private[this] lazy val controllers_UserController_processLoginAttempt17_route = Route("POST",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("users/doLogin")))
   )
-  private[this] lazy val controllers_UserController_processLoginAttempt14_invoker = createInvoker(
+  private[this] lazy val controllers_UserController_processLoginAttempt17_invoker = createInvoker(
     UserController_1.processLoginAttempt,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
@@ -361,11 +422,11 @@ class Routes(
     )
   )
 
-  // @LINE:39
-  private[this] lazy val controllers_AuthenticatedUserController_logout15_route = Route("GET",
+  // @LINE:45
+  private[this] lazy val controllers_AuthenticatedUserController_logout18_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("users/logout")))
   )
-  private[this] lazy val controllers_AuthenticatedUserController_logout15_invoker = createInvoker(
+  private[this] lazy val controllers_AuthenticatedUserController_logout18_invoker = createInvoker(
     AuthenticatedUserController_2.logout,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
@@ -379,12 +440,12 @@ class Routes(
     )
   )
 
-  // @LINE:40
-  private[this] lazy val controllers_LandingPageController_showLandingPage16_route = Route("GET",
+  // @LINE:46
+  private[this] lazy val controllers_LandingPageController_showLandingPage19_route = Route("GET",
     PathPattern(List(StaticPart(this.prefix), StaticPart(this.defaultPrefix), StaticPart("landingPage")))
   )
-  private[this] lazy val controllers_LandingPageController_showLandingPage16_invoker = createInvoker(
-    LandingPageController_6.showLandingPage,
+  private[this] lazy val controllers_LandingPageController_showLandingPage19_invoker = createInvoker(
+    LandingPageController_7.showLandingPage,
     play.api.routing.HandlerDef(this.getClass.getClassLoader,
       "router",
       "controllers.LandingPageController",
@@ -397,8 +458,8 @@ class Routes(
     )
   )
 
-  // @LINE:43
-  private[this] val prefixed_webjars_Routes_0_17 = Include(webjars_Routes_0.withPrefix(this.prefix + (if (this.prefix.endsWith("/")) "" else "/") + "webjars"))
+  // @LINE:49
+  private[this] val prefixed_webjars_Routes_0_20 = Include(webjars_Routes_0.withPrefix(this.prefix + (if (this.prefix.endsWith("/")) "" else "/") + "webjars"))
 
 
   def routes: PartialFunction[RequestHeader, Handler] = {
@@ -406,106 +467,124 @@ class Routes(
     // @LINE:6
     case controllers_LandingPageController_showLandingPage0_route(params@_) =>
       call { 
-        controllers_LandingPageController_showLandingPage0_invoker.call(LandingPageController_6.showLandingPage)
+        controllers_LandingPageController_showLandingPage0_invoker.call(LandingPageController_7.showLandingPage)
       }
   
     // @LINE:8
     case controllers_NetViewerController_index1_route(params@_) =>
       call { 
-        controllers_NetViewerController_index1_invoker.call(NetViewerController_7.index)
+        controllers_NetViewerController_index1_invoker.call(NetViewerController_8.index)
       }
   
     // @LINE:10
     case controllers_MongoLookupController_findBySpecies2_route(params@_) =>
       call(params.fromPath[String]("speciesId", None)) { (speciesId) =>
-        controllers_MongoLookupController_findBySpecies2_invoker.call(MongoLookupController_5.findBySpecies(speciesId))
+        controllers_MongoLookupController_findBySpecies2_invoker.call(MongoLookupController_6.findBySpecies(speciesId))
       }
   
     // @LINE:12
     case controllers_MongoLookupController_getSpeciesByGeneration3_route(params@_) =>
       call(params.fromPath[String]("runId", None), params.fromPath[String]("generationId", None)) { (runId, generationId) =>
-        controllers_MongoLookupController_getSpeciesByGeneration3_invoker.call(MongoLookupController_5.getSpeciesByGeneration(runId, generationId))
+        controllers_MongoLookupController_getSpeciesByGeneration3_invoker.call(MongoLookupController_6.getSpeciesByGeneration(runId, generationId))
       }
   
     // @LINE:14
     case controllers_ConfigController_viewConfig4_route(params@_) =>
       call { 
-        controllers_ConfigController_viewConfig4_invoker.call(ConfigController_3.viewConfig)
+        controllers_ConfigController_viewConfig4_invoker.call(ConfigController_4.viewConfig)
       }
   
     // @LINE:16
-    case controllers_ConfigController_userPost5_route(params@_) =>
+    case controllers_AggregateAnalysisController_index5_route(params@_) =>
       call { 
-        controllers_ConfigController_userPost5_invoker.call(ConfigController_3.userPost)
+        controllers_AggregateAnalysisController_index5_invoker.call(AggregateAnalysisController_3.index)
       }
   
     // @LINE:18
-    case controllers_MongoLookupController_findBySpeciesandGen6_route(params@_) =>
-      call(params.fromPath[String]("runId", None), params.fromPath[String]("generationId", None), params.fromPath[String]("speciesId", None)) { (runId, generationId, speciesId) =>
-        controllers_MongoLookupController_findBySpeciesandGen6_invoker.call(MongoLookupController_5.findBySpeciesandGen(runId, generationId, speciesId))
+    case controllers_ConfigController_viewConfigFilled6_route(params@_) =>
+      call { 
+        controllers_ConfigController_viewConfigFilled6_invoker.call(ConfigController_4.viewConfigFilled)
       }
   
     // @LINE:20
-    case controllers_MongoLookupController_getGenerations7_route(params@_) =>
+    case controllers_ConfigController_reuseConfig7_route(params@_) =>
       call { 
-        controllers_MongoLookupController_getGenerations7_invoker.call(MongoLookupController_5.getGenerations)
+        controllers_ConfigController_reuseConfig7_invoker.call(ConfigController_4.reuseConfig)
       }
   
     // @LINE:22
-    case controllers_MongoLookupController_getGenerationsByRun8_route(params@_) =>
-      call(params.fromPath[String]("runId", None)) { (runId) =>
-        controllers_MongoLookupController_getGenerationsByRun8_invoker.call(MongoLookupController_5.getGenerationsByRun(runId))
+    case controllers_ConfigController_userPost8_route(params@_) =>
+      call { 
+        controllers_ConfigController_userPost8_invoker.call(ConfigController_4.userPost)
       }
   
     // @LINE:24
-    case controllers_MongoLookupController_getRuns9_route(params@_) =>
-      call { 
-        controllers_MongoLookupController_getRuns9_invoker.call(MongoLookupController_5.getRuns)
+    case controllers_MongoLookupController_findBySpeciesandGen9_route(params@_) =>
+      call(params.fromPath[String]("runId", None), params.fromPath[String]("generationId", None), params.fromPath[String]("speciesId", None)) { (runId, generationId, speciesId) =>
+        controllers_MongoLookupController_findBySpeciesandGen9_invoker.call(MongoLookupController_6.findBySpeciesandGen(runId, generationId, speciesId))
       }
   
     // @LINE:26
-    case controllers_StartEvolveController_start10_route(params@_) =>
+    case controllers_MongoLookupController_getGenerations10_route(params@_) =>
       call { 
-        controllers_StartEvolveController_start10_invoker.call(StartEvolveController_0.start)
+        controllers_MongoLookupController_getGenerations10_invoker.call(MongoLookupController_6.getGenerations)
       }
   
     // @LINE:28
-    case controllers_StartEvolveController_startWS11_route(params@_) =>
-      call { 
-        controllers_StartEvolveController_startWS11_invoker.call(StartEvolveController_0.startWS)
+    case controllers_MongoLookupController_getGenerationsByRun11_route(params@_) =>
+      call(params.fromPath[String]("runId", None)) { (runId) =>
+        controllers_MongoLookupController_getGenerationsByRun11_invoker.call(MongoLookupController_6.getGenerationsByRun(runId))
       }
   
-    // @LINE:31
-    case controllers_Assets_versioned12_route(params@_) =>
+    // @LINE:30
+    case controllers_MongoLookupController_getRuns12_route(params@_) =>
+      call { 
+        controllers_MongoLookupController_getRuns12_invoker.call(MongoLookupController_6.getRuns)
+      }
+  
+    // @LINE:32
+    case controllers_StartEvolveController_start13_route(params@_) =>
+      call { 
+        controllers_StartEvolveController_start13_invoker.call(StartEvolveController_0.start)
+      }
+  
+    // @LINE:34
+    case controllers_StartEvolveController_startWS14_route(params@_) =>
+      call { 
+        controllers_StartEvolveController_startWS14_invoker.call(StartEvolveController_0.startWS)
+      }
+  
+    // @LINE:37
+    case controllers_Assets_versioned15_route(params@_) =>
       call(params.fromPath[String]("file", None)) { (file) =>
-        controllers_Assets_versioned12_invoker.call(Assets_4.versioned(file))
+        controllers_Assets_versioned15_invoker.call(Assets_5.versioned(file))
       }
   
-    // @LINE:35
-    case controllers_UserController_showLoginForm13_route(params@_) =>
+    // @LINE:41
+    case controllers_UserController_showLoginForm16_route(params@_) =>
       call { 
-        controllers_UserController_showLoginForm13_invoker.call(UserController_1.showLoginForm)
+        controllers_UserController_showLoginForm16_invoker.call(UserController_1.showLoginForm)
       }
   
-    // @LINE:36
-    case controllers_UserController_processLoginAttempt14_route(params@_) =>
+    // @LINE:42
+    case controllers_UserController_processLoginAttempt17_route(params@_) =>
       call { 
-        controllers_UserController_processLoginAttempt14_invoker.call(UserController_1.processLoginAttempt)
+        controllers_UserController_processLoginAttempt17_invoker.call(UserController_1.processLoginAttempt)
       }
   
-    // @LINE:39
-    case controllers_AuthenticatedUserController_logout15_route(params@_) =>
+    // @LINE:45
+    case controllers_AuthenticatedUserController_logout18_route(params@_) =>
       call { 
-        controllers_AuthenticatedUserController_logout15_invoker.call(AuthenticatedUserController_2.logout)
+        controllers_AuthenticatedUserController_logout18_invoker.call(AuthenticatedUserController_2.logout)
       }
   
-    // @LINE:40
-    case controllers_LandingPageController_showLandingPage16_route(params@_) =>
+    // @LINE:46
+    case controllers_LandingPageController_showLandingPage19_route(params@_) =>
       call { 
-        controllers_LandingPageController_showLandingPage16_invoker.call(LandingPageController_6.showLandingPage)
+        controllers_LandingPageController_showLandingPage19_invoker.call(LandingPageController_7.showLandingPage)
       }
   
-    // @LINE:43
-    case prefixed_webjars_Routes_0_17(handler) => handler
+    // @LINE:49
+    case prefixed_webjars_Routes_0_20(handler) => handler
   }
 }

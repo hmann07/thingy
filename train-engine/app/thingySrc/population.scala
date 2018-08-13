@@ -252,7 +252,9 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 						"startTime" -> startTime,
 						"settings" -> configData,
 						"endTime" -> endTime,
-						"duration" -> duration
+						"duration" -> duration,
+						"bestFitness" -> s.speciesDirectory.bestMember.fitnessValue,
+						"bestPerformance" -> s.speciesDirectory.bestMember.performanceValue
 					)).map(_ => {}))
 
  					context.stop(self)
