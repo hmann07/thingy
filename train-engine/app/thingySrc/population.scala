@@ -73,7 +73,8 @@ object Population {
 			"layer" -> n.layer,
 			"activationFunction" -> n.activationFunction,
 			"subnetid" -> n.subnetId,
-			"biasWeight" -> n.biasWeight)
+			"biasWeight" -> n.biasWeight,
+			"type" -> n.nodeType)
     }
 
   	implicit def connectionWriter: BSONDocumentWriter[ConnectionGenome] = Macros.writer[ConnectionGenome]
@@ -161,7 +162,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 			c.headOption.map(cnew=> {
 				cnew ! Network.NetworkUpdate(evalG)
 				rep(g.tail, c.tail, cnew :: cummulate)
-			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData), "agent" + "weneedtospecanid") :: cummulate)
+			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData, ActiveAgent), "agent" + "weneedtospecanid") :: cummulate)
 		}).getOrElse({
 			//c.foreach(newc => context.stop(newc))
 			c ++ cummulate
@@ -172,7 +173,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
  		i <- 1 to configData.populationSize
  	}
  	yield {
- 		context.actorOf(Agent.props(innovation,  new GenomeIO(Some(nb.json), None), configData), "agent" + i)
+ 		context.actorOf(Agent.props(innovation,  new GenomeIO(Some(nb.json), None), configData, ActiveAgent), "agent" + i)
 	}
 
 	log.info("population created with {} children", context.children.size) 

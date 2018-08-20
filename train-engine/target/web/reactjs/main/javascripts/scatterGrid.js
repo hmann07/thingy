@@ -1,10 +1,12 @@
 class ScatterGrid extends React.Component {
  constructor(props) {
     super(props);
+     this.updateFilter = this.updateFilter.bind(this)
   this.state =
   {
     
-    "runData":[]
+    "runData":[],
+    "valuefilter": 0
   }
  }
 
@@ -15,6 +17,10 @@ class ScatterGrid extends React.Component {
   })
  }
 
+ updateFilter(event){
+    this.setState({valuefilter: event.target.value});
+ }
+
  render(){
    var t = this
     const gridData = t.state.runData.length>0?Object.keys(t.state.runData[0].settings):[]
@@ -22,11 +28,13 @@ class ScatterGrid extends React.Component {
     const grids = gridData.map(function(g1){
       return (React.createElement("div", null, "", 
 
+
+
         React.createElement("div", {className: "gridLabel"}, g1), "", 
 
           
         gridData.map(function(g2){
-          return (React.createElement(ScatterGraph, {data: t.state.runData, axis: [g2, g1, "bestPerformance"]}))
+          return (React.createElement(ScatterGraph, {data: t.state.runData, filterVal: t.state.valuefilter, axis: [g2, g1, "bestPerformance"]}))
         }), "", 
 
         React.createElement("br", null), ""
@@ -35,6 +43,12 @@ class ScatterGrid extends React.Component {
     })
     return (
     React.createElement("div", null, "", 
+
+        React.createElement("div", {className: "custom-control"}, "", 
+
+            React.createElement("input", {className: "custom-range", type: "range", min: "0", max: "50", onChange: this.updateFilter}), ""
+
+        ), "", 
 
         React.createElement("div", {className: "gridHeadContainer"}, "", 
 

@@ -76,37 +76,6 @@ class App extends React.Component {
  }
 
 
-class ConfigViewer extends React.Component {
-  
-  render() {
-    var d = this.props.data
-    var listitems = Object.keys(d).map(function(configItem){ 
-        return (
-          React.createElement("div", null, "", 
-
-          React.createElement("label", null, configItem), "", 
-
-          React.createElement("input", {name: configItem, value: d[configItem]}), ""
-
-          )
-          )})
-    return (React.createElement("div", null, "", 
-
-              React.createElement("form", {action: "/config/reuseConfig", method: "POST"}, "", 
-
-                React.createElement("input", {type: "hidden", name: "csrfToken", value: $('input[name="csrfToken"]').attr('value')}), "", 
-
-               listitems, "", 
-
-               React.createElement("button", {type: "submit"}, "Reuse Config"), ""
-
-              ), ""
-
-              
-
-            ))
-  }
-}
 
 
 class DataPager extends React.Component {
@@ -210,29 +179,50 @@ class DataSelectorItem extends React.Component {
 
   render() {
     const data =  this.props
+    const genomeStr = JSON.stringify(data.value)
     const t = this.props.fields == "all" ? (
+            React.createElement("tr", null, "", 
+
             React.createElement("td", {ref: node => this.node = node, className: "list-item"}, ""
 
                  
 
+            ), "", 
+
+            React.createElement("td", null, "", 
+
+              React.createElement("form", {action: "/submitgenome", method: "POST"}, "", 
+
+               React.createElement("input", {type: "hidden", name: "csrfToken", value: $('input[name="csrfToken"]').attr('value')}), "", 
+
+                React.createElement("input", {type: "hidden", name: "genome", value: genomeStr}), "", 
+
+              React.createElement("button", {type: "submit"}, "Use Genome"), ""
+
+              ), ""
+
+            ), ""
+
             )
             ) :
+            React.createElement("tr", null, "", 
+
+            
             this.props.fields.map(function(field){
               return (
+              
               React.createElement("td", {className: "list-item", onClick: ()=>data.clickHandler(data.value)}, "", 
 
           data.value[field], ""
 
               )
-            )})
+
+            )}), 
+          ""
+
+            )
   
-    return (
-      React.createElement("tr", null, "", 
-
-        t, ""
-
-        )
-    );
+    return t;
   }
 }
 

@@ -1,6 +1,6 @@
 // @GENERATOR:play-routes-compiler
 // @SOURCE:C:/Users/mau/Documents/thingy/train-engine/conf/routes
-// @DATE:Sun Aug 12 19:41:21 BST 2018
+// @DATE:Mon Aug 20 21:25:37 BST 2018
 
 import play.api.mvc.Call
 
@@ -10,14 +10,14 @@ import _root_.controllers.Assets.Asset
 // @LINE:6
 package controllers {
 
-  // @LINE:37
+  // @LINE:43
   class ReverseAssets(_prefix: => String) {
     def _defaultPrefix: String = {
       if (_prefix.endsWith("/")) "" else "/"
     }
 
   
-    // @LINE:37
+    // @LINE:43
     def versioned(file:String): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "assets/" + implicitly[play.api.mvc.PathBindable[String]].unbind("file", file))
@@ -25,14 +25,29 @@ package controllers {
   
   }
 
-  // @LINE:45
+  // @LINE:28
+  class ReverseNewEnvironmentController(_prefix: => String) {
+    def _defaultPrefix: String = {
+      if (_prefix.endsWith("/")) "" else "/"
+    }
+
+  
+    // @LINE:28
+    def newEnvironment(): Call = {
+      
+      Call("GET", _prefix + { _defaultPrefix } + "newenvironment")
+    }
+  
+  }
+
+  // @LINE:51
   class ReverseAuthenticatedUserController(_prefix: => String) {
     def _defaultPrefix: String = {
       if (_prefix.endsWith("/")) "" else "/"
     }
 
   
-    // @LINE:45
+    // @LINE:51
     def logout(): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "users/logout")
@@ -47,13 +62,13 @@ package controllers {
     }
 
   
-    // @LINE:28
+    // @LINE:34
     def getGenerationsByRun(runId:String): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "generations/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("runId", runId)))
     }
   
-    // @LINE:30
+    // @LINE:36
     def getRuns(): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "runs")
@@ -65,13 +80,13 @@ package controllers {
       Call("GET", _prefix + { _defaultPrefix } + "getSpeciesByGeneration/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("runId", runId)) + "/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("generationId", generationId)))
     }
   
-    // @LINE:26
+    // @LINE:32
     def getGenerations(): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "generations")
     }
   
-    // @LINE:24
+    // @LINE:30
     def findBySpeciesandGen(runId:String, generationId:String, speciesId:String): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "getNetByGenerationAndSpecies/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("runId", runId)) + "/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("generationId", generationId)) + "/" + play.core.routing.dynamicString(implicitly[play.api.mvc.PathBindable[String]].unbind("speciesId", speciesId)))
@@ -148,20 +163,20 @@ package controllers {
   
   }
 
-  // @LINE:32
+  // @LINE:38
   class ReverseStartEvolveController(_prefix: => String) {
     def _defaultPrefix: String = {
       if (_prefix.endsWith("/")) "" else "/"
     }
 
   
-    // @LINE:34
+    // @LINE:40
     def startWS(): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "startWS")
     }
   
-    // @LINE:32
+    // @LINE:38
     def start(): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "start")
@@ -169,23 +184,44 @@ package controllers {
   
   }
 
-  // @LINE:41
+  // @LINE:47
   class ReverseUserController(_prefix: => String) {
     def _defaultPrefix: String = {
       if (_prefix.endsWith("/")) "" else "/"
     }
 
   
-    // @LINE:42
+    // @LINE:48
     def processLoginAttempt(): Call = {
       
       Call("POST", _prefix + { _defaultPrefix } + "users/doLogin")
     }
   
-    // @LINE:41
+    // @LINE:47
     def showLoginForm(): Call = {
       
       Call("GET", _prefix + { _defaultPrefix } + "users/login")
+    }
+  
+  }
+
+  // @LINE:24
+  class ReverseStartTestController(_prefix: => String) {
+    def _defaultPrefix: String = {
+      if (_prefix.endsWith("/")) "" else "/"
+    }
+
+  
+    // @LINE:26
+    def startWS(): Call = {
+      
+      Call("GET", _prefix + { _defaultPrefix } + "test/startWS")
+    }
+  
+    // @LINE:24
+    def submitGenome(): Call = {
+      
+      Call("POST", _prefix + { _defaultPrefix } + "submitgenome")
     }
   
   }

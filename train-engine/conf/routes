@@ -21,6 +21,12 @@ POST 	/config/reuseConfig			controllers.ConfigController.reuseConfig
 
 POST     /userPost						controllers.ConfigController.userPost
 
+POST     /submitgenome				controllers.StartTestController.submitGenome
+
+GET     /test/startWS				controllers.StartTestController.startWS
+
+GET     /newenvironment				controllers.NewEnvironmentController.newEnvironment
+
 GET /getNetByGenerationAndSpecies/:runId/:generationId/:speciesId controllers.MongoLookupController.findBySpeciesandGen(runId, generationId, speciesId)
 
 GET     /generations 				controllers.MongoLookupController.getGenerations

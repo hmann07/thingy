@@ -17,6 +17,8 @@ class ScatterGraph extends React.Component {
       const  xAttr = this.props.axis[0]
       const  yAttr = this.props.axis[1]
       const  cAttr = this.props.axis[2]
+      const fval = this.props.filterVal
+      const filteredData = this.props.data.filter(function(d){return d[cAttr] > fval })
 
       const yScale = d3.scaleLinear()
          .domain(d3.extent(this.props.data, function(d){return d.settings[yAttr]}))
@@ -30,36 +32,53 @@ class ScatterGraph extends React.Component {
       const cScale = d3.scaleLinear().range([0,1]).domain(d3.extent(this.props.data, function(d){return d[cAttr]}))
 
       const axis = d3.axisLeft(yScale);
+
+      function buildForm(d){
+         // alert(d)
+          ReactDOM.render(
+              React.createElement(ConfigViewer, {data: d.settings}),
+         document.getElementById('config')
+          );
+      }
    
    node
       .selectAll('circle')
-      .data(this.props.data)
+      .data(filteredData)
       .enter()
       .append('circle')
+      .on("click", function(d){
+        buildForm(d)
+      })
       .style("fill", d => d3.interpolateRdYlBu(cScale(d[cAttr])))
       .style("opacity", 0.6)
       .attr('r', 5)
       .attr('cx', (d,i) => xScale(d.settings[xAttr]))
       .attr('cy', d => yScale(d.settings[yAttr]))
       .append("title")
-      .text(function(d) { return xAttr + ": " +  d.settings[xAttr] + ", " + yAttr + ": " + d.settings[yAttr] + ", val: " +  d[cAttr] ; });
+      .text(function(d) { return xAttr + ": " +  d.settings[xAttr] + ", " + yAttr + ": " + d.settings[yAttr] + ", val: " +  d[cAttr] ; })
+      ;
    
    node
       .selectAll('circle')
-      .data(this.props.data)
+      .data(filteredData)
       .exit()
       .remove()
    
    node
       .selectAll('circle')
-      .data(this.props.data)
+      .data(filteredData)
       .style("fill", d => d3.interpolateRdYlBu(cScale(d[cAttr])))
       .style("opacity", 0.6)
       .attr('r', 5)
       .attr('cx', (d,i) => xScale(d.settings[xAttr]))
       .attr('cy', d => yScale(d.settings[yAttr]))
+      .on("click", function(d){
+        buildForm(d)
+      })
       .append("title")
-      .text(function(d) { return xAttr + ": " +  d[xAttr] + ", " + yAttr + ": " + d[yAttr] + ", val: " +  d[cAttr] ; });
+      .text(function(d) { return xAttr + ": " +  d[xAttr] + ", " + yAttr + ": " + d[yAttr] + ", val: " +  d[cAttr] ; })
+      
+      ;
    
  
  /*     

@@ -69,27 +69,6 @@ class App extends React.Component {
  }
 
 
-class ConfigViewer extends React.Component {
-  
-  render() {
-    var d = this.props.data
-    var listitems = Object.keys(d).map(function(configItem){ 
-        return (
-          <div>
-          <label>{configItem}</label>
-          <input name={configItem} value={d[configItem]}></input>
-          </div>
-          )})
-    return (<div>
-              <form action="/config/reuseConfig" method="POST">
-                <input type="hidden" name="csrfToken" value={$('input[name="csrfToken"]').attr('value')}></input>
-               {listitems}
-               <button type="submit">Reuse Config</button>
-              </form>
-              
-            </div>)
-  }
-}
 
 
 class DataPager extends React.Component {
@@ -179,23 +158,35 @@ class DataSelectorItem extends React.Component {
 
   render() {
     const data =  this.props
+    const genomeStr = JSON.stringify(data.value)
     const t = this.props.fields == "all" ? (
+            <tr>
             <td ref={node => this.node = node} className="list-item">
                  
             </td>
+            <td>
+              <form action="/submitgenome" method="POST">
+               <input type="hidden" name="csrfToken" value={$('input[name="csrfToken"]').attr('value')}></input>
+                <input type="hidden" name="genome" value={genomeStr}></input>
+              <button type="submit">Use Genome</button>
+              </form>
+            </td>
+            </tr>
             ) :
+            <tr>
+            {
             this.props.fields.map(function(field){
               return (
+              
               <td className="list-item" onClick={()=>data.clickHandler(data.value)}>
           {data.value[field]}
               </td>
+
             )})
+          }
+            </tr>
   
-    return (
-      <tr>
-        {t}
-        </tr>
-    );
+    return t;
   }
 }
 

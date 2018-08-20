@@ -18,7 +18,8 @@ import com.typesafe.config.ConfigFactory
 sealed trait NetworkState
 case object Initialising extends NetworkState
 case object Ready extends NetworkState
-case object Active extends NetworkState
+case object NetworkActive extends NetworkState
+case object NetworkTest extends NetworkState
 case object Mutating extends NetworkState
 
 
@@ -46,16 +47,17 @@ object Network {
 	case class Mutated()
 	case class NetworkUpdate(f: GenomeIO)
 	case class Done(evaluator: Evaluator, genome: NetworkGenome)
+	case class Completed()
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
-	def props(name: String, networkGenome: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData): Props = {
+	def props(name: String, networkGenome: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData, startState: NetworkState, out: ActorRef = null): Props = {
 
-		Props(classOf[Network], name, networkGenome, innovation, environment, configData)
+		Props(classOf[Network], name, networkGenome, innovation, environment, configData, startState, out)
 	}
 }
 
-class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData) extends FSM[NetworkState, NetworkSettings] {
+class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData, startState: NetworkState, out: ActorRef = null) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
 	val networkGenome = ng
@@ -73,9 +75,9 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 
 	environment ! Perceive()
 
-	startWith(Ready, NetworkSettings(genome = networkGenome, networkSchema = generatedActors))
+	startWith(startState, NetworkSettings(genome = networkGenome, networkSchema = generatedActors))
 
-	when(Ready) {
+	when(NetworkActive) {
 
 		case Event(s: Network.Mutate, t: NetworkSettings) =>
 			
@@ -203,7 +205,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 	}
 
 	onTransition {
-		case Mutating -> Ready =>
+		case Mutating -> NetworkActive =>
 			
 			environment ! Perceive()
 	}
@@ -230,7 +232,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 			//toActor.actor ! Neuron.ConnectionConfigUpdate(inputs = List(Predecessor(fromActor, recurrent = trecurrent)))
 			//fromActor.actor ! Neuron.ConnectionConfigUpdate(outputs = List(Successor(node = toActor, weight = newlyupdatedconnectionGenome.weight, recurrent = trecurrent)))
 
-			goto(Ready) using updatedSettings
+			goto(NetworkActive) using updatedSettings
 
 		case Event(s: Innovation.SubnetConnectionInnovationConfirmation, t: NetworkSettings) =>
 
@@ -251,7 +253,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 
 			updatedSettings.networkSchema.allNodes(s.originalRequest.neuronId).actor ! SubNetwork.ConnectionUpdate(newlyupdatedsubnetGenome,newlyupdatedconnectionGenome)
 
-			goto(Ready) using updatedSettings
+			goto(NetworkActive) using updatedSettings
 
 
 		case Event(s: Innovation.NetworkNeuronInnovationConfirmation, t: NetworkSettings) =>
@@ -263,7 +265,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
 			// need to tell two neurons that they have a disabled connection and a new one.
 			log.debug("genome updated now: {}, represented as : {}", updatedGenome.toJson, updatedGenome.toJson)
-			goto(Ready) using updatedSettings
+			goto(NetworkActive) using updatedSettings
 
 		case Event(s: Innovation.SubNetNeuronInnovationConfirmation, t: NetworkSettings) =>
 			log.debug("received confirmation of new neuron {} for subnet", s)
@@ -274,9 +276,73 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
 			// need to tell two neurons that they have a disabled connection and a new one.
 			log.debug("genome updated now: {}, represented as : {}", updatedGenome, updatedGenome.toJson)
-			goto(Ready) using updatedSettings
+			goto(NetworkActive) using updatedSettings
 
 
+
+	}
+
+	when(NetworkTest) {
+
+		case Event(s: Neuron.Signal, t: NetworkSettings) =>
+
+			log.debug("received signal of {}", s.value)
+			generatedActors.in.nodes.foreach {i =>
+			 	i.actor ! s
+				}
+
+			stay using t
+
+		case Event(r: Representation, t: NetworkSettings) =>
+
+			log.debug("received representation of {} will generate batch {}", r.input, t.rCount)
+			
+			// Send the signals off into the network, send signal with a batch id (rCount)
+			r.input.foreach(i => {
+				generatedActors.allNodes(i._1).actor ! Neuron.Signal(i._2, r.flags, t.rCount)
+			})
+
+			val updateExpected = t.expectedOutputs + (t.rCount -> r)
+
+			stay using t.copy(rCount = t.rCount + 1, expectedOutputs = updateExpected)
+
+		case Event(s: Neuron.Output, t: NetworkSettings) =>
+
+			log.debug("network received Output signal of {} from {}, reps processed: {}", s, sender(), t.expectedOutputs)
+
+			// add signal to actual outputsReceived
+			val existing = t.actualOutputs.getOrElse(s.batchId, Map.empty)
+			val updateExisting = existing + (s.nodeId -> s.value)
+			val updateOutputs = t.actualOutputs + (s.batchId -> updateExisting) 
+			
+			out ! "" + s				
+			
+			// check have we processed a representation complete?
+			if(updateOutputs(s.batchId).size == t.expectedOutputs(s.batchId).expectedOutput.size) {
+				
+
+				// now double check if we have more representations to process
+				// this assumes that no mesage can overtake another to a particular neuron. since all messages will visit all nodes it 
+				// should be impossible that a final signal arrives before another.
+				if(s.flags.contains("FINAL")) {
+					// then this was the last representation, eval all and tell parent we're done, reset settings
+
+					val resetT = t.copy(expectedOutputs = Map.empty, actualOutputs = Map.empty)
+					context.parent ! Completed
+					stay using resetT
+				
+				} else {
+				
+					val newT = t.copy(actualOutputs = updateOutputs)
+					environment ! Perceive()
+					stay using newT
+				
+				}
+			} else {
+				
+				val newT = t.copy(actualOutputs = updateOutputs)
+				stay using newT	
+			}
 
 	}
 

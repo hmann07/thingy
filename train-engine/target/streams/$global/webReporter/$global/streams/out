@@ -1,4 +1,4 @@
-[0m[[31merror[0m] [0mC:\Users\mau\Documents\thingy\train-engine\app\assets\javascripts\scatterGrid.jsx:27: Parse Error: Line 27: Unexpected token return[0m
-[0m[[31merror[0m] [0m          return (<ScatterGraph data={t.state.runData} axis={[g1, g2, "bestPerformance"]} />)[0m
-[0m[[31merror[0m] [0m          ^[0m
+[0m[[31merror[0m] [0mC:\Users\mau\Documents\thingy\train-engine\app\assets\javascripts\index.jsx:165: Parse Error: Line 165: Adjacent JSX elements must be wrapped in an enclosing tag[0m
+[0m[[31merror[0m] [0m            <td>[0m
+[0m[[31merror[0m] [0m                 ^[0m
 [0m[[31merror[0m] [0mone error found[0m

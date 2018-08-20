@@ -1,6 +1,6 @@
 // @GENERATOR:play-routes-compiler
 // @SOURCE:C:/Users/mau/Documents/thingy/train-engine/conf/routes
-// @DATE:Sun Aug 12 19:41:21 BST 2018
+// @DATE:Mon Aug 20 21:25:37 BST 2018
 
 import play.api.routing.JavaScriptReverseRoute
 
@@ -10,7 +10,7 @@ import _root_.controllers.Assets.Asset
 // @LINE:6
 package controllers.javascript {
 
-  // @LINE:37
+  // @LINE:43
   class ReverseAssets(_prefix: => String) {
 
     def _defaultPrefix: String = {
@@ -18,7 +18,7 @@ package controllers.javascript {
     }
 
   
-    // @LINE:37
+    // @LINE:43
     def versioned: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.Assets.versioned",
       """
@@ -30,7 +30,27 @@ package controllers.javascript {
   
   }
 
-  // @LINE:45
+  // @LINE:28
+  class ReverseNewEnvironmentController(_prefix: => String) {
+
+    def _defaultPrefix: String = {
+      if (_prefix.endsWith("/")) "" else "/"
+    }
+
+  
+    // @LINE:28
+    def newEnvironment: JavaScriptReverseRoute = JavaScriptReverseRoute(
+      "controllers.NewEnvironmentController.newEnvironment",
+      """
+        function() {
+          return _wA({method:"GET", url:"""" + _prefix + { _defaultPrefix } + """" + "newenvironment"})
+        }
+      """
+    )
+  
+  }
+
+  // @LINE:51
   class ReverseAuthenticatedUserController(_prefix: => String) {
 
     def _defaultPrefix: String = {
@@ -38,7 +58,7 @@ package controllers.javascript {
     }
 
   
-    // @LINE:45
+    // @LINE:51
     def logout: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.AuthenticatedUserController.logout",
       """
@@ -58,7 +78,7 @@ package controllers.javascript {
     }
 
   
-    // @LINE:28
+    // @LINE:34
     def getGenerationsByRun: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.MongoLookupController.getGenerationsByRun",
       """
@@ -68,7 +88,7 @@ package controllers.javascript {
       """
     )
   
-    // @LINE:30
+    // @LINE:36
     def getRuns: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.MongoLookupController.getRuns",
       """
@@ -88,7 +108,7 @@ package controllers.javascript {
       """
     )
   
-    // @LINE:26
+    // @LINE:32
     def getGenerations: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.MongoLookupController.getGenerations",
       """
@@ -98,7 +118,7 @@ package controllers.javascript {
       """
     )
   
-    // @LINE:24
+    // @LINE:30
     def findBySpeciesandGen: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.MongoLookupController.findBySpeciesandGen",
       """
@@ -210,7 +230,7 @@ package controllers.javascript {
   
   }
 
-  // @LINE:32
+  // @LINE:38
   class ReverseStartEvolveController(_prefix: => String) {
 
     def _defaultPrefix: String = {
@@ -218,7 +238,7 @@ package controllers.javascript {
     }
 
   
-    // @LINE:34
+    // @LINE:40
     def startWS: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.StartEvolveController.startWS",
       """
@@ -228,7 +248,7 @@ package controllers.javascript {
       """
     )
   
-    // @LINE:32
+    // @LINE:38
     def start: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.StartEvolveController.start",
       """
@@ -240,7 +260,7 @@ package controllers.javascript {
   
   }
 
-  // @LINE:41
+  // @LINE:47
   class ReverseUserController(_prefix: => String) {
 
     def _defaultPrefix: String = {
@@ -248,7 +268,7 @@ package controllers.javascript {
     }
 
   
-    // @LINE:42
+    // @LINE:48
     def processLoginAttempt: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.UserController.processLoginAttempt",
       """
@@ -258,12 +278,42 @@ package controllers.javascript {
       """
     )
   
-    // @LINE:41
+    // @LINE:47
     def showLoginForm: JavaScriptReverseRoute = JavaScriptReverseRoute(
       "controllers.UserController.showLoginForm",
       """
         function() {
           return _wA({method:"GET", url:"""" + _prefix + { _defaultPrefix } + """" + "users/login"})
+        }
+      """
+    )
+  
+  }
+
+  // @LINE:24
+  class ReverseStartTestController(_prefix: => String) {
+
+    def _defaultPrefix: String = {
+      if (_prefix.endsWith("/")) "" else "/"
+    }
+
+  
+    // @LINE:26
+    def startWS: JavaScriptReverseRoute = JavaScriptReverseRoute(
+      "controllers.StartTestController.startWS",
+      """
+        function() {
+          return _wA({method:"GET", url:"""" + _prefix + { _defaultPrefix } + """" + "test/startWS"})
+        }
+      """
+    )
+  
+    // @LINE:24
+    def submitGenome: JavaScriptReverseRoute = JavaScriptReverseRoute(
+      "controllers.StartTestController.submitGenome",
+      """
+        function() {
+          return _wA({method:"POST", url:"""" + _prefix + { _defaultPrefix } + """" + "submitgenome"})
         }
       """
     )
