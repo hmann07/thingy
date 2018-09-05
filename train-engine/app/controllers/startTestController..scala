@@ -42,6 +42,7 @@ class StartTestController @Inject()(cache: SyncCacheApi, cc: ControllerComponent
     println(request.body)
     val body: AnyContent = request.body
     val jsonBody: Option[JsValue] = Some(Json.parse(body.asFormUrlEncoded.get("genome").head))
+    val envId = body.asFormUrlEncoded.get("envId").head
 
     // Expecting json body
     jsonBody.map { json =>
@@ -57,6 +58,7 @@ class StartTestController @Inject()(cache: SyncCacheApi, cc: ControllerComponent
       val agent = genome.map { g => 
           
         cache.set("test.genome", g)
+        cache.set("test.envId", envId)
         
       }
 
@@ -70,11 +72,12 @@ class StartTestController @Inject()(cache: SyncCacheApi, cc: ControllerComponent
   }
 
 
-  def startWS = WebSocket.accept[String, String] { request =>
+  def startWS() = WebSocket.accept[String, String] { request =>
     val maybeGenome: Option[NetworkGenome] = cache.get[NetworkGenome]("test.genome")
+    val maybeEnvId: Option[String] = cache.get[String]("test.envId")
       
       ActorFlow.actorRef { out =>
-        Agent.props(null,  new GenomeIO(None, Some(()=> maybeGenome.get)), ConfigData(), TestState, out)
+        Agent.props(null,  new GenomeIO(None, Some(()=> maybeGenome.get)), ConfigData(environmentId = maybeEnvId.get), TestState, List.empty, out)
     }
   }
 

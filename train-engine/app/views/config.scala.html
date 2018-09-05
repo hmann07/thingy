@@ -23,7 +23,9 @@
   @helper.form(routes.ConfigController.userPost()) {
 
   @helper.CSRF.formField
-
+  <div class="form-group">
+    @helper.inputText(configForm("environmentId"), 'class -> "form-control")
+ </div>
   <div class="form-group">
     @helper.inputText(configForm("populationSize"), 'class -> "form-control")
  </div>

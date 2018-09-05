@@ -148,6 +148,52 @@ class MongoLookupController @Inject()(cc: ControllerComponents)(val reactiveMong
   }
 
 
+  def getRunsByEnv(envId: String) = Action.async {
+
+     def collection: JSONCollection = db.collection[JSONCollection]("runs")
+      
+      val cursor: Cursor[JsObject] = collection.
+        // find all people with name `name`
+        find(Json.obj("envId" -> envId)).
+        // sort them by creation date
+        //sort(Json.obj("generation" -> -1)).
+        // perform the query and get a cursor of JsObject
+        cursor[JsObject]()
+
+      // gather all the JsObjects in a list
+      val futureRunsList: Future[List[JsObject]] = cursor.collect[List]()
+
+      // everything's ok! Let's reply with the array
+      futureRunsList.map { run =>
+        Ok(Json.toJson(run))
+      } 
+  }
+
+
+
+  def getEnvironments = Action.async {
+    // let's do our query
+    def collection: JSONCollection = db.collection[JSONCollection]("environments")
+    
+    val cursor: Cursor[JsObject] = collection.
+      // find all people with name `name`
+      find(Json.obj()).
+      // sort them by creation date
+      //sort(Json.obj("generation" -> -1)).
+      // perform the query and get a cursor of JsObject
+      cursor[JsObject]()
+
+    // gather all the JsObjects in a list
+    val futureEnvironments: Future[List[JsObject]] = cursor.collect[List]()
+
+    // everything's ok! Let's reply with the array
+    futureEnvironments.map { run =>
+      Ok(Json.toJson(run))
+    }
+  }
+
+
+
   def getGenerationsByRun(runId: String) = Action.async {
     // let's do our query
     val convRun = runId

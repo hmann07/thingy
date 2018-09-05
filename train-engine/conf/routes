@@ -5,13 +5,14 @@
 # An example controller showing a sample home page
 GET     /                           controllers.LandingPageController.showLandingPage
 # the net viewer
+
 GET     /netviewer                  controllers.NetViewerController.index
 
 GET     /mongolookup/:speciesId		controllers.MongoLookupController.findBySpecies(speciesId)
 
 GET     /getSpeciesByGeneration/:runId/:generationId		controllers.MongoLookupController.getSpeciesByGeneration(runId, generationId)
 
-GET     /config						controllers.ConfigController.viewConfig
+GET     /config/:envId				controllers.ConfigController.viewConfig(envId)
 
 GET 	/aggregateAnalysis			controllers.AggregateAnalysisController.index
 
@@ -19,13 +20,17 @@ GET     /configFilled				controllers.ConfigController.viewConfigFilled
 
 POST 	/config/reuseConfig			controllers.ConfigController.reuseConfig
 
+POST    /config/createenvironment   controllers.EnvironmentController.createEnvironment
+
+GET     /viewenvironments			controllers.EnvironmentController.viewEnvironments
+
 POST     /userPost						controllers.ConfigController.userPost
 
 POST     /submitgenome				controllers.StartTestController.submitGenome
 
 GET     /test/startWS				controllers.StartTestController.startWS
 
-GET     /newenvironment				controllers.NewEnvironmentController.newEnvironment
+GET     /newenvironment				controllers.EnvironmentController.newEnvironment
 
 GET /getNetByGenerationAndSpecies/:runId/:generationId/:speciesId controllers.MongoLookupController.findBySpeciesandGen(runId, generationId, speciesId)
 
@@ -34,6 +39,10 @@ GET     /generations 				controllers.MongoLookupController.getGenerations
 GET     /generations/:runId 		controllers.MongoLookupController.getGenerationsByRun(runId)
 
 GET     /runs 						controllers.MongoLookupController.getRuns
+
+GET     /runs/:envId 				controllers.MongoLookupController.getRunsByEnv(envId)
+
+GET     /environments 				controllers.MongoLookupController.getEnvironments
 
 GET     /start 						controllers.StartEvolveController.start
 

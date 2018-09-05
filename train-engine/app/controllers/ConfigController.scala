@@ -59,6 +59,7 @@ class ConfigController @Inject()(cache: SyncCacheApi, cc: ControllerComponents)(
 
   val configForm = Form(
     mapping(
+      "environmentId" -> text,
       "populationSize" -> number,
       "maxGenerations" -> number,
       "connectionWeightRange" -> number,
@@ -72,8 +73,8 @@ class ConfigController @Inject()(cache: SyncCacheApi, cc: ControllerComponents)(
 
   implicit val configReads = Json.reads[ConfigData]
 
-  def viewConfig = Action { implicit request =>
-    Ok(views.html.config(configForm.fill(ConfigData()), routes.AuthenticatedUserController.logout))
+  def viewConfig(envId: String) = Action { implicit request =>
+    Ok(views.html.config(configForm.fill(ConfigData(environmentId = envId)), routes.AuthenticatedUserController.logout))
   }
 
   def viewConfigFilled = Action { implicit request =>

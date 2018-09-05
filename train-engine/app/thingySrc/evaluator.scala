@@ -16,8 +16,10 @@ case class XOREvaluator(
 	val epochLength: Int = 0,
 	val aggregatedIterationValue: Double = 0.0,
 	val fitness: Double = 0.0,
-	val auxValue: Double = 0.0) extends Evaluator {
+	val auxValue: Double = 0.0
+	val fieldDMap: List = List("Input", "Input", "Output")) extends Evaluator {
 	
+	// Will be evaluated after each pattern.So will test the response to a particular representation.
 	override def evaluateIteration(networkInput: Representation, networkOutput: Map[Int, Double]): Evaluator = {
 		  
   		  val error = networkInput.expectedOutput(3) - networkOutput(3)
@@ -27,6 +29,7 @@ case class XOREvaluator(
 	}
 
 
+	// Will be evaluated after the whole pattern has been consumed. 
 	override def evaluateEpoch() = {
 		
 		val evalfitness = 1.0 / aggregatedIterationValue

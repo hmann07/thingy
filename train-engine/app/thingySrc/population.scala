@@ -3,6 +3,7 @@ package com.thingy.population
 import com.thingy.config.ConfigDataClass.ConfigData
 import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorRef, FSM, Props }
+import akka.pattern.pipe
 import com.thingy.genome.NetworkGenomeBuilder
 import com.thingy.genome.NetworkGenome
 import com.thingy.genome.NeuronGenome
@@ -17,10 +18,12 @@ import com.thingy.species.SpeciesMember
 import com.thingy.species.Species
 import com.thingy.species.SpeciesDirectory
 import play.api.libs.json._
+import reactivemongo.play.json._
 import play.api.libs.iteratee._
 import java.util.Calendar
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 import scala.concurrent.ExecutionContext.Implicits.global
 import reactivemongo.api.{ DefaultDB, MongoConnection, MongoDriver }
 import reactivemongo.bson.{
@@ -41,7 +44,6 @@ object Population {
 	
 	val mongoUri = "mongodb://localhost:27017/genomeData?authMode=scram-sha1"
 
- 
  	 // Connect to the database: Must be done only once per application
   	val driver = MongoDriver()
   	val parsedUri = MongoConnection.parseURI(mongoUri)
@@ -50,13 +52,10 @@ object Population {
   	// Database and collections: Get references
   	val futureConnection = Future.fromTry(connection)
   	def db1: Future[DefaultDB] = futureConnection.flatMap(_.database("genomeData"))
-  	
   	def genomeCollection = db1.map(_.collection("genomes"))
-
   	def generationCollection = db1.map(_.collection("generations"))
-
+  	def environmentCollection = db1.map(_.collection("environments"))
   	def speciesCollection = db1.map(_.collection("species"))
-
   	def runStatsCollection = db1.map(_.collection("runs"))
 
   	// Write Documents: insert or update
@@ -119,18 +118,20 @@ object Population {
 
 	case class FrontendMessage(msg: String)
   	
-  	
+  	case class EnvData(data: BSONDocument)
 
 	case class PopulationSettings(
 			currentGeneration: Int = 1,
 			currentFamily: Int = 1,
-			currentPopulation: List[ActorRef],
+			currentPopulation: List[ActorRef] = List.empty,
 			currentPopulationSize: Int = p,
 			agentsCompleteCount: Int = 0, 
 			agentsComplete: Map[ActorRef, NetworkGenome] = Map.empty,
 			agentSumTotalFitness: Double = 0.0,
 			currentSpecies: Int = 0,
-			speciesDirectory: SpeciesDirectory = SpeciesDirectory())
+			speciesDirectory: SpeciesDirectory,
+			innovation: ActorRef = null,
+			fieldmap: List[String] = List.empty)
 
 	
 }
@@ -145,47 +146,76 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 
 	out ! (runId)
 
-	val nb: NetworkGenomeBuilder = new NetworkGenomeBuilder
+	//val nb: NetworkGenomeBuilder = new NetworkGenomeBuilder
+	val query = BSONDocument("_id" -> Json.obj("$oid" -> configData.environmentId))
+	val envData = environmentCollection.flatMap(_.find(query).one[BSONDocument])
+	def extractEnvData(implicit ec: ExecutionContext) = { 
 
- 	val innovation = context.actorOf(Innovation.props(new GenomeIO(Some(nb.json), None).generate), "innov8")
+		envData.map {d=>
+			EnvData(d.get)
+		}
+	}
+
+
+	extractEnvData.pipeTo(self)
+
  	val generations = configData.maxGenerations
  	
- 	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef]) = {
- 		rep(gestatable, population, List.empty)
+ 	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef], innovation: ActorRef, fieldmap:List[String]) = {
+ 		rep(gestatable, population, List.empty, innovation, fieldmap)
  	}
 
 
 
- 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef]):List[ActorRef] ={
+ 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef], innovation: ActorRef, fieldmap: List[String]):List[ActorRef] ={
 		g.headOption.map(gnew=>{
 			val evalG = new GenomeIO(None, Some(gnew))
 			c.headOption.map(cnew=> {
 				cnew ! Network.NetworkUpdate(evalG)
-				rep(g.tail, c.tail, cnew :: cummulate)
-			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData, ActiveAgent), "agent" + "weneedtospecanid") :: cummulate)
+				rep(g.tail, c.tail, cnew :: cummulate, innovation, fieldmap)
+			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData, ActiveAgent, fieldmap), "agent" + "weneedtospecanid") :: cummulate)
 		}).getOrElse({
 			//c.foreach(newc => context.stop(newc))
 			c ++ cummulate
 		})	
 	}
 
- 	val popList = for {
- 		i <- 1 to configData.populationSize
- 	}
- 	yield {
- 		context.actorOf(Agent.props(innovation,  new GenomeIO(Some(nb.json), None), configData, ActiveAgent), "agent" + i)
-	}
 
-	log.info("population created with {} children", context.children.size) 
-
+ 	
 
 	startWith(Active, PopulationSettings(
-		currentPopulation = popList.toList, 
 		currentPopulationSize = configData.populationSize,
 		speciesDirectory = SpeciesDirectory(configData = configData)
 		))
 
 	when(Active) {
+
+		case Event(d: EnvData, s: PopulationSettings) =>
+ 			
+ 			val jsonEnvData =  Json.toJson(d.data)
+ 			val fieldMapData = (jsonEnvData \ "fieldmap").get.as[List[String]].foldLeft((List(Int), List(Int), 0)) {(acc, current) =>
+ 				current match {
+ 					case "Input" => (acc._1 ++ current, acc._2)
+ 					case "Output" =>(acc._1, acc._2 ++ current)
+ 				}
+ 			}
+ 			println(fieldMapData)
+
+
+			val innovation = context.actorOf(Innovation.props(new GenomeIO(None, None).generateFromSpec(fieldMapData)), "innov8")
+ 			val popList = for {
+ 			i <- 1 to configData.populationSize
+ 			}
+ 			yield {
+ 				context.actorOf(Agent.props(innovation,  new GenomeIO(None, None), configData, ActiveAgent, fieldMapData), "agent" + i)
+			}
+
+			log.info("population created with {} children", context.children.size) 
+
+			val newSettings = s.copy(currentPopulation = popList.toList, innovation = innovation, fieldmap = fieldMapData)
+
+			stay using newSettings
+
  		case Event(d: Network.Done, s: PopulationSettings) =>
  			
  			val completed = s.agentsCompleteCount + 1
@@ -249,6 +279,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
  					out ! (runId + " finished in " + duration + " seconds")
 
 					val insertDBRecord = runStatsCollection.flatMap(_.insert(BSONDocument(
+						"envId" -> configData.environmentId,
 						"runId" -> runId,
 						"startTime" -> startTime,
 						"settings" -> configData,
@@ -273,7 +304,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 
  				
  				val agentFns = gestatable.flatten.toList
- 				val pop = repurposeAgents(agentFns, s.currentPopulation)
+ 				val pop = repurposeAgents(agentFns, s.currentPopulation, s.innovation, s.fieldmap)
 
  				stay using s.copy(
  								  currentGeneration = s.currentGeneration + 1,

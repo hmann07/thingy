@@ -3,6 +3,7 @@ class App extends React.Component {
     super(props);
   this.state =
   {
+    "environmentData":[],
     "generationData": [],
     "runData":[],
     "speciesData": [],
@@ -16,19 +17,25 @@ class App extends React.Component {
 
  componentDidMount(){
   var t = this
-  $.get( "/runs", function( runData ) {
-    t.setState({runData : runData})
+  $.get( "/environments", function( environmentData ) {
+    t.setState({environmentData : environmentData})
   })
  }
 
+
+envClickHandle(envData) {
+  var t = this
+  $.get( "/runs/" + envData, function( runData ) {
+    t.setState({runData : runData})
+  })   
+ }
 
 
  runClickHandle(runData) {
   var t = this
   $.get( "/generations/" + runData.runId, function( generationData ) {
     t.setState({generationData : generationData, currentRunId : runData.runId, currentRunSettings: runData.settings})
-  })  
-   
+  })   
  }
 
 
@@ -55,12 +62,13 @@ class App extends React.Component {
  render(){
   return (
     <div>
+      <EnvironmentViewer value={this.state.environmentData} clickHandler={this.envClickHandle.bind(this)}/>
       <DataSelector value={this.state.runData} fields={["runId","startTime", "endTime", "duration", "bestFitness", "bestPerformance"]} clickHandler={this.runClickHandle.bind(this)}/>
       <ConfigViewer data={this.state.currentRunSettings} />
       <BarChart data={this.state.generationData}/>
       <DataSelector value={this.state.generationData} fields={["generation","bestPerformance", "bestFitness"]} clickHandler={this.generationClickHandle.bind(this)}/>
       <DataSelector value={this.state.speciesData} fields={["species", "speciesTotalFitness", "speciesBestFitness"]} clickHandler={this.speciesClickHandle.bind(this)}/>
-      <DataSelector value={this.state.networksData} fields="all" clickHandler={this.netClickHandle.bind(this)}/>
+      <DataSelector value={this.state.networksData} envId={this.state.currentRunSettings.environmentId} fields="all" clickHandler={this.netClickHandle.bind(this)}/>
     </div>
 
     )
@@ -168,6 +176,7 @@ class DataSelectorItem extends React.Component {
               <form action="/submitgenome" method="POST">
                <input type="hidden" name="csrfToken" value={$('input[name="csrfToken"]').attr('value')}></input>
                 <input type="hidden" name="genome" value={genomeStr}></input>
+                <input type="hidden" name="envId" value={data.envId}></input>
               <button type="submit">Use Genome</button>
               </form>
             </td>

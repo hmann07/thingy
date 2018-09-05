@@ -22,6 +22,7 @@ object ConfigDataClass {
 private val config = ConfigFactory.load()
 
 case class ConfigData(
+  environmentId: String,
   populationSize: Int = config.getConfig("thingy").getInt("population-size"), 
   maxGenerations: Int = config.getConfig("thingy").getInt("generations"),
   connectionWeightRange: Int = config.getConfig("thingy").getInt("weight-range"),

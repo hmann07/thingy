@@ -21,18 +21,27 @@ object Agent {
 	case class AgentSettings()
 	case class Performance(performanceValue: Double, genome: NetworkGenome)
 	
-	def props(innovation: ActorRef, network: GenomeIO, configData: ConfigData, startState: AgentState, out: ActorRef = null): Props = {
+	def props(innovation: ActorRef, network: GenomeIO, configData: ConfigData, startState: AgentState, fieldmap: List[String], out: ActorRef = null): Props = {
 		
-		Props(classOf[Agent], innovation, network, configData, startState, out)
+		Props(classOf[Agent], innovation, network, configData, startState, fieldmap, out)
 	}
 
 }
 
 
 
-class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData, startState: AgentState, out: ActorRef = null) extends FSM[AgentState, Agent.AgentSettings] {
+class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData, startState: AgentState, fieldmap: List[String], out: ActorRef = null) extends FSM[AgentState, Agent.AgentSettings] {
 	import Agent._
-	def networkGenome = ng.generate
+	def networkGenome = ng match {
+		case GenomeIO(None, None) => {
+			
+			val cg = ng.generateFromSpec(fieldmap)
+			log.info("creating genome from spec " + cg)
+			cg
+		}
+		case _ => ng.generate
+	}
+	 
 	val environment = context.actorOf(Environment.props(), "environment")
 	val network = startState match {
 		case TestState =>
@@ -75,10 +84,6 @@ class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData, startSta
 
  	}
 
- 	onTermination {
-        case StopEvent(FSM.Normal, state, data) => println("bye")
-        case StopEvent(FSM.Shutdown, state, data) => println("bye")
-        case StopEvent(FSM.Failure(cause), state, data) => println("bye")
-      }
+ 	
 
 }

@@ -79,4 +79,72 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 		}).get
 	}
 
+
+	// Build the most basic seed network based on input/ouput spec. All outputs will automatically be given a neutral subnet:
+	// one input, one ouput one connection with weight 1. ,
+	// this should receive a tuple of two lists (1,2,5),(3,5)
+	def generateFromSpec(spec: List[String]): NetworkGenome = {
+
+		val (inputs, outputs, currentId) = spec.foldLeft((Map[Int, NeuronGenome](), Map[Int, NeuronGenome](), 1)) { (acc,current) =>
+			val currentId = acc._3
+			current match {
+				case "Input" => (acc._1 + (currentId -> NeuronGenome(
+															currentId, 
+															"inputNeuron" + currentId, 
+															0, 
+															Some("SIGMOID"), 
+															None, //subnetid
+															Weight(), 
+															"input")), 
+															acc._2, currentId + 1)
+				
+				case "Output" => (acc._1, 
+								acc._2 + (currentId -> NeuronGenome(
+															currentId, 
+															"outputNeuron" + currentId, 
+															1, 
+															Some("SIGMOID"), 
+															Some(1),  //SubnetId
+															Weight(), 
+															"output")),
+								currentId+1)
+
+			}
+		}
+
+
+		val (connections, connid) = inputs.foldLeft((Map[Int,ConnectionGenome](), 1)) { (acc, i) =>
+
+			val (itoo, connid2) =  outputs.foldLeft(acc._1, acc._2) { (acc2, o)=> 
+				( acc2._1 + (acc2._2 -> ConnectionGenome(acc2._2, i._1, o._1, Weight(), true, false)), acc2._2 + 1)
+			}
+
+			(itoo, connid2)
+
+		}
+
+		// this process should be repeated for each output....
+		val subnetNeurons = Map(1 -> NeuronGenome(1,"subnetIputNeuron1", 0, Some("SIGMOID"), None, Weight(), "input"),
+								2 -> NeuronGenome(2,"outputNeuron2", 1, Some("SIGMOID"), None, Weight(), "output"))
+		val subnetConnection = Map(1-> ConnectionGenome(1, 1, 2, Weight(), true, false))
+
+		val subnetwork = NetworkGenome(1, 
+					 subnetNeurons, 
+					  subnetConnection, 
+					  None, 
+					  Some(3))
+
+		NetworkGenome(1, 
+					  inputs ++ outputs, 
+					  connections, 
+					  Some(Map(1->subnetwork)), 
+					  Some(0), 
+					  0,
+					  0) 
+
+
+	}
+
+
+
 }

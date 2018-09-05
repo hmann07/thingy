@@ -75,7 +75,7 @@ object SpeciesDirectory {
 }
 
 case class SpeciesDirectory (
-	val configData: ConfigData = ConfigData(),
+	val configData: ConfigData,
 	val currentSpeciesId: Int = 0, 
 	val species: Map[Int, Species] = Map.empty,
 	val totalFitness: Double = 0.0,
