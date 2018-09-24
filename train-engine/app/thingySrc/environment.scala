@@ -2,6 +2,7 @@ package com.thingy.environment
 
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.network.Network.Perceive
+import com.thingy.environment.EnvironmentIOSpec
 
 import scala.io.Source
 
@@ -16,53 +17,51 @@ object Environment {
 	
 
 	case class Experience(representations: List[Representation])
-	def props(): Props = {
-		Props(classOf[Environment])
+	
+	def props(envType: EnvironmentType ): Props = {
+		Props(classOf[Environment], envType)
 	}
 }
 
 
 
-class Environment() extends FSM[EnvironmentState, Environment.EnvironmentSettings] {
+class Environment(envType: EnvironmentType) extends FSM[EnvironmentState, Environment.EnvironmentSettings] {
 	import Environment._
-	val fieldmap = List("Input", "Input", "Output")
-	val filename = "Xor.json"
-	val fileNameAndPath = "C:\\Windows\\Temp\\" + filename
-	val lines = Source.fromFile(fileNameAndPath).getLines
-	val representations  = lines.map { line =>
-		
-		val columns: List[String] = line.split(",").toList
-		val zippedCols = columns.zip(fieldmap)
-		val (inputs, idx) = zippedCols.foldLeft((Map[Int, Double](), 1)) { (acc, current) =>
 
-			if(current._2=="Input"){
 
-			(acc._1 + (acc._2 -> current._1.toDouble), acc._2 + 1)
-			} else {
-			(acc._1, acc._2 )
-			}
-		}
+	val experienceStream: Experience = envType match {
+		case et: FileEnvironmentType =>
+				val filename = et.environmentConnetion
+				val fileNameAndPath = "C:\\Windows\\Temp\\" + filename
+				val lines = Source.fromFile(fileNameAndPath).getLines
+				val representations  = lines.map { line =>
+					
+					val columns: List[String] = line.split(",").toList
+					
+					val inputMap = et.environmentIOSpec.inputs.foldLeft(Map[Int, Double]()) { (acc, current) =>
+						acc + (current -> columns(current-1).toDouble)
+					}
 
-		val (outputs, idx2) = zippedCols.foldLeft((Map[Int, Double](), idx)) { (acc, current) =>
-			if(current._2=="Output"){
-			(acc._1 + (acc._2 -> current._1.toDouble), acc._2 + 1)
-			} else {
-			(acc._1, acc._2)
-			}
-		}
-    
-    	if(lines.hasNext) {
-				Representation(List.empty, inputs, outputs)
-    	}else{
-    		Representation(List("FINAL"), inputs, outputs)
-    	}
+					val outputMap = et.environmentIOSpec.outputs.foldLeft(Map[Int, Double]()) { (acc, current) =>
+						acc + (current -> columns(current-1).toDouble)
+					}
 
+			    
+			    	if(lines.hasNext) {
+							Representation(List.empty, inputMap, outputMap)
+			    	}else{
+			    		Representation(List("FINAL"), inputMap, outputMap)
+			    	}
+
+				}
+
+
+				Experience(representations.toList)
+		case _ =>
+			Experience(List.empty)
 	}
 
-
-	val experienceStream = Experience(representations.toList)
-
-
+	
 	startWith(Active, EnvironmentSettings(experienceStream.representations.head, experienceStream.representations.tail))
 
  	when(Active) {

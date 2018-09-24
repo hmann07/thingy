@@ -8,7 +8,7 @@ class App extends React.Component {
     "runData":[],
     "speciesData": [],
     "networksData": [],
-    "currentRunSettings":"{}",
+    "currentRunSettings":{},
     currentGeneration: 0,
     currentSpecies: 0,
     currentRunId: 0
@@ -68,7 +68,7 @@ envClickHandle(envData) {
       <BarChart data={this.state.generationData}/>
       <DataSelector value={this.state.generationData} fields={["generation","bestPerformance", "bestFitness"]} clickHandler={this.generationClickHandle.bind(this)}/>
       <DataSelector value={this.state.speciesData} fields={["species", "speciesTotalFitness", "speciesBestFitness"]} clickHandler={this.speciesClickHandle.bind(this)}/>
-      <DataSelector value={this.state.networksData} envId={this.state.currentRunSettings.environmentId} fields="all" clickHandler={this.netClickHandle.bind(this)}/>
+      <DataSelector value={this.state.networksData} environmentId={this.state.currentRunSettings.environmentId} fields="all" clickHandler={this.netClickHandle.bind(this)}/>
     </div>
 
     )
@@ -128,6 +128,7 @@ class DataSelector extends React.Component {
     var totalPages =  pages.length
     var t = this.props.fields
     var tt = this.props.clickHandler
+    var env = this.props.environmentId
     return (
       <div>
         <table className="table table-hover">
@@ -140,7 +141,7 @@ class DataSelector extends React.Component {
               {
               pages.length > 0 ?  
                 pages[this.state.currentPage].map(function(page) {    
-                return (<DataSelectorItem  key={page._id["$oid"]} value={page} fields={t} clickHandler={tt} />) 
+                return (<DataSelectorItem  key={page._id["$oid"]} value={page} fields={t} envId={env} clickHandler={tt} />) 
               }): null
               }
             </tbody>

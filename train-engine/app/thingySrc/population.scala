@@ -17,6 +17,9 @@ import com.thingy.agent._
 import com.thingy.species.SpeciesMember
 import com.thingy.species.Species
 import com.thingy.species.SpeciesDirectory
+import com.thingy.environment.EnvironmentIOSpec
+import com.thingy.environment.EnvironmentType
+import com.thingy.environment.FileEnvironmentType
 import play.api.libs.json._
 import reactivemongo.play.json._
 import play.api.libs.iteratee._
@@ -131,7 +134,7 @@ object Population {
 			currentSpecies: Int = 0,
 			speciesDirectory: SpeciesDirectory,
 			innovation: ActorRef = null,
-			fieldmap: List[String] = List.empty)
+			envType: EnvironmentType = null)
 
 	
 }
@@ -161,19 +164,19 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 
  	val generations = configData.maxGenerations
  	
- 	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef], innovation: ActorRef, fieldmap:List[String]) = {
- 		rep(gestatable, population, List.empty, innovation, fieldmap)
+ 	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef], innovation: ActorRef, envType:EnvironmentType) = {
+ 		rep(gestatable, population, List.empty, innovation, envType)
  	}
 
 
 
- 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef], innovation: ActorRef, fieldmap: List[String]):List[ActorRef] ={
+ 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef], innovation: ActorRef, envType: EnvironmentType):List[ActorRef] ={
 		g.headOption.map(gnew=>{
 			val evalG = new GenomeIO(None, Some(gnew))
 			c.headOption.map(cnew=> {
 				cnew ! Network.NetworkUpdate(evalG)
-				rep(g.tail, c.tail, cnew :: cummulate, innovation, fieldmap)
-			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData, ActiveAgent, fieldmap), "agent" + "weneedtospecanid") :: cummulate)
+				rep(g.tail, c.tail, cnew :: cummulate, innovation, envType)
+			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData, ActiveAgent, envType), "agent" + "weneedtospecanid") :: cummulate)
 		}).getOrElse({
 			//c.foreach(newc => context.stop(newc))
 			c ++ cummulate
@@ -192,27 +195,21 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 
 		case Event(d: EnvData, s: PopulationSettings) =>
  			
- 			val jsonEnvData =  Json.toJson(d.data)
- 			val fieldMapData = (jsonEnvData \ "fieldmap").get.as[List[String]].foldLeft((List(Int), List(Int), 0)) {(acc, current) =>
- 				current match {
- 					case "Input" => (acc._1 ++ current, acc._2)
- 					case "Output" =>(acc._1, acc._2 ++ current)
- 				}
- 			}
- 			println(fieldMapData)
+ 			// this should be controlled by data coming from EnvData... 
+ 			val envType: FileEnvironmentType = new FileEnvironmentType(d.data)
 
 
-			val innovation = context.actorOf(Innovation.props(new GenomeIO(None, None).generateFromSpec(fieldMapData)), "innov8")
+			val innovation = context.actorOf(Innovation.props(new GenomeIO(None, None).generateFromSpec(envType.environmentIOSpec)), "innov8")
  			val popList = for {
  			i <- 1 to configData.populationSize
  			}
  			yield {
- 				context.actorOf(Agent.props(innovation,  new GenomeIO(None, None), configData, ActiveAgent, fieldMapData), "agent" + i)
+ 				context.actorOf(Agent.props(innovation,  new GenomeIO(None, None), configData, ActiveAgent, envType), "agent" + i)
 			}
 
 			log.info("population created with {} children", context.children.size) 
 
-			val newSettings = s.copy(currentPopulation = popList.toList, innovation = innovation, fieldmap = fieldMapData)
+			val newSettings = s.copy(currentPopulation = popList.toList, innovation = innovation, envType = envType)
 
 			stay using newSettings
 
@@ -236,7 +233,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 				"genome" -> updateGenome
 			)).map(_ => {}))
 
-			log.info("generation {} population received Performance value of {}, auxValue: {} for genome: {} from {}. received {} of {} ", logParams)
+			log.info("generation {} population received fitness value of {}, performance Value of: {} for genome: {} from {}. received {} of {} ", logParams)
 						
 
 
@@ -304,7 +301,7 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 
  				
  				val agentFns = gestatable.flatten.toList
- 				val pop = repurposeAgents(agentFns, s.currentPopulation, s.innovation, s.fieldmap)
+ 				val pop = repurposeAgents(agentFns, s.currentPopulation, s.innovation, s.envType)
 
  				stay using s.copy(
  								  currentGeneration = s.currentGeneration + 1,

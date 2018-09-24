@@ -11,8 +11,8 @@ import com.thingy.config.ConfigDataClass.ConfigData
 
 case class SpeciesMember (
 	genome: NetworkGenome,
-	performanceValue: Double,
-	fitnessValue: Double)
+	performanceValue: Double, // THe actual measure used to evaluate the genome
+	fitnessValue: Double) // the performanceValue converted into an overall fitness value, higher the fitness, better the individual
 
 object Species {
 	implicit val speciesWrites: Writes[Species] = new Writes[Species] {
@@ -43,10 +43,10 @@ case class Species(id: Int = 0,
 		val newMemberCount = memberCount + 1
 		val newMember = SpeciesMember(g, performanceValue, fitnessValue)
 		val newMembers =  newMember:: members
-		val newGenerationArchetype =  if(generationalArchetype == null || performanceValue> generationalArchetype.performanceValue) newMember else generationalArchetype
-		val newHistoricalArchetype =  if(performanceValue> historicalArchetype.performanceValue) newMember else historicalArchetype
+		val newGenerationArchetype =  if(generationalArchetype == null || fitnessValue > generationalArchetype.fitnessValue) newMember else generationalArchetype
+		val newHistoricalArchetype =  if(fitnessValue> historicalArchetype.fitnessValue) newMember else historicalArchetype
 
-		val updatedTotalFitness = speciesTotalFitness + performanceValue
+		val updatedTotalFitness = speciesTotalFitness + fitnessValue
 
 		copy(
 			speciesTotalFitness = updatedTotalFitness,
@@ -102,12 +102,12 @@ case class SpeciesDirectory (
 				// Create one at location 1.
 				val newMember = SpeciesMember(f, performanceValue, fitnessValue)
 
-				(currentSpeciesId, copy(totalFitness = totalFitness + performanceValue, 
+				(currentSpeciesId, copy(totalFitness = totalFitness + fitnessValue, 
 						  currentSpeciesId = 1, 
 						  species = species + (1 -> Species(
 						  								id = 1,
 						  								memberCount = 1, 
-						  								speciesTotalFitness = performanceValue, 
+						  								speciesTotalFitness = fitnessValue, 
 						  								historicalArchetype = newMember, 
 						  								generationalArchetype = newMember,
 						  								members = List(newMember))),
@@ -119,10 +119,11 @@ case class SpeciesDirectory (
 
 				val (allocatedSpecies, newSpeciesList) = findSpecies(f, performanceValue, fitnessValue, species, species)
 				
-				val best = if(bestMember == null || performanceValue > bestMember.performanceValue) SpeciesMember(f, performanceValue, fitnessValue) else bestMember
+				val best = if(bestMember == null || fitnessValue > bestMember.fitnessValue) SpeciesMember(f, performanceValue, fitnessValue) else bestMember
 				// Increase the species Id. and create new list.
 
-				(allocatedSpecies, copy(totalFitness = totalFitness + performanceValue,
+				(allocatedSpecies, copy(
+						  totalFitness = totalFitness + fitnessValue,
 						  currentSpeciesId = if(newSpeciesList.size > currentSpeciesId){currentSpeciesId + 1} else {currentSpeciesId},
 						  species = newSpeciesList,
 						  bestMember = best))
@@ -170,7 +171,7 @@ case class SpeciesDirectory (
 					(currentSpeciesId + 1, staticList + (currentSpeciesId + 1 -> Species(
 														id = currentSpeciesId + 1,
 						  								memberCount = 1, 
-						  								speciesTotalFitness = performanceValue, 
+						  								speciesTotalFitness = fitnessValue, 
 						  								historicalArchetype = newMember, 
 						  								generationalArchetype = newMember,
 						  								members = List(newMember))))
@@ -209,7 +210,7 @@ case class SpeciesDirectory (
 			val genome1 = TournamentSelection.select(s.members)
 			val genome2 = TournamentSelection.select(s.members)
 
-			val orderedGenome = (if(genome1.performanceValue > genome2.performanceValue) genome1 else genome2, if(genome1.performanceValue > genome2.performanceValue) genome2 else genome1)
+			val orderedGenome = (if(genome1.fitnessValue > genome2.fitnessValue) genome1 else genome2, if(genome1.fitnessValue > genome2.fitnessValue) genome2 else genome1)
 			
 			val f = () => {
 				orderedGenome._1.genome.crossover(orderedGenome._2.genome)

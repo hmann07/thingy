@@ -51,13 +51,20 @@ object Network {
     // an override of props to allow Actor to take con structor args.
 	// Network should take a genome and create a number of sub networks.
 
-	def props(name: String, networkGenome: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData, startState: NetworkState, out: ActorRef = null): Props = {
+	def props(name: String, 
+			  networkGenome: NetworkGenome, 
+			  innovation: ActorRef, 
+			  environment: ActorRef, 
+			  configData: ConfigData, 
+			  startState: NetworkState, 
+			  evaluator: Evaluator,
+			  out: ActorRef = null): Props = {
 
-		Props(classOf[Network], name, networkGenome, innovation, environment, configData, startState, out)
+		Props(classOf[Network], name, networkGenome, innovation, environment, configData, startState, evaluator, out)
 	}
 }
 
-class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData, startState: NetworkState, out: ActorRef = null) extends FSM[NetworkState, NetworkSettings] {
+class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment: ActorRef, configData: ConfigData, startState: NetworkState, evaluator: Evaluator, out: ActorRef = null) extends FSM[NetworkState, NetworkSettings] {
 
 	import Network._
 	val networkGenome = ng
@@ -75,7 +82,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 
 	environment ! Perceive()
 
-	startWith(startState, NetworkSettings(genome = networkGenome, networkSchema = generatedActors))
+	startWith(startState, NetworkSettings(genome = networkGenome, networkSchema = generatedActors, evaluator = evaluator))
 
 	when(NetworkActive) {
 
@@ -315,7 +322,7 @@ class Network(name: String, ng: NetworkGenome, innovation: ActorRef, environment
 			val updateExisting = existing + (s.nodeId -> s.value)
 			val updateOutputs = t.actualOutputs + (s.batchId -> updateExisting) 
 			
-			out ! "" + s				
+			out ! "Received: " + s  + " Expected: " + t.expectedOutputs(s.batchId)				
 			
 			// check have we processed a representation complete?
 			if(updateOutputs(s.batchId).size == t.expectedOutputs(s.batchId).expectedOutput.size) {

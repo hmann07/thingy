@@ -8,6 +8,8 @@ import play.api.libs.functional.syntax._
 
 import com.thingy.genome._
 import com.thingy.weight.Weight
+import com.thingy.environment.EnvironmentIOSpec
+
 //import com.thingy.genome.ConnectionGenome
 //import com.thingy.genome.NetworkGenome
 
@@ -83,39 +85,32 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 	// Build the most basic seed network based on input/ouput spec. All outputs will automatically be given a neutral subnet:
 	// one input, one ouput one connection with weight 1. ,
 	// this should receive a tuple of two lists (1,2,5),(3,5)
-	def generateFromSpec(spec: List[String]): NetworkGenome = {
+	def generateFromSpec(fieldmap: EnvironmentIOSpec): NetworkGenome = {
 
-		val (inputs, outputs, currentId) = spec.foldLeft((Map[Int, NeuronGenome](), Map[Int, NeuronGenome](), 1)) { (acc,current) =>
-			val currentId = acc._3
-			current match {
-				case "Input" => (acc._1 + (currentId -> NeuronGenome(
-															currentId, 
-															"inputNeuron" + currentId, 
+		val inputNeurons = fieldmap.inputs.foldLeft(Map[Int, NeuronGenome]()) { (acc,current) =>
+			 acc + (current -> NeuronGenome(
+															current, 
+															"inputNeuron" + current, 
 															0, 
 															Some("SIGMOID"), 
 															None, //subnetid
 															Weight(), 
-															"input")), 
-															acc._2, currentId + 1)
-				
-				case "Output" => (acc._1, 
-								acc._2 + (currentId -> NeuronGenome(
-															currentId, 
-															"outputNeuron" + currentId, 
+															"input"))
+			 	}
+		val outputNeurons = fieldmap.outputs.foldLeft(Map[Int, NeuronGenome]()) { (acc,current) =>
+					acc + (current -> NeuronGenome(current, 
+															"outputNeuron" + current, 
 															1, 
 															Some("SIGMOID"), 
 															Some(1),  //SubnetId
 															Weight(), 
-															"output")),
-								currentId+1)
-
+															"output"))
 			}
-		}
 
 
-		val (connections, connid) = inputs.foldLeft((Map[Int,ConnectionGenome](), 1)) { (acc, i) =>
+		val (connections, connid) = inputNeurons.foldLeft((Map[Int,ConnectionGenome](), 1)) { (acc, i) =>
 
-			val (itoo, connid2) =  outputs.foldLeft(acc._1, acc._2) { (acc2, o)=> 
+			val (itoo, connid2) =  outputNeurons.foldLeft(acc._1, acc._2) { (acc2, o)=> 
 				( acc2._1 + (acc2._2 -> ConnectionGenome(acc2._2, i._1, o._1, Weight(), true, false)), acc2._2 + 1)
 			}
 
@@ -135,7 +130,7 @@ case class GenomeIO(json: Option[JsValue], genome: Option[()=>NetworkGenome]) {
 					  Some(3))
 
 		NetworkGenome(1, 
-					  inputs ++ outputs, 
+					  inputNeurons ++ outputNeurons, 
 					  connections, 
 					  Some(Map(1->subnetwork)), 
 					  Some(0), 

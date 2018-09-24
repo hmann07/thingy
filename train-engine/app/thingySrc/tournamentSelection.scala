@@ -16,7 +16,7 @@ object TournamentSelection {
 				best
 			} else {
 				val newCandidate = genomes(Random.nextInt(genomes.length))
-				if(k > 0 && (best == null || newCandidate.performanceValue > best.performanceValue)) {
+				if(k > 0 && (best == null || newCandidate.fitnessValue > best.fitnessValue)) {
 					selectAux(genomes, k -1, newCandidate)
 				} else {
 					selectAux(genomes, k -1, best)

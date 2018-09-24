@@ -22,6 +22,7 @@ import com.thingy.genome._
 import play.api.libs.json._
 import com.thingy.config.ConfigDataClass.ConfigData
 import com.thingy.agent._
+import com.thingy.environment.EnvironmentIOSpec
 
 /**
  * This controller creates an `Action` to handle HTTP requests to the
@@ -43,7 +44,7 @@ class StartTestController @Inject()(cache: SyncCacheApi, cc: ControllerComponent
     val body: AnyContent = request.body
     val jsonBody: Option[JsValue] = Some(Json.parse(body.asFormUrlEncoded.get("genome").head))
     val envId = body.asFormUrlEncoded.get("envId").head
-
+   
     // Expecting json body
     jsonBody.map { json =>
            
@@ -77,7 +78,7 @@ class StartTestController @Inject()(cache: SyncCacheApi, cc: ControllerComponent
     val maybeEnvId: Option[String] = cache.get[String]("test.envId")
       
       ActorFlow.actorRef { out =>
-        Agent.props(null,  new GenomeIO(None, Some(()=> maybeGenome.get)), ConfigData(environmentId = maybeEnvId.get), TestState, List.empty, out)
+        Agent.props(null,  new GenomeIO(None, Some(()=> maybeGenome.get)), ConfigData(environmentId = maybeEnvId.get), TestState, null, out)
     }
   }
 
