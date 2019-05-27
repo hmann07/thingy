@@ -12,7 +12,7 @@ trait Evaluator {
 	def reset: Evaluator
 	
 }
-case class XOREvaluator(
+case class SSEEvaluator(
 	val epochLength: Int = 0,
 	val aggregatedIterationValue: Double = 0.0,
 	val fitness: Double = 0.0,
@@ -35,20 +35,20 @@ case class XOREvaluator(
 		  }
 
   		 
-          this.copy(aggregatedIterationValue = aggregatedIterationValue + sumSquaredError)
+          copy(aggregatedIterationValue = aggregatedIterationValue + sumSquaredError)
 	}
 
 
 	// Will be evaluated after the whole pattern has been consumed. 
-	override def evaluateEpoch() = {
+	override def evaluateEpoch(): Evaluator = {
 		
 		val evalfitness = 1.0 / aggregatedIterationValue
 		
-		this.copy(fitness = evalfitness, auxValue = aggregatedIterationValue)
+		copy(fitness = evalfitness, auxValue = aggregatedIterationValue)
 	}
 
-	override def reset = {
-		this.copy(aggregatedIterationValue = 0.0, fitness = 0.0, auxValue = 0.0)
+	override def reset: Evaluator = {
+		copy(aggregatedIterationValue = 0.0, fitness = 0.0, auxValue = 0.0)
 	}
 
 } 

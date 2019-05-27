@@ -3,6 +3,7 @@ package com.thingy.subnetwork
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.neuron.{Successor, Predecessor, Neuron}
 import com.thingy.genome._
+import com.thingy.network._
 import com.thingy.weight.Weight
 
 
@@ -19,7 +20,7 @@ final case class SubNetworkSettings(
 	connections: Neuron.ConnectionConfig = Neuron.ConnectionConfig(),
 	nodeGenome:  NeuronGenome,
 	genome: NetworkGenome,
-	networkSchema: NetworkGenome.NetworkNodeSchema)
+	networkSchema: NetworkNodeSchema)
 
 
 
@@ -38,9 +39,11 @@ object SubNetwork {
 class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGenome) extends FSM[SubNetworkState, SubNetworkSettings] {
 
 	import SubNetwork._
+	import Network._
+
 	log.debug("sub-network: {} created", name)
 
-	val generatedActors: NetworkGenome.NetworkNodeSchema = subnetGenome.generateActors(context, NetworkGenome.NetworkNodeSchema())
+	val generatedActors: NetworkNodeSchema = generateActors(NetworkNodeSchema(), subnetGenome)
 
 	log.debug("generated subnet genome: {}, actors are setup as {} ", subnetGenome, generatedActors)
 
@@ -74,7 +77,7 @@ class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGe
 
 		case Event(g: NetworkGenome, t: SubNetworkSettings) =>
 			log.debug("subnet received new NetworkGenome, now need to inform neurons and connections of new status ")
-			val updatedSchema = g.generateActors(context, t.networkSchema)
+			val updatedSchema = generateActors(t.networkSchema, g)
 			log.debug("subnets updated schema {}", updatedSchema)
 			stay using t.copy(genome = g, networkSchema = updatedSchema)
 
@@ -143,6 +146,129 @@ class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGe
 			stay using resetT
 
   	}
+
+
+  	def generateActors(networkSchema: NetworkNodeSchema, networkGenome: NetworkGenome): NetworkNodeSchema = {
+	 	val subnets = networkGenome.subnets
+	 	val neurons = networkGenome.neurons
+	 	val newNetworkSchema: NetworkNodeSchema = networkGenome.neurons.foldLeft(networkSchema){ (schemaObj, current) =>
+	 		val currentObj = current._2
+
+		 	currentObj.subnetId match {
+
+			 	case Some(subnet) =>
+				 	
+				 	// already an actor for this genome?
+				 	{if(!schemaObj.allNodes.contains(currentObj.id)){
+				 		val subnetStructure = subnets.get(subnet)
+					    val sn: ActorRef = context.actorOf(SubNetwork.props("subnet-" + currentObj.name, currentObj, subnetStructure), "subnet-" + currentObj.name)
+					    schemaObj.update(currentObj, sn)
+				 	} else {
+				 		
+				 		// get the new genome structure for the subnet
+				 		val subnetStructure = subnets.get(subnet)
+				 		// find the actor 
+				 		val sn: ActorRef = schemaObj.allNodes(currentObj.id).actor
+				 		// send the genome srtucture to the subnet
+				 		sn ! subnetStructure
+
+				 		schemaObj
+				 	}}
+				 	
+			 case None =>
+			 		// already an actor for this genome?
+				 	{if(!schemaObj.allNodes.contains(currentObj.id)){
+
+				 		val ar: ActorRef =  context.actorOf(Neuron.props(currentObj), currentObj.name )
+				 		schemaObj.update(currentObj, ar)
+		 	 		} else {
+		 	 			//send the structure to the neuron to update things such as bias
+		 	 			val sn: ActorRef = schemaObj.allNodes(currentObj.id).actor
+		 	 			sn ! currentObj
+				 		schemaObj
+				 	}}
+	 		}
+	 	}
+
+	 	// now close down any neurons not used.
+
+	 	context.children.foreach(c=> if(!newNetworkSchema.allNodes.values.exists(x	=> x.actor.path.name == c.path.name)) context.stop(c))
+
+	 	// Now send down the connections to remaining neurons
+
+	 	val (connectionConfigs, inputnodes) = networkGenome.connections.foldLeft((Map[ActorRef, Neuron.ConnectionConfig](), Map[Int, List[ActorRef]]())) { (acc, current) =>
+	 		
+	 		val (connectionId, connection) = current
+	 		val (actorConnectionConfigs, inputConnectedActors) = acc
+
+  	 		if (connection.enabled) {
+	 			// If the connection is enabled update the config obj. 
+
+	 			val fromActor = newNetworkSchema.allNodes(connection.from)
+				val toActor = newNetworkSchema.allNodes(connection.to)
+
+
+		 		val pre = Predecessor(fromActor, connection.recurrent)
+		 		val suc = Successor(toActor, connection.weight, connection.recurrent)
+
+
+		 		val updatedInputConnectedActors: Map[Int, List[ActorRef]] = if(connection.isConnectedInput){
+		 				val existing = inputConnectedActors(connection.from) 
+		 				val newActorList: List[ActorRef] = toActor.actor :: existing
+		 				inputConnectedActors + (connection.from -> newActorList) 
+		 			} else {
+		 				inputConnectedActors
+		 			}
+
+		 		// Create configs for all inputs
+		 		val updateIncoming: Map[ActorRef, Neuron.ConnectionConfig] = actorConnectionConfigs get toActor.actor match {
+			 		
+			 		case Some(existingConfig) => {
+				 	
+
+			 			// we already have at least one connection for this actor so update the config by adding a new incomin connection to it.
+
+				 		actorConnectionConfigs + (toActor.actor -> existingConfig.copy(inputs = pre :: existingConfig.inputs))
+				 	
+				 	}
+			 		
+			 		case None => 
+
+			 			// this is the first connection we have so create a new config.
+
+			 			actorConnectionConfigs + (toActor.actor -> Neuron.ConnectionConfig(inputs = List(pre), neuronGenome = neurons(connection.to)))
+		 		}
+
+		 		// create config for all outputs
+		 		updateIncoming get newNetworkSchema.allNodes(connection.from).actor match {
+			 		case Some(existingConfig) => {
+
+			 			// we already have at least one connection for this actor so update the config by adding a new outgoing connection to it.
+
+				 		(updateIncoming + (fromActor.actor ->  existingConfig.copy(outputs = suc :: existingConfig.outputs)), inputConnectedActors)
+				 	}
+			 		case None => 
+
+			 				// this is the first connection we have so create a new config.
+
+			 			(updateIncoming + (fromActor.actor -> Neuron.ConnectionConfig(outputs = List(suc), neuronGenome = neurons(connection.from))), inputConnectedActors)
+			 	}
+	 	} else {
+			(actorConnectionConfigs, inputConnectedActors) 
+		}
+	}
+
+		// Maps of actor and their connection config has been created.
+		// It's now possible to send the configs to the actors.
+
+		connectionConfigs.foreach(c => {
+			//first send config
+			c._1 ! c._2
+	 	})
+
+
+		newNetworkSchema.copy(inNodes = inputnodes)
+   	}
 
 	initialize()
 

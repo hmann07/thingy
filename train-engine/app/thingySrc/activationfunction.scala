@@ -23,7 +23,7 @@ object ActivationFunction {
   case class Sigmoid() extends ActivationFunction {
     // def function(x: Double) = 1 / (1 + Math.exp(x * -1))
 
-    var b = -4.9 //-4.9  //-1
+    var b = -1 //-4.9 //-4.9  //-1
    def function(x: Double) = 1 / (1 + Math.exp(x * b))
 	 def derivative(x: Double) = this.function(x)  * (1 - this.function(x))
   }

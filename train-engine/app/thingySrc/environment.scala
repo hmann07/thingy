@@ -2,7 +2,6 @@ package com.thingy.environment
 
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.network.Network.Perceive
-import com.thingy.environment.EnvironmentIOSpec
 
 import scala.io.Source
 
@@ -62,7 +61,7 @@ class Environment(envType: EnvironmentType) extends FSM[EnvironmentState, Enviro
 	}
 
 	
-	startWith(Active, EnvironmentSettings(experienceStream.representations.head, experienceStream.representations.tail))
+	startWith(Active, EnvironmentSettings(next = experienceStream.representations.head, queued = experienceStream.representations.tail))
 
  	when(Active) {
  		case Event(g: Perceive, t: EnvironmentSettings) =>

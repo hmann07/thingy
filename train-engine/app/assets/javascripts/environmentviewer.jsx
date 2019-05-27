@@ -27,9 +27,10 @@ class Environment extends React.Component {
   render(){
     const hrefStr = this.props.data._id.$oid
     const newRunHref = "/config/" + hrefStr
-    return(<div>{this.props.data.name}
-              <a className="btn btn-primary btn-sm" href={newRunHref} role="button">New Run</a>
-              <a className="btn btn-primary btn-sm" href="#" onClick={()=>this.props.clickHandler(hrefStr)} role="button">View results</a></div>)
+    return(<div>
+              <span className="env-view-item">{this.props.data.name}</span>
+              <a className="btn btn-primary btn-sm env-view-item" href={newRunHref} role="button">New Run</a>
+              <a className="btn btn-primary btn-sm env-view-item" href="#" onClick={()=>this.props.clickHandler(hrefStr)} role="button">View results</a></div>)
   }
 
 }

@@ -61,7 +61,7 @@ class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData, startSta
 		  	val futureConnection = Future.fromTry(connection)
 		  	def db1: Future[DefaultDB] = futureConnection.flatMap(_.database("genomeData"))
 		  	def environmentCollection = db1.map(_.collection("environments"))
-		  	println(configData)
+		  	
 			val query = BSONDocument("_id" -> Json.obj("$oid" -> configData.environmentId))
 			val envData = environmentCollection.flatMap(_.find(query).one[BSONDocument])
 			
@@ -89,7 +89,7 @@ class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData, startSta
 			}
 	 
 			val environment = context.actorOf(Environment.props(envType), "environment")
-			val evaluator = XOREvaluator(fieldMap = envType.environmentIOSpec)
+			val evaluator = SoftmaxEvaluator(fieldMap = envType.environmentIOSpec)
 			val net = context.actorOf(Network.props("my network", networkGenome, innovation, environment, configData, NetworkActive, evaluator, null), "mynetwork")
 			(AgentSettings(runState = ActiveAgent, network = net, evaluator = evaluator, environment = environment), ActiveAgent)		
 		}
@@ -143,7 +143,7 @@ class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData, startSta
 			}
 
 			val environment = context.actorOf(Environment.props(envType), "environment")
-			val evaluator = XOREvaluator(fieldMap = envType.environmentIOSpec)
+			val evaluator = SoftmaxEvaluator(fieldMap = envType.environmentIOSpec)
 			val net = context.actorOf(Network.props("my network", networkGenome, innovation, environment, configData, NetworkTest, evaluator, out), "mynetwork")
 			val updatedSettings = t.copy(runState= TestState, network = net, evaluator = evaluator, environment = environment)
 			goto(TestState) using updatedSettings

@@ -19,23 +19,22 @@ class Mutator(configData: ConfigData) {
 	 * Change weight
 	 */
 	
+	// perhaps necessary to check the sum = 1.
+	val mutationFunctions = List(
+				(addNetworkNode(_), configData.addNetworkNode), 
+				//addSubNetConnection(_), configData.addSubNetConnection,
+				(addNetworkConnection(_),configData.addNetworkConnection),
+				//addSubNetworkNode(_),
+				(mutateWeights(_), configData.mutateWeights)
+			)
+
+		
 
 	def mutate(genome: NetworkGenome): Innovation.InnovationType = {
 
-
-		val mutationFunctions = List(
-				(addNetworkNode(_),0.025), 
-				//addSubNetConnection(_),
-				(addNetworkConnection(_),0.05),
-				//addSubNetworkNode(_),
-				(mutateWeights(_), 1.0)
-			)
-		
-		
-
-		def getfn(fnList: List[(NetworkGenome => Innovation.InnovationType, Double)]): NetworkGenome => Innovation.InnovationType = {
+		def getfn(fnList: List[(NetworkGenome => Innovation.InnovationType, Double)], cumulativeSum: Double = 0.0): NetworkGenome => Innovation.InnovationType = {
 			val mThrow = Random.nextDouble()
-			fnList.headOption.map(fnItem => if(mThrow < fnItem._2) fnItem._1 else getfn(fnList.tail)).getOrElse(mutateWeights(_))
+			fnList.headOption.map(fnItem => if(mThrow < cumulativeSum + fnItem._2) fnItem._1 else getfn(fnList.tail, cumulativeSum + fnItem._2)).getOrElse(mutateWeights(_))
 		}
 
 		getfn(mutationFunctions)(genome)
@@ -72,7 +71,7 @@ class Mutator(configData: ConfigData) {
 			}
 		}
 
-		addNetworkConnectionInt(genome, 30)
+		addNetworkConnectionInt(genome, 100)
 	}
 
 
@@ -142,6 +141,34 @@ class Mutator(configData: ConfigData) {
 	 	}
 
 	 	addNetworkNodeInt(genome, 100)
+
+	}
+
+	/*
+	 * Pick A connection.
+	 * inspect both src and dest node. 
+	 * If src has > 1 enabled ouput AND dest has > 1 enabled input.
+	 * delete the connection (or just disable it)
+	 */
+
+
+	def removeNetworkConnection(genome: NetworkGenome) {
+
+	}
+
+	/*
+	 * Pick A Neuron.
+	 * inspect both src and dest nodes.
+	 * create connections (fully connected) between src and destinnation (checking to ensure there's not one already.) 
+	 * SharpNeat takes the approach of identifing only neurons with one connection on one side... i.e
+	 * - Find a neuron that satisfies: One inputs connection OR One Output connection. 
+	 * - Replace that neuron with connections that = the count of connections on the other side. 
+	 * Innovation numbers will need to be sought for the new connections.
+	 * delete the node
+	 */
+
+
+	def removeNetworkNode(genome: NetworkGenome) {
 
 	}
 

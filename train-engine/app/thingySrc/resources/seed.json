@@ -6,8 +6,8 @@
 		{"id":3, "layer": 1, "name": "subnetoutput1", "subnetid": 1, "type": "output", "activationFunction": "SIGMOID"}],
 
 "connections": [
-		{"id": 1, "from":1, "to": 3, "weight":null, "enabled": true},
-		{"id": 2, "from":2, "to": 3, "weight":null, "enabled": true}
+		{"id": 1, "from":1, "to": 3, "isConnectedInput": true, "isConnectedOutput": true, "weight":null, "enabled": true},
+		{"id": 2, "from":2, "to": 3, "isConnectedInput": true, "isConnectedOutput": true"weight":null, "enabled": true}
 	],
 "subnets":[
 	{
@@ -17,6 +17,6 @@
 		{"id": 1, "layer": 0, "name": "input1", "biasWeight": null, "type": "input"},
 		{"id": 2, "layer": 1, "name": "ouput1", "activationFunction": "SIGMOID", "biasWeight": null, "type": "output"}],
 	"connections": [
-			{"id": 1, "from":1, "to": 2,"weight":1, "enabled": true}]
+			{"id": 1, "from":1, "to": 2, "isConnectedInput": true, "isConnectedOutput": true, "weight":1, "enabled": true}]
 	}]
 }

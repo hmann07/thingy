@@ -67,7 +67,12 @@ class ConfigController @Inject()(cache: SyncCacheApi, cc: ControllerComponents)(
       "crossoverRate" -> of(doubleFormat),
       "globalMutationRate" -> of(doubleFormat),
       "weightMutationRate" -> of(doubleFormat),
-      "weightJiggleOverReset" -> of(doubleFormat)
+      "weightJiggleOverReset" -> of(doubleFormat),
+      "addNetworkNode" -> of(doubleFormat),
+      "addNetworkConnection" -> of(doubleFormat),
+      "mutateWeights" -> of(doubleFormat),
+      "compatWeightCoeff" -> of(doubleFormat),
+      "compatDisjointCoeff" -> of(doubleFormat)
     )(ConfigData.apply)(ConfigData.unapply)
   )
 

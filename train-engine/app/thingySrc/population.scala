@@ -171,12 +171,15 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 
 
  	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef], innovation: ActorRef, envType: EnvironmentType):List[ActorRef] ={
-		g.headOption.map(gnew=>{
+		g.headOption.map(gnew => {
 			val evalG = new GenomeIO(None, Some(gnew))
-			c.headOption.map(cnew=> {
+			c.headOption.map(cnew => {
 				cnew ! Network.NetworkUpdate(evalG)
 				rep(g.tail, c.tail, cnew :: cummulate, innovation, envType)
-			}).getOrElse(context.actorOf(Agent.props(innovation, evalG, configData, ActiveAgent, envType), "agent" + "weneedtospecanid") :: cummulate)
+			}).getOrElse(
+				// we should actually mutate here too? If it's a new member it won't mutate otherwise, Since mutation is being done at network level
+				// though not much effect if the population doesn't fluctuate that much.
+				context.actorOf(Agent.props(innovation, evalG, configData, ActiveAgent, envType), "agent" + "weneedtospecanid") :: cummulate)
 		}).getOrElse({
 			//c.foreach(newc => context.stop(newc))
 			c ++ cummulate
@@ -290,11 +293,13 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
  					stay
  				} else {
 
+
+
  				val gestatable = s.speciesDirectory.selectGenerationSurvivors
  				log.debug("gestatable. find a better name. : {}", gestatable)
 
  				// time to reset the species.
- 				val resetSpeciesDir = s.speciesDirectory.reset
+ 				val resetSpeciesDir = s.speciesDirectory.reorder.reset
  				
  				// Now we have a load of functions to run we need to send them to available agents. 
  				//creating new ones if required and shutting down old ones..

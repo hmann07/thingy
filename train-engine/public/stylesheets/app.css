@@ -3,7 +3,29 @@
   overflow: scroll;
 }
 
+.env-view-item{
+  margin: 5px;
+}
 
+.data-selector{
+  margin: 20px;
+}
+
+.data-selector-item{
+  cursor: pointer;
+}
+
+.config-form{
+  margin:20px;
+}
+
+.axis path{
+    stroke:#999999;
+}
+
+.axis text {
+  fill: #999999;
+}
 
 svg {
   background-color: #FFF;

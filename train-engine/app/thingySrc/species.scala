@@ -7,12 +7,13 @@ import scala.util.Random
 import com.thingy.selection.TournamentSelection
 import play.api.libs.json._
 import com.thingy.config.ConfigDataClass.ConfigData
+import scala.collection.immutable.ListMap
 
 
 case class SpeciesMember (
 	genome: NetworkGenome,
 	performanceValue: Double, // THe actual measure used to evaluate the genome
-	fitnessValue: Double) // the performanceValue converted into an overall fitness value, higher the fitness, better the individual
+	fitnessValue: Double) // the performanceValue converted into an overall fitness value, higher the fitness, better the individual, for selection
 
 object Species {
 	implicit val speciesWrites: Writes[Species] = new Writes[Species] {
@@ -77,17 +78,29 @@ object SpeciesDirectory {
 case class SpeciesDirectory (
 	val configData: ConfigData,
 	val currentSpeciesId: Int = 0, 
-	val species: Map[Int, Species] = Map.empty,
+	val species: ListMap[Int, Species] = ListMap.empty,
 	val totalFitness: Double = 0.0,
 	val bestMember: SpeciesMember = null) {
 
 		import SpeciesDirectory._
 		
+		def sortPredicate(p1: (Int, Species) , p2: (Int, Species)) = {
+			p1._2.speciesTotalFitness > p2._2.speciesTotalFitness
+		}
+
+
+		def reorder: SpeciesDirectory = {
+			val orderSpecies = ListMap(species.toSeq.sortWith(sortPredicate):_*)
+			
+			copy(species = orderSpecies)
+			
+		}
+
 		def reset: SpeciesDirectory = {
 
-			// GO through each species and clear it's members n rest its counts
+			// GO through each species and clear it's members n reset its counts
 
-			val updateSpecies = species.foldLeft(Map[Int, Species]()) {(acc, current) =>
+			val updateSpecies = species.foldLeft(ListMap[Int, Species]()) {(acc, current) =>
 				acc + (current._1 -> current._2.reset)
 			}
 
@@ -95,7 +108,7 @@ case class SpeciesDirectory (
 			
 		}
 
-		def allocate(f: NetworkGenome, performanceValue: Double, fitnessValue: Double): (Int, SpeciesDirectory) = {
+		def allocate(f: NetworkGenome, fitnessValue: Double, performanceValue: Double): (Int, SpeciesDirectory) = {
 			if (currentSpeciesId == 0) {
 
 				// Then no species have been created yet. 
@@ -116,6 +129,10 @@ case class SpeciesDirectory (
 
 				// iterate through the dir listing and add if compatible
 				
+				// HERE WE SHOULD introduce the explicit fitenss sharing. Descirbe in the NEAT paper as Fitness / number of genomes in the species.
+				// THe species total fitness should become the sume of the adjusted fitnesses. 
+
+				// in fact,   fitness sharing calculation may as well be left unitl the end of generation. otherwise we need to recalc each species each allocation
 
 				val (allocatedSpecies, newSpeciesList) = findSpecies(f, performanceValue, fitnessValue, species, species)
 				
@@ -131,14 +148,14 @@ case class SpeciesDirectory (
 		
 		}
 
-		def findSpecies(c: NetworkGenome, performanceValue: Double, fitnessValue: Double, sList: Map[Int, Species], staticList: Map[Int, Species]): (Int, Map[Int, Species]) = {
+		def findSpecies(c: NetworkGenome, performanceValue: Double, fitnessValue: Double, sList: ListMap[Int, Species], staticList: ListMap[Int, Species]): (Int, ListMap[Int, Species]) = {
 
 			
 			val newMember = SpeciesMember(c, performanceValue, fitnessValue)
 			
 			// probably worth checking if still compatible with exisiting species.
 			
-			if(c.species != 0 && c.distance(sList(c.species).historicalArchetype.genome) < configData.speciesMembershipThreshold) {
+			if(c.species != 0 && c.distance(sList(c.species).historicalArchetype.genome, configData) < configData.speciesMembershipThreshold) {
 				// it is compatible, then 
 			    val species = sList(c.species)
 			    val updatedspec = species.add(c, performanceValue, fitnessValue)
@@ -150,7 +167,7 @@ case class SpeciesDirectory (
 			
 				sList.headOption.map(current => {
 				
-					val d = c.distance(current._2.historicalArchetype.genome)
+					val d = c.distance(current._2.historicalArchetype.genome, configData)
 
 					// if(d > (current._2.averageDistance * speciesExpansionFactor)) { 
 					if(d < configData.speciesMembershipThreshold) {
@@ -183,37 +200,78 @@ case class SpeciesDirectory (
 			val populationSize =  configData.populationSize
 
 
-			species.map(s => {
+			// right, here we correct the explicit fitness sharing based total and species fitness.
+
+			val (speciesWithFitnessSharing, totalFitnessShared) = species.foldLeft((List[Species](), 0.0)) { case ((speciesList, tfs), (speciesIdx, species)) => {
+				val speciesFitness = species.members.foldLeft(0.0) { (totalFitness, currentMember)=> {
+						totalFitness + (currentMember.fitnessValue / species.memberCount)
+				}}
+
+
+				def memberSortPredicate(p1: SpeciesMember , p2: SpeciesMember) = {
+					p1.fitnessValue > p2.fitnessValue
+				}
+				// SORT MEMBERS TO ALLOW FOR Elimination of lower performing members
+				val sortedMemberList = species.members.sortWith(memberSortPredicate)
+
+
+				( species.copy(speciesTotalFitness = speciesFitness, members = sortedMemberList) :: speciesList , tfs + speciesFitness)
+			}}
+
+
+			speciesWithFitnessSharing.map(s => {
 
 				
-				val speciesCandidates = ((s._2.speciesTotalFitness / totalFitness) * populationSize).toInt
+				val speciesCandidates = ((s.speciesTotalFitness / totalFitnessShared) * populationSize).toInt
 				// elites?
 				// 	
+				if(speciesCandidates > 1) {
+					val elite: () => NetworkGenome = () => s.generationalArchetype.genome
 
+					1.to(speciesCandidates - 1).map(i => {
+							
+							if(Random.nextDouble < configData.crossoverRate){
+							// crossover
+							generationFunction(s)
+							} else {
+							// mutation only
+							() => TournamentSelection.select(s.members.take(s.members.size- (s.members.size * .25).toInt )).genome
+							}
+					}) :+ elite
 
-				// crossover
-				// Here we should pick candidates from the species members x times based on fitness
+				} else {
+
 					1.to(speciesCandidates).map(i => {
 							
 							if(Random.nextDouble < configData.crossoverRate){
 							// crossover
-							generationFunction(s._2)
+							generationFunction(s)
 							} else {
 							// mutation only
-							() => TournamentSelection.select(s._2.members).genome
+							() => TournamentSelection.select(s.members.take(s.members.size- (s.members.size * .25).toInt )).genome
 							}
-					})
+					}) 
+
+
+				}
+					// lets default one elites
+				
+				//
+				// crossover
+				// Here we should pick candidates from the species members x times based on fitness
+					  
 			})
 		}
 
 		def generationFunction(s: Species): () => NetworkGenome = {
-			val genome1 = TournamentSelection.select(s.members)
-			val genome2 = TournamentSelection.select(s.members)
+			val genome1 = TournamentSelection.select(s.members.take( s.members.size- (s.members.size * .25).toInt ))
+			val genome2 = TournamentSelection.select(s.members.take( s.members.size -(s.members.size * .25).toInt ))
 
 			val orderedGenome = (if(genome1.fitnessValue > genome2.fitnessValue) genome1 else genome2, if(genome1.fitnessValue > genome2.fitnessValue) genome2 else genome1)
 			
 			val f = () => {
 				orderedGenome._1.genome.crossover(orderedGenome._2.genome)
+
 			}
 
 			f

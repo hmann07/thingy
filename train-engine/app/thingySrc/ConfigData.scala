@@ -22,7 +22,7 @@ object ConfigDataClass {
 private val config = ConfigFactory.load()
 
 case class ConfigData(
-  environmentId: String,
+  environmentId: String = "",
   populationSize: Int = config.getConfig("thingy").getInt("population-size"), 
   maxGenerations: Int = config.getConfig("thingy").getInt("generations"),
   connectionWeightRange: Int = config.getConfig("thingy").getInt("weight-range"),
@@ -30,7 +30,12 @@ case class ConfigData(
   crossoverRate: Double = config.getConfig("thingy").getDouble("crossover-rate"),
   globalMutationRate: Double = config.getConfig("thingy").getDouble("mutation-rate"),
   weightMutationRate: Double = config.getConfig("thingy").getDouble("weight-mutation-likelihood"),
-  weightJiggleOverReset: Double = config.getConfig("thingy").getDouble("jiggle-over-reset")
+  weightJiggleOverReset: Double = config.getConfig("thingy").getDouble("jiggle-over-reset"),
+  addNetworkNode: Double = 0.025,
+  addNetworkConnection: Double = 0.025,
+  mutateWeights: Double = 0.95,
+  compatWeightCoeff: Double = 0.4,
+  compatDisjointCoeff: Double = 1
   )
 
 }

@@ -9,6 +9,9 @@ class App extends React.Component {
     "speciesData": [],
     "networksData": [],
     "currentRunSettings":{},
+    "selectedRunId": "",
+    "selectedGenerationId": "",
+    "selectedSpeciesId": "",
     currentGeneration: 0,
     currentSpecies: 0,
     currentRunId: 0
@@ -26,7 +29,13 @@ class App extends React.Component {
 envClickHandle(envData) {
   var t = this
   $.get( "/runs/" + envData, function( runData ) {
-    t.setState({runData : runData})
+    t.setState({runData : runData,
+                generationData:[],
+                speciesData: [],
+                networksData: [],
+                currentRunSettings:{}
+
+                })
   })   
  }
 
@@ -34,7 +43,13 @@ envClickHandle(envData) {
  runClickHandle(runData) {
   var t = this
   $.get( "/generations/" + runData.runId, function( generationData ) {
-    t.setState({generationData : generationData, currentRunId : runData.runId, currentRunSettings: runData.settings})
+    t.setState({generationData : generationData, 
+                selectedRunId: runData._id.$oid,
+                currentRunId : runData.runId, currentRunSettings: runData.settings, 
+                speciesData: [],
+                networksData: []
+                
+              })
   })   
  }
 
@@ -42,7 +57,9 @@ envClickHandle(envData) {
  generationClickHandle(generationData) {
   var t = this
   $.get( "/getSpeciesByGeneration/" + t.state.currentRunId + "/" + generationData.generation, function( speciesData ) {
-    t.setState({speciesData : speciesData, currentGeneration : generationData.generation})
+    t.setState({speciesData : speciesData,
+                selectedGenerationId: generationData._id.$oid,
+                currentGeneration : generationData.generation, networksData: []})
    }) 
    
  }
@@ -51,7 +68,9 @@ envClickHandle(envData) {
   var t = this
   var species = speciesData.species
   $.get( "/getNetByGenerationAndSpecies/" + t.state.currentRunId + "/" + t.state.currentGeneration  + "/" + species, function( netData ) {
-    t.setState({networksData : netData.sort(function(a,b){return a.fitness>b.fitness?-1:(a.fitness<b.fitness?1:0)})})
+    t.setState({
+          selectedSpeciesId: speciesData._id.$oid,
+          networksData : netData.sort(function(a,b){return a.fitness>b.fitness?-1:(a.fitness<b.fitness?1:0)})})
   })
  }
 
@@ -63,11 +82,16 @@ envClickHandle(envData) {
   return (
     <div>
       <EnvironmentViewer value={this.state.environmentData} clickHandler={this.envClickHandle.bind(this)}/>
-      <DataSelector value={this.state.runData} fields={["runId","startTime", "endTime", "duration", "bestFitness", "bestPerformance"]} clickHandler={this.runClickHandle.bind(this)}/>
+      <DataSelector selectedDataItem={this.state.selectedRunId} 
+                    value={this.state.runData} 
+                    fields={["runId","startTime", "endTime", "duration", "bestFitness", "bestPerformance"]} 
+                    clickHandler={this.runClickHandle.bind(this)}/>
+      
       <ConfigViewer data={this.state.currentRunSettings} />
       <BarChart data={this.state.generationData}/>
-      <DataSelector value={this.state.generationData} fields={["generation","bestPerformance", "bestFitness"]} clickHandler={this.generationClickHandle.bind(this)}/>
-      <DataSelector value={this.state.speciesData} fields={["species", "speciesTotalFitness", "speciesBestFitness"]} clickHandler={this.speciesClickHandle.bind(this)}/>
+     
+      <DataSelector selectedDataItem={this.state.selectedGenerationId} value={this.state.generationData} fields={["generation","bestPerformance", "bestFitness"]} clickHandler={this.generationClickHandle.bind(this)}/>
+      <DataSelector selectedDataItem={this.state.selectedSpeciesId} value={this.state.speciesData} fields={["species", "speciesTotalFitness", "speciesBestFitness"]} clickHandler={this.speciesClickHandle.bind(this)}/>
       <DataSelector value={this.state.networksData} environmentId={this.state.currentRunSettings.environmentId} fields="all" clickHandler={this.netClickHandle.bind(this)}/>
     </div>
 
@@ -82,7 +106,8 @@ envClickHandle(envData) {
 class DataPager extends React.Component {
   
   renderLi(itemNo) {
-    return (<li key={itemNo} className="page-link" onClick={()=>this.props.changeHandler(itemNo)}>{itemNo}</li>)
+    const liClass = this.props.currentPage == itemNo?"page-item active":"page-item"
+    return (<li key={itemNo} className={""+ liClass + ""} onClick={()=>this.props.changeHandler(itemNo)}><a class="page-link">{itemNo}</a></li>)
   }
 
   render() {
@@ -125,13 +150,22 @@ class DataSelector extends React.Component {
     ar[ix].push(it);
       return ar;
     }, [])
+    var si = this.props.selectedDataItem
+    var totalDataLength = this.props.value.length
     var totalPages =  pages.length
     var t = this.props.fields
     var tt = this.props.clickHandler
     var env = this.props.environmentId
+
     return (
       <div>
-        <table className="table table-hover">
+          {totalDataLength > 0 ?
+            (
+              <div className="data-selector">
+          <ul className="pagination">
+            <DataPager currentPage={this.state.currentPage} pages={totalPages} changeHandler={this.pageChangeHandler.bind(this)} />
+          </ul>
+        <table className="table table-hover table-striped">
           <thead>
             <tr>
               {t =="all"?null: t.map(function(x){ return(<th scope="col">{x}</th>)})}
@@ -141,14 +175,14 @@ class DataSelector extends React.Component {
               {
               pages.length > 0 ?  
                 pages[this.state.currentPage].map(function(page) {    
-                return (<DataSelectorItem  key={page._id["$oid"]} value={page} fields={t} envId={env} clickHandler={tt} />) 
+                return (<DataSelectorItem  selectedDataItem={si} key={page._id["$oid"]} value={page} fields={t} envId={env} clickHandler={tt} />) 
               }): null
               }
             </tbody>
           </table>
-          <ul className="pagination">
-            <DataPager pages={totalPages} changeHandler={this.pageChangeHandler.bind(this)} />
-          </ul>
+          </div>
+          ) : null
+         } 
         </div>
     );
   }
@@ -168,8 +202,9 @@ class DataSelectorItem extends React.Component {
   render() {
     const data =  this.props
     const genomeStr = JSON.stringify(data.value)
+    const rowClass = data.value._id?(this.props.selectedDataItem == data.value._id.$oid?"data-selector-item table-info":"data-selector-item"):null
     const t = this.props.fields == "all" ? (
-            <tr>
+            <tr className={"" + rowClass + ""}>
             <td ref={node => this.node = node} className="list-item">
                  
             </td>
@@ -178,12 +213,12 @@ class DataSelectorItem extends React.Component {
                <input type="hidden" name="csrfToken" value={$('input[name="csrfToken"]').attr('value')}></input>
                 <input type="hidden" name="genome" value={genomeStr}></input>
                 <input type="hidden" name="envId" value={data.envId}></input>
-              <button type="submit">Use Genome</button>
+              <button className="btn btn-primary" type="submit">Use Genome</button>
               </form>
             </td>
             </tr>
             ) :
-            <tr>
+            <tr className={"" + rowClass + ""}>
             {
             this.props.fields.map(function(field){
               return (

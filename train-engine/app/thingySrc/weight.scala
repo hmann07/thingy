@@ -3,6 +3,9 @@ package com.thingy.weight
 import scala.util.Random
 import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorRef, FSM }
+import play.api.libs.json.Json.JsValueWrapper
+import play.api.libs.json._
+import play.api.libs.functional.syntax._
 
 /**
   * Weight object is designed to encapsulate functionality related
@@ -11,6 +14,21 @@ import akka.actor.{ ActorRef, FSM }
   * related to it.
   */
 object Weight {
+
+
+	implicit def weightReads = new Reads[Weight] {
+  		def reads(js: JsValue): JsResult[Weight] = js match {
+  					case JsNumber(d) => JsSuccess(Weight(d.toDouble))
+  					case _ => JsSuccess(Weight())
+  				}
+    }
+
+
+
+    implicit val weightWrites: Writes[Weight] = new Writes[Weight] {
+    	def writes(w: Weight): JsValue = JsNumber(w.value)
+	}
+
 
 	implicit val config = ConfigFactory.load()
 
@@ -64,9 +82,11 @@ object Weight {
 		  */
 
 		 def jiggle = {
-		 	val newval = value + {if(Random.nextDouble<0.5)-1 else 1} * (0.1 * Random.nextDouble)
+		 	val newval = value + {if(Random.nextDouble<0.5)-1 else 1} * (  Random.nextDouble)
 		 	val limitval = if(Math.abs(newval) > (weightRange / 2)) {if(newval<0){-(weightRange / 2)}else{(weightRange / 2)}} else newval
-		 	Weight(value = limitval)
+		 	//val limitval = newval
+
+		 	copy(value = limitval)
 
 		 }
 		 /** @group mutation */

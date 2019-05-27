@@ -29,11 +29,11 @@
     </root>
 
 
-    <logger name="play" level="INFO" />
+    <logger name="play" level="DEBUG" />
     <logger name="application" level="DEBUG" />
-    <logger name="akka.event.slf4j.Slf4jLogger" level="INFO" />
-    <logger name="akka" level="INFO" />
-    <logger name="actor" level="INFO" />
+    <logger name="akka.event.slf4j.Slf4jLogger" level="DEBUG" />
+    <logger name="akka" level="DEBUG" />
+    <logger name="actor" level="DEBUG" />
 
  
 

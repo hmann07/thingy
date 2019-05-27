@@ -31,6 +31,7 @@ var simulation = d3.forceSimulation()
     .force("center", d3.forceCenter(width / 2, height / 2))
     .force("collide", d3.forceCollide(50));
 
+   d3.select(rootObj).select("svg").remove() 
   var svg = d3.select(rootObj)
   .append('svg')
   .attr('width', width)
@@ -103,7 +104,7 @@ svg.append('svg:defs').append('svg:marker')
   var node = nodeSelection.enter().append("circle")
       .attr("r", nodeSize)
       .attr("fill", function(d) {
-        return d.subnetid?"#999999":actFnColourScale(d.activationFunction);
+        return d.subnetid || d.type=="input"?"#999999":actFnColourScale(d.activationFunction);
       })
       .on("click",function(d){
         if(d.subnetid) {
