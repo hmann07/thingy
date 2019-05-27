@@ -1,3 +1,211 @@
 2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
 2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
 2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-7] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~ 22:36:42.279UTC ~ ERROR[default-akka.actor.default-dispatcher-5] ~ a.a.OneForOneStrategy ~ akka://default/user/environment ~ C:\Windows\Temp\somepath (The system cannot find the file specified)
+akka.actor.ActorInitializationException: akka://default/user/environment: exception during creation
+	at akka.actor.ActorInitializationException$.apply(Actor.scala:193)
+	at akka.actor.ActorCell.create(ActorCell.scala:671)
+	at akka.actor.ActorCell.invokeAll$1(ActorCell.scala:525)
+	at akka.actor.ActorCell.systemInvoke(ActorCell.scala:547)
+	at akka.dispatch.Mailbox.processAllSystemMessages(Mailbox.scala:282)
+	at akka.testkit.CallingThreadDispatcher.process$1(CallingThreadDispatcher.scala:243)
+	at akka.testkit.CallingThreadDispatcher.runQueue(CallingThreadDispatcher.scala:283)
+	at akka.testkit.CallingThreadDispatcher.register(CallingThreadDispatcher.scala:152)
+	at akka.dispatch.MessageDispatcher.attach(AbstractDispatcher.scala:133)
+	at akka.actor.dungeon.Dispatch$class.start(Dispatch.scala:110)
+	at akka.actor.ActorCell.start(ActorCell.scala:433)
+	at akka.testkit.TestActorRef.<init>(TestActorRef.scala:50)
+	at akka.testkit.TestFSMRef.<init>(TestFSMRef.scala:40)
+	at akka.testkit.TestFSMRef$.apply(TestFSMRef.scala:96)
+	at com.thingy.tests.TestNetwork.<init>(networkTests.scala:45)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source)
+	at java.lang.reflect.Constructor.newInstance(Unknown Source)
+	at java.lang.Class.newInstance(Unknown Source)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:435)
+	at sbt.ForkMain$Run$2.call(ForkMain.java:296)
+	at sbt.ForkMain$Run$2.call(ForkMain.java:286)
+	at java.util.concurrent.FutureTask.run(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+Caused by: java.io.FileNotFoundException: C:\Windows\Temp\somepath (The system cannot find the file specified)
+	at java.io.FileInputStream.open0(Native Method)
+	at java.io.FileInputStream.open(Unknown Source)
+	at java.io.FileInputStream.<init>(Unknown Source)
+	at scala.io.Source$.fromFile(Source.scala:91)
+	at scala.io.Source$.fromFile(Source.scala:76)
+	at scala.io.Source$.fromFile(Source.scala:54)
+	at com.thingy.environment.Environment.<init>(environment.scala:35)
+	at com.thingy.tests.TestNetwork$$anonfun$2.apply(networkTests.scala:45)
+	at com.thingy.tests.TestNetwork$$anonfun$2.apply(networkTests.scala:45)
+	at akka.actor.TypedCreatorFunctionConsumer.produce(IndirectActorProducer.scala:87)
+	at akka.actor.Props.newActor(Props.scala:213)
+	at akka.actor.ActorCell.newActor(ActorCell.scala:626)
+	at akka.actor.ActorCell.create(ActorCell.scala:652)
+	... 25 common frames omitted
+2019-05-27 ~ 22:36:42.413UTC ~ ERROR[default-akka.actor.default-dispatcher-4] ~ a.a.OneForOneStrategy ~ akka://default/user/mynetwork ~ key not found: 1
+akka.actor.ActorInitializationException: akka://default/user/mynetwork: exception during creation
+	at akka.actor.ActorInitializationException$.apply(Actor.scala:193)
+	at akka.actor.ActorCell.create(ActorCell.scala:671)
+	at akka.actor.ActorCell.invokeAll$1(ActorCell.scala:525)
+	at akka.actor.ActorCell.systemInvoke(ActorCell.scala:547)
+	at akka.dispatch.Mailbox.processAllSystemMessages(Mailbox.scala:282)
+	at akka.testkit.CallingThreadDispatcher.process$1(CallingThreadDispatcher.scala:243)
+	at akka.testkit.CallingThreadDispatcher.runQueue(CallingThreadDispatcher.scala:283)
+	at akka.testkit.CallingThreadDispatcher.register(CallingThreadDispatcher.scala:152)
+	at akka.dispatch.MessageDispatcher.attach(AbstractDispatcher.scala:133)
+	at akka.actor.dungeon.Dispatch$class.start(Dispatch.scala:110)
+	at akka.actor.ActorCell.start(ActorCell.scala:433)
+	at akka.testkit.TestActorRef.<init>(TestActorRef.scala:50)
+	at akka.testkit.TestFSMRef.<init>(TestFSMRef.scala:40)
+	at akka.testkit.TestFSMRef$.apply(TestFSMRef.scala:96)
+	at com.thingy.tests.TestNetwork.<init>(networkTests.scala:48)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source)
+	at java.lang.reflect.Constructor.newInstance(Unknown Source)
+	at java.lang.Class.newInstance(Unknown Source)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:435)
+	at sbt.ForkMain$Run$2.call(ForkMain.java:296)
+	at sbt.ForkMain$Run$2.call(ForkMain.java:286)
+	at java.util.concurrent.FutureTask.run(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+Caused by: java.util.NoSuchElementException: key not found: 1
+	at scala.collection.MapLike$class.default(MapLike.scala:228)
+	at scala.collection.AbstractMap.default(Map.scala:59)
+	at scala.collection.MapLike$class.apply(MapLike.scala:141)
+	at scala.collection.AbstractMap.apply(Map.scala:59)
+	at com.thingy.network.Network$$anonfun$8.apply(NetworkActor.scala:446)
+	at com.thingy.network.Network$$anonfun$8.apply(NetworkActor.scala:429)
+	at scala.collection.TraversableOnce$$anonfun$foldLeft$1.apply(TraversableOnce.scala:157)
+	at scala.collection.TraversableOnce$$anonfun$foldLeft$1.apply(TraversableOnce.scala:157)
+	at scala.collection.immutable.Map$Map2.foreach(Map.scala:137)
+	at scala.collection.TraversableOnce$class.foldLeft(TraversableOnce.scala:157)
+	at scala.collection.AbstractTraversable.foldLeft(Traversable.scala:104)
+	at com.thingy.network.Network.generateActors(NetworkActor.scala:429)
+	at com.thingy.network.Network.<init>(NetworkActor.scala:87)
+	at com.thingy.tests.TestNetwork$$anonfun$3.apply(networkTests.scala:49)
+	at com.thingy.tests.TestNetwork$$anonfun$3.apply(networkTests.scala:49)
+	at akka.actor.TypedCreatorFunctionConsumer.produce(IndirectActorProducer.scala:87)
+	at akka.actor.Props.newActor(Props.scala:213)
+	at akka.actor.ActorCell.newActor(ActorCell.scala:626)
+	at akka.actor.ActorCell.create(ActorCell.scala:652)
+	... 25 common frames omitted
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-7] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~ 22:40:39.112UTC ~ ERROR[default-akka.actor.default-dispatcher-5] ~ a.a.OneForOneStrategy ~ akka://default/user/mynetwork ~ key not found: 1
+akka.actor.ActorInitializationException: akka://default/user/mynetwork: exception during creation
+	at akka.actor.ActorInitializationException$.apply(Actor.scala:193)
+	at akka.actor.ActorCell.create(ActorCell.scala:671)
+	at akka.actor.ActorCell.invokeAll$1(ActorCell.scala:525)
+	at akka.actor.ActorCell.systemInvoke(ActorCell.scala:547)
+	at akka.dispatch.Mailbox.processAllSystemMessages(Mailbox.scala:282)
+	at akka.testkit.CallingThreadDispatcher.process$1(CallingThreadDispatcher.scala:243)
+	at akka.testkit.CallingThreadDispatcher.runQueue(CallingThreadDispatcher.scala:283)
+	at akka.testkit.CallingThreadDispatcher.register(CallingThreadDispatcher.scala:152)
+	at akka.dispatch.MessageDispatcher.attach(AbstractDispatcher.scala:133)
+	at akka.actor.dungeon.Dispatch$class.start(Dispatch.scala:110)
+	at akka.actor.ActorCell.start(ActorCell.scala:433)
+	at akka.testkit.TestActorRef.<init>(TestActorRef.scala:50)
+	at akka.testkit.TestFSMRef.<init>(TestFSMRef.scala:40)
+	at akka.testkit.TestFSMRef$.apply(TestFSMRef.scala:96)
+	at com.thingy.tests.TestNetwork.<init>(networkTests.scala:48)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source)
+	at java.lang.reflect.Constructor.newInstance(Unknown Source)
+	at java.lang.Class.newInstance(Unknown Source)
+	at org.scalatest.tools.Framework$ScalaTestTask.execute(Framework.scala:435)
+	at sbt.ForkMain$Run$2.call(ForkMain.java:296)
+	at sbt.ForkMain$Run$2.call(ForkMain.java:286)
+	at java.util.concurrent.FutureTask.run(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.lang.Thread.run(Unknown Source)
+Caused by: java.util.NoSuchElementException: key not found: 1
+	at scala.collection.MapLike$class.default(MapLike.scala:228)
+	at scala.collection.AbstractMap.default(Map.scala:59)
+	at scala.collection.MapLike$class.apply(MapLike.scala:141)
+	at scala.collection.AbstractMap.apply(Map.scala:59)
+	at com.thingy.network.Network$$anonfun$8.apply(NetworkActor.scala:446)
+	at com.thingy.network.Network$$anonfun$8.apply(NetworkActor.scala:429)
+	at scala.collection.TraversableOnce$$anonfun$foldLeft$1.apply(TraversableOnce.scala:157)
+	at scala.collection.TraversableOnce$$anonfun$foldLeft$1.apply(TraversableOnce.scala:157)
+	at scala.collection.immutable.Map$Map2.foreach(Map.scala:137)
+	at scala.collection.TraversableOnce$class.foldLeft(TraversableOnce.scala:157)
+	at scala.collection.AbstractTraversable.foldLeft(Traversable.scala:104)
+	at com.thingy.network.Network.generateActors(NetworkActor.scala:429)
+	at com.thingy.network.Network.<init>(NetworkActor.scala:87)
+	at com.thingy.tests.TestNetwork$$anonfun$3.apply(networkTests.scala:49)
+	at com.thingy.tests.TestNetwork$$anonfun$3.apply(networkTests.scala:49)
+	at akka.actor.TypedCreatorFunctionConsumer.produce(IndirectActorProducer.scala:87)
+	at akka.actor.Props.newActor(Props.scala:213)
+	at akka.actor.ActorCell.newActor(ActorCell.scala:626)
+	at akka.actor.ActorCell.create(ActorCell.scala:652)
+	... 25 common frames omitted
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~ 22:47:28.288UTC ~ ERROR[default-akka.actor.default-dispatcher-7] ~ a.a.OneForOneStrategy ~ akka://default/user/mynetwork/subnet-outputNeuron3 ~ key not found: 1
+akka.actor.ActorInitializationException: akka://default/user/mynetwork/subnet-outputNeuron3: exception during creation
+	at akka.actor.ActorInitializationException$.apply(Actor.scala:193)
+	at akka.actor.ActorCell.create(ActorCell.scala:671)
+	at akka.actor.ActorCell.invokeAll$1(ActorCell.scala:525)
+	at akka.actor.ActorCell.systemInvoke(ActorCell.scala:547)
+	at akka.dispatch.Mailbox.processAllSystemMessages(Mailbox.scala:282)
+	at akka.dispatch.Mailbox.run(Mailbox.scala:223)
+	at akka.dispatch.Mailbox.exec(Mailbox.scala:234)
+	at akka.dispatch.forkjoin.ForkJoinTask.doExec(ForkJoinTask.java:260)
+	at akka.dispatch.forkjoin.ForkJoinPool$WorkQueue.runTask(ForkJoinPool.java:1339)
+	at akka.dispatch.forkjoin.ForkJoinPool.runWorker(ForkJoinPool.java:1979)
+	at akka.dispatch.forkjoin.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:107)
+Caused by: java.lang.reflect.InvocationTargetException: null
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)
+	at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Source)
+	at java.lang.reflect.Constructor.newInstance(Unknown Source)
+	at akka.util.Reflect$.instantiate(Reflect.scala:65)
+	at akka.actor.ArgsReflectConstructor.produce(IndirectActorProducer.scala:96)
+	at akka.actor.Props.newActor(Props.scala:213)
+	at akka.actor.ActorCell.newActor(ActorCell.scala:626)
+	at akka.actor.ActorCell.create(ActorCell.scala:652)
+	... 9 common frames omitted
+Caused by: java.util.NoSuchElementException: key not found: 1
+	at scala.collection.MapLike$class.default(MapLike.scala:228)
+	at scala.collection.AbstractMap.default(Map.scala:59)
+	at scala.collection.MapLike$class.apply(MapLike.scala:141)
+	at scala.collection.AbstractMap.apply(Map.scala:59)
+	at com.thingy.subnetwork.SubNetwork$$anonfun$4.apply(subnet.scala:216)
+	at com.thingy.subnetwork.SubNetwork$$anonfun$4.apply(subnet.scala:199)
+	at scala.collection.TraversableOnce$$anonfun$foldLeft$1.apply(TraversableOnce.scala:157)
+	at scala.collection.TraversableOnce$$anonfun$foldLeft$1.apply(TraversableOnce.scala:157)
+	at scala.collection.immutable.Map$Map1.foreach(Map.scala:116)
+	at scala.collection.TraversableOnce$class.foldLeft(TraversableOnce.scala:157)
+	at scala.collection.AbstractTraversable.foldLeft(Traversable.scala:104)
+	at com.thingy.subnetwork.SubNetwork.generateActors(subnet.scala:199)
+	at com.thingy.subnetwork.SubNetwork.<init>(subnet.scala:46)
+	... 18 common frames omitted
+2019-05-27 ~ 22:47:28.317UTC ~ INFO [default-akka.actor.default-dispatcher-4] ~ a.a.LocalActorRef ~ akka://default/user/mynetwork/subnet-outputNeuron3 ~ Message [com.thingy.neuron.Neuron$ConnectionConfig] from TestActor[akka://default/user/mynetwork] to Actor[akka://default/user/mynetwork/subnet-outputNeuron3#-668871191] was not delivered. [1] dead letters encountered. This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2019-05-27 ~ 22:47:28.351UTC ~ INFO [default-akka.actor.default-dispatcher-4] ~ a.a.LocalActorRef ~ akka://default/user/mynetwork/subnet-outputNeuron3 ~ Message [com.thingy.neuron.Neuron$Signal] from Actor[akka://default/user/mynetwork/inputNeuron2#-1349850987] to Actor[akka://default/user/mynetwork/subnet-outputNeuron3#-668871191] was not delivered. [2] dead letters encountered. This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2019-05-27 ~ 22:47:28.351UTC ~ INFO [default-akka.actor.default-dispatcher-4] ~ a.a.LocalActorRef ~ akka://default/user/mynetwork/subnet-outputNeuron3 ~ Message [com.thingy.neuron.Neuron$Signal] from Actor[akka://default/user/mynetwork/inputNeuron1#-389951352] to Actor[akka://default/user/mynetwork/subnet-outputNeuron3#-668871191] was not delivered. [3] dead letters encountered. This logging can be turned off or adjusted with configuration settings 'akka.log-dead-letters' and 'akka.log-dead-letters-during-shutdown'.
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-3] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
+2019-05-27 ~  ~ INFO [default-akka.actor.default-dispatcher-2] ~ a.e.s.Slf4jLogger ~  ~ Slf4jLogger started
