@@ -6,6 +6,9 @@ import akka.actor.{ ActorRef, FSM }
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import reactivemongo.bson.{
+  BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
+}
 
 /**
   * Weight object is designed to encapsulate functionality related
@@ -27,6 +30,11 @@ object Weight {
 
     implicit val weightWrites: Writes[Weight] = new Writes[Weight] {
     	def writes(w: Weight): JsValue = JsNumber(w.value)
+	}
+
+	// Write Documents: insert or update
+  	implicit object weightWriter extends BSONWriter[Weight, BSONDouble] {
+ 		def write(weight: Weight): BSONDouble = BSONDouble(weight.value)
 	}
 
 

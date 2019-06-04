@@ -8,7 +8,9 @@ import com.thingy.selection.TournamentSelection
 import play.api.libs.json._
 import com.thingy.config.ConfigDataClass.ConfigData
 import scala.collection.immutable.ListMap
-
+import reactivemongo.bson.{
+  BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
+}
 
 case class SpeciesMember (
 	genome: NetworkGenome,
@@ -25,6 +27,26 @@ object Species {
         //bar.key -> Json.obj("value" -> bar.value)
     )
 }
+
+	implicit object speciesMemberWriter extends BSONDocumentWriter[SpeciesMember] {
+  		def write(s: SpeciesMember): BSONDocument =
+    		BSONDocument(
+    				"speciesMember" -> s.genome,
+    				"speciesMemberPerformance" -> s.performanceValue
+    				)
+	}
+
+	implicit object speciesWriter extends BSONDocumentWriter[Species] {
+  		def write(s: Species): BSONDocument =
+    		BSONDocument(
+    				"speciesId" -> s.id,
+    				"speciesMembers" -> s.members
+    				)
+	}
+
+
+
+
 }
 
 case class Species(id: Int = 0,
@@ -72,6 +94,13 @@ object SpeciesDirectory {
     	
     }
 }
+
+	implicit object speciesDirWriter extends BSONDocumentWriter[SpeciesDirectory] {
+  		def write(s: SpeciesDirectory): BSONDocument =
+    		BSONDocument(
+    				"species" -> s.species.values
+    				)
+	}
 
 }
 

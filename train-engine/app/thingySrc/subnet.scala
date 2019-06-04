@@ -213,9 +213,15 @@ class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGe
 
 
 		 		val updatedInputConnectedActors: Map[Int, List[ActorRef]] = if(connection.isConnectedInput){
-		 				val existing = inputConnectedActors(connection.from) 
-		 				val newActorList: List[ActorRef] = toActor.actor :: existing
-		 				inputConnectedActors + (connection.from -> newActorList) 
+		 				inputConnectedActors.get(connection.from) match {
+		 					case Some(existing: List[ActorRef]) => 
+		 						val newActorList: List[ActorRef] = toActor.actor :: existing
+		 						inputConnectedActors + (connection.from -> newActorList)
+		 					case None =>
+		 						
+		 						inputConnectedActors + (connection.from -> List(toActor.actor)) 
+		 				}
+		 				
 		 			} else {
 		 				inputConnectedActors
 		 			}

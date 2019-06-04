@@ -4,6 +4,9 @@ import com.thingy.weight.Weight
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import reactivemongo.bson.{
+  BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
+}
 
 object NeuronGenome {
 
@@ -31,6 +34,20 @@ object NeuronGenome {
 	 (JsPath  \ "biasWeight").write[Weight] and
 	 (JsPath  \ "type").write[String]
 	) (unlift(NeuronGenome.unapply))
+
+
+	//implicit def neuronWriter: BSONDocumentWriter[NeuronGenome] = Macros.writer[NeuronGenome]
+  	implicit object neuronWriter extends BSONDocumentWriter[NeuronGenome] {
+  		def write(n: NeuronGenome): BSONDocument =
+    		BSONDocument(
+			"id" -> n.id,
+			"name" -> n.name, 
+			"layer" -> n.layer,
+			"activationFunction" -> n.activationFunction,
+			"subnetid" -> n.subnetId,
+			"biasWeight" -> n.biasWeight,
+			"type" -> n.nodeType)
+    }
 
 }
 

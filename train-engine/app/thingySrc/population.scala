@@ -1,6 +1,6 @@
 package com.thingy.population
 
-import com.thingy.config.ConfigDataClass.ConfigData
+import com.thingy.config.ConfigDataClass.{ConfigData, RuntimeConfig}
 import com.typesafe.config.ConfigFactory
 import akka.actor.{ ActorRef, FSM, Props }
 import akka.pattern.pipe
@@ -61,64 +61,6 @@ object Population {
   	def speciesCollection = db1.map(_.collection("species"))
   	def runStatsCollection = db1.map(_.collection("runs"))
 
-  	// Write Documents: insert or update
-  	implicit object weightWriter extends BSONWriter[Weight, BSONDouble] {
- 		def write(weight: Weight): BSONDouble = BSONDouble(weight.value)
-	}
-
-  	//implicit def neuronWriter: BSONDocumentWriter[NeuronGenome] = Macros.writer[NeuronGenome]
-  	implicit object neuronWriter extends BSONDocumentWriter[NeuronGenome] {
-  		def write(n: NeuronGenome): BSONDocument =
-    		BSONDocument(
-			"id" -> n.id,
-			"name" -> n.name, 
-			"layer" -> n.layer,
-			"activationFunction" -> n.activationFunction,
-			"subnetid" -> n.subnetId,
-			"biasWeight" -> n.biasWeight,
-			"type" -> n.nodeType)
-    }
-
-  	implicit def connectionWriter: BSONDocumentWriter[ConnectionGenome] = Macros.writer[ConnectionGenome]
-  	
-  	
-  	implicit object genomeWriter extends BSONDocumentWriter[NetworkGenome] {
-  		def write(net: NetworkGenome): BSONDocument =
-    		BSONDocument(
-    				"id" -> net.id,
-    				"connections" -> net.connections.values, 
-    				"neurons" -> net.neurons.values,
-    				"subnets" -> net.subnets.map(slist=>slist.values).getOrElse(List.empty),
-    				"parent" -> net.parentId,
-	    			"species" -> net.species,
-	    			"generation" -> net.generation)
-	}
-
-	implicit object speciesMemberWriter extends BSONDocumentWriter[SpeciesMember] {
-  		def write(s: SpeciesMember): BSONDocument =
-    		BSONDocument(
-    				"speciesMember" -> s.genome,
-    				"speciesMemberPerformance" -> s.performanceValue
-    				)
-	}
-
-	implicit object speciesWriter extends BSONDocumentWriter[Species] {
-  		def write(s: Species): BSONDocument =
-    		BSONDocument(
-    				"speciesId" -> s.id,
-    				"speciesMembers" -> s.members
-    				)
-	}
-
-	implicit val configWriter: BSONDocumentWriter[ConfigData] = Macros.writer[ConfigData]
-
-	implicit object speciesDirWriter extends BSONDocumentWriter[SpeciesDirectory] {
-  		def write(s: SpeciesDirectory): BSONDocument =
-    		BSONDocument(
-    				"species" -> s.species.values
-    				)
-	}
-
 	case class FrontendMessage(msg: String)
   	
   	case class EnvData(data: BSONDocument)
@@ -139,7 +81,7 @@ object Population {
 	
 }
 
-class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationState, Population.PopulationSettings] {
+class Population(out: ActorRef, configData: ConfigData, runtimeConfig: RuntimeConfig = RuntimeConfig()) extends FSM[PopulationState, Population.PopulationSettings] {
 	import Population._
 
 	//val gNet = () => {new NetworkGenomeBuilder(None)}.generate
@@ -149,19 +91,21 @@ class Population(out: ActorRef, configData: ConfigData) extends FSM[PopulationSt
 
 	out ! (runId)
 
-	//val nb: NetworkGenomeBuilder = new NetworkGenomeBuilder
-	val query = BSONDocument("_id" -> Json.obj("$oid" -> configData.environmentId))
-	val envData = environmentCollection.flatMap(_.find(query).one[BSONDocument])
-	def extractEnvData(implicit ec: ExecutionContext) = { 
+	if(runtimeConfig.mongoStorage) {
+		val query = BSONDocument("_id" -> Json.obj("$oid" -> configData.environmentId))
+		val envData = environmentCollection.flatMap(_.find(query).one[BSONDocument])
+		def extractEnvData(implicit ec: ExecutionContext) = { 
 
-		envData.map {d=>
-			EnvData(d.get)
+			envData.map {d=>
+				EnvData(d.get)
+			}
 		}
+
+
+		extractEnvData.pipeTo(self)
 	}
-
-
-	extractEnvData.pipeTo(self)
-
+	// else we assume that somehow this population will be sent som environment settings
+	
  	val generations = configData.maxGenerations
  	
  	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef], innovation: ActorRef, envType:EnvironmentType) = {

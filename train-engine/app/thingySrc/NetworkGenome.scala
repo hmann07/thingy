@@ -18,6 +18,9 @@ import java.io.FileInputStream
 import play.api.libs.functional.syntax._
 import scala.util.Random
 import com.thingy.config.ConfigDataClass.ConfigData
+import reactivemongo.bson.{
+  BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
+}
 
 
 
@@ -50,6 +53,18 @@ object NetworkGenome {
 	    	"generation" -> net.generation
 	        //bar.key -> Json.obj("value" -> bar.value)
 	    )
+	}
+
+	implicit object genomeWriter extends BSONDocumentWriter[NetworkGenome] {
+  		def write(net: NetworkGenome): BSONDocument =
+    		BSONDocument(
+    				"id" -> net.id,
+    				"connections" -> net.connections.values, 
+    				"neurons" -> net.neurons.values,
+    				"subnets" -> net.subnets.map(slist=>slist.values).getOrElse(List.empty),
+    				"parent" -> net.parentId,
+	    			"species" -> net.species,
+	    			"generation" -> net.generation)
 	}
 
 	

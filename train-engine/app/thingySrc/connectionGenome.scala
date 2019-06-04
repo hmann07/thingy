@@ -4,6 +4,9 @@ import com.thingy.weight.Weight
 import play.api.libs.json.Json.JsValueWrapper
 import play.api.libs.json._
 import play.api.libs.functional.syntax._
+import reactivemongo.bson.{
+  BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
+}
 
 object ConnectionGenome {
 
@@ -28,6 +31,10 @@ object ConnectionGenome {
 	 (JsPath  \ "enabled").write[Boolean] and 
 	 (JsPath  \ "recurrent").write[Boolean]
 	) (unlift(ConnectionGenome.unapply))
+
+	implicit def connectionWriter: BSONDocumentWriter[ConnectionGenome] = Macros.writer[ConnectionGenome]
+  	
+  	
 
 }
 

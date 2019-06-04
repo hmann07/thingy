@@ -89,7 +89,7 @@ class Agent(innovation: ActorRef, ng: GenomeIO, configData: ConfigData, startSta
 			}
 	 
 			val environment = context.actorOf(Environment.props(envType), "environment")
-			val evaluator = SoftmaxEvaluator(fieldMap = envType.environmentIOSpec)
+			val evaluator = SSEEvaluator(fieldMap = envType.environmentIOSpec)
 			val net = context.actorOf(Network.props("my network", networkGenome, innovation, environment, configData, NetworkActive, evaluator, null), "mynetwork")
 			(AgentSettings(runState = ActiveAgent, network = net, evaluator = evaluator, environment = environment), ActiveAgent)		
 		}

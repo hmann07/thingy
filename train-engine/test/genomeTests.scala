@@ -49,4 +49,13 @@ class TestGenome extends FlatSpec {
 		assert(d==0)
 	}
 
+	"the genome" should "have 2 connections" in {
+		assert(networkGenome.connections.size == 2)
+	}
+
+	"all connections in the genome" should "be flagged as being connected to inputs" in {
+		val inputConns = networkGenome.connections.map { case (id, connectionGenome) => if(connectionGenome.isConnectedInput) 1 else 0 }
+		assert(inputConns.sum == 2)
+	}
+
 }

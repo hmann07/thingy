@@ -6,6 +6,7 @@ import com.thingy.genome._
 import com.thingy.neuron.Neuron
 import play.api.libs.json._
 import com.thingy.neuron.{Successor, Predecessor}
+import com.thingy.neuron.Neuron.ConnectionConfig
 import com.thingy.weight.Weight
 import com.thingy.innovation._
 import com.thingy.subnetwork.SubNetwork
@@ -14,6 +15,7 @@ import com.thingy.environment.Environment.Representation
 import com.thingy.evaluator._
 import scala.util.Random
 import com.typesafe.config.ConfigFactory
+import com.thingy.messages.Perceive
 
 sealed trait NetworkState
 case object Initialising extends NetworkState
@@ -43,7 +45,6 @@ object Network {
 	// Messages it can receive
 	final case class Signal(value: Double)
 	final case class Mutate()
-	final case class Perceive()
 	case class Mutated()
 	case class NetworkUpdate(f: GenomeIO)
 	case class Done(evaluator: Evaluator, genome: NetworkGenome)
@@ -99,6 +100,11 @@ class Network(name: String,
 
 	when(NetworkActive) {
 
+
+		case Event(e: ConnectionConfig , t: NetworkSettings) =>
+			log.info("network received connection settings, this shoud be turned off.")
+			stay
+
 		case Event(s: Network.Mutate, t: NetworkSettings) =>
 			
 			log.debug("mutating genome")
@@ -127,9 +133,19 @@ class Network(name: String,
 			//  NOTE: NOT ALL HIDDEN NODES ARE CONNECTED TO AN INPUT.
 			// SO WE MUUST COLLECT NOEURONS BY THE INPUT THEY ARE CONNECTED TO. THEN FOR EACH INPUT FEATURES SEND TO THE NEURONS RELATED TO THAT fEATURES.
 
+
+
+			/*
 			r.input.foreach(i => {
 				nodeSchema.allNodes(i._1).actor ! Neuron.Signal(i._2, r.flags, t.rCount)
 			})
+
+			*/
+
+			r.input.foreach(i => {
+				nodeSchema.inNodes(i._1).foreach(a => a ! Neuron.Signal(i._2, r.flags, t.rCount))
+			})
+
 
 			val updateExpected = t.expectedOutputs + (t.rCount -> r)
 
@@ -408,13 +424,16 @@ class Network(name: String,
 			 case None =>
 			 		// already an actor for this genome?
 				 	{if(!schemaObj.allNodes.contains(currentObj.id)){
-
-				 		val ar: ActorRef =  context.actorOf(Neuron.props(currentObj), currentObj.name )
+				 		// there is no actor, so create one
+				 		val ar: ActorRef =  if(currentObj.layer > 1) context.actorOf(Neuron.props(currentObj), currentObj.name) else self
 				 		schemaObj.update(currentObj, ar)
 		 	 		} else {
 		 	 			//send the structure to the neuron to update things such as bias
-		 	 			val sn: ActorRef = schemaObj.allNodes(currentObj.id).actor
-		 	 			sn ! currentObj
+		 	 			// but no need to if this is an input
+		 	 			if(currentObj.layer > 1) {
+		 	 				val sn: ActorRef = schemaObj.allNodes(currentObj.id).actor
+		 	 				sn ! currentObj
+		 	 			}
 				 		schemaObj
 				 	}}
 	 		}
@@ -481,13 +500,13 @@ class Network(name: String,
 
 			 			// we already have at least one connection for this actor so update the config by adding a new outgoing connection to it.
 
-				 		(updateIncoming + (fromActor.actor ->  existingConfig.copy(outputs = suc :: existingConfig.outputs)), inputConnectedActors)
+				 		(updateIncoming + (fromActor.actor ->  existingConfig.copy(outputs = suc :: existingConfig.outputs)), updatedInputConnectedActors)
 				 	}
 			 		case None => 
 
 			 				// this is the first connection we have so create a new config.
 
-			 			(updateIncoming + (fromActor.actor -> Neuron.ConnectionConfig(outputs = List(suc), neuronGenome = neurons(connection.from))), inputConnectedActors)
+			 			(updateIncoming + (fromActor.actor -> Neuron.ConnectionConfig(outputs = List(suc), neuronGenome = neurons(connection.from))), updatedInputConnectedActors)
 			 	}
 	 	} else {
 			(actorConnectionConfigs, inputConnectedActors) 

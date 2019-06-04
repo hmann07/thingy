@@ -1,6 +1,9 @@
 package com.thingy.config
 
 import com.typesafe.config.ConfigFactory
+import reactivemongo.bson.{
+  BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
+}
 
  /*
  #seed-network = "/thingy/app/thingySrc/resources/seed.json"
@@ -21,6 +24,12 @@ import com.typesafe.config.ConfigFactory
 object ConfigDataClass {
 private val config = ConfigFactory.load()
 
+
+case class RuntimeConfig(
+  mongoStorage: Boolean = true
+)
+
+
 case class ConfigData(
   environmentId: String = "",
   populationSize: Int = config.getConfig("thingy").getInt("population-size"), 
@@ -37,6 +46,10 @@ case class ConfigData(
   compatWeightCoeff: Double = 0.4,
   compatDisjointCoeff: Double = 1
   )
+
+  implicit val configWriter: BSONDocumentWriter[ConfigData] = Macros.writer[ConfigData]
+
+  
 
 }
 

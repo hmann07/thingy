@@ -21,26 +21,21 @@ case class NetworkNodeSchema(
 			
 			// DO INPUTS GO IN THIS SCHEMA?
 			// INPUTS
-			case 0 => NetworkNodeSchema(
-				in.copy(nodes = newnode :: in.nodes),
-				out,
-				hidden,
-				allNodes + (n.id -> newnode))
+			case 0 => copy(
+				in = in.copy(nodes = newnode :: in.nodes),
+				allNodes = allNodes + (n.id -> newnode))
 
 			//OUTPUTS
-			case 1 => NetworkNodeSchema(
-							in, 
-							out.copy(nodes = newnode :: out.nodes ), 
-							hidden, 
-							allNodes + (n.id -> newnode))
+			case 1 => copy(
+							
+							out = out.copy(nodes = newnode :: out.nodes ), 
+							allNodes = allNodes + (n.id -> newnode))
 
 
 			//ALL OTHER "HIDDEN"	
-			case _ => NetworkNodeSchema(
-					in, 
-					out, 
-					hidden.copy(nodes = newnode :: hidden.nodes ), 
-					allNodes + (n.id -> newnode)
+			case _ => copy(
+					hidden = hidden.copy(nodes = newnode :: hidden.nodes ), 
+					allNodes = allNodes + (n.id -> newnode)
 				)
 			}
 		}

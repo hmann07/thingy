@@ -1,7 +1,7 @@
 package com.thingy.environment
 
 import akka.actor.{ ActorRef, FSM, Props }
-import com.thingy.network.Network.Perceive
+import com.thingy.messages.Perceive
 
 import scala.io.Source
 
