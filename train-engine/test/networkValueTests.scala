@@ -143,6 +143,56 @@ class TestValueNetwork extends TestKit(ActorSystem("MySpec")) with ImplicitSende
 		}
 	}
 
+	within(0.millis, 9000.millis) {
+		"With slightly different weight values the network" should "receive an Done message from the network with correct value" in {
+			//Representation(flags: List[String], input: Map[Int, Double], expectedOutput: Map[Int, Double])
+			val testGenome = 
+		NetworkGenome(1,2,1,
+			Map(
+				1 -> NeuronGenome(1,"inputNeuron1",0.0,true,true,Some("SIGMOID"),None,Weight(1),"input"), 
+				2 -> NeuronGenome(2,"inputNeuron2",0.0,true,true,Some("SIGMOID"),None,Weight(1),"input"), 
+				3 -> NeuronGenome(3,"outputNeuron3",1.0,true,true,Some("SIGMOID"),Some(1),Weight(1),"output")),
+
+			Map(1 -> ConnectionGenome(1,1,3,Weight(0.5),true,true,true,false), 
+				2 -> ConnectionGenome(2,2,3,Weight(0.5),true,true,true,false)),
+
+			Some(Map(
+				1 -> NetworkGenome(1,1,1,Map(
+					1 -> NeuronGenome(1,"subnetIputNeuron1",0.0,true,true,Some("SIGMOID"),None,Weight(1),"input"), 
+					2 -> NeuronGenome(2,"outputNeuron2",1.0,true,true,Some("SIGMOID"),None,Weight(1),"output")),
+				Map(1 -> ConnectionGenome(1,1,2,Weight(1),true,true,true,false)),
+				None,Some(3),0,0))),Some(0),0,0)
+			val networkGenome = GenomeIO(None, Some(()=>testGenome)).generate
+
+			val representation =  com.thingy.environment.Environment.Representation(List("FINAL"), Map(1 -> 1, 2 -> 0), Map(3 -> 0))
+			val agent = TestProbe()
+			val net = agent.childActorOf(Network.props("my network2", 
+									networkGenome, 
+									innovation.ref, 
+									environment.ref, 
+									ConfigData(), 
+									NetworkActive, 
+									evaluator, 
+									null), "mynetwork2")
+			agent.send(net, representation) 
+			agent.expectMsg(9000.millis, Network.Done(
+			SSEEvaluator(0,0.1425369565965509,7.015724369859303,0.1425369565965509,EnvironmentIOSpec(List(2, 1),List(3))), NetworkGenome(1,2,1,
+			Map(
+				1 -> NeuronGenome(1,"inputNeuron1",0.0,true,true,Some("SIGMOID"),None,Weight(1),"input"), 
+				2 -> NeuronGenome(2,"inputNeuron2",0.0,true,true,Some("SIGMOID"),None,Weight(1),"input"), 
+				3 -> NeuronGenome(3,"outputNeuron3",1.0,true,true,Some("SIGMOID"),Some(1),Weight(1),"output")),
+
+			Map(1 -> ConnectionGenome(1,1,3,Weight(0.5),true,true,true,false), 
+				2 -> ConnectionGenome(2,2,3,Weight(0.5),true,true,true,false)),
+
+			Some(Map(
+				1 -> NetworkGenome(1,1,1,Map(
+					1 -> NeuronGenome(1,"subnetIputNeuron1",0.0,true,true,Some("SIGMOID"),None,Weight(1),"input"), 
+					2 -> NeuronGenome(2,"outputNeuron2",1.0,true,true,Some("SIGMOID"),None,Weight(1),"output")),
+				Map(1 -> ConnectionGenome(1,1,2,Weight(1),true,true,true,false)),
+				None,Some(3),0,0))),Some(0),0,0) ))
+		}
+	}
 
 	
 

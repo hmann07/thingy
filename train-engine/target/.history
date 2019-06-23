@@ -56,3 +56,22 @@ test
 exit
 clean
 exit
+run
+test
+clear
+test
+test -h
+help
+test help
+test completions
+test
+run
+test
+testonly TestMutation
+testOnly TestMutation
+testOnly *TestMutation
+test
+testOnly *TestMutation
+test
+testOnly *TestMutation
+run

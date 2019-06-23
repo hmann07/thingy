@@ -17,7 +17,7 @@ libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.5.23"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.5.23" % "test"
 
-libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.4.11"
+libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.5.23"
 
 libraryDependencies += "io.kamon" %% "kamon-core" % "0.6.3"
 

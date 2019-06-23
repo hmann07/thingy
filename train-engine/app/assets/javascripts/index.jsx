@@ -91,7 +91,7 @@ envClickHandle(envData) {
       <BarChart data={this.state.generationData}/>
      
       <DataSelector selectedDataItem={this.state.selectedGenerationId} value={this.state.generationData} fields={["generation","bestPerformance", "bestFitness"]} clickHandler={this.generationClickHandle.bind(this)}/>
-      <DataSelector selectedDataItem={this.state.selectedSpeciesId} value={this.state.speciesData} fields={["species", "speciesTotalFitness", "speciesBestFitness"]} clickHandler={this.speciesClickHandle.bind(this)}/>
+      <DataSelector selectedDataItem={this.state.selectedSpeciesId} value={this.state.speciesData} fields={["species", "memberCount", "speciesTotalFitness", "speciesBestFitness"]} clickHandler={this.speciesClickHandle.bind(this)}/>
       <DataSelector value={this.state.networksData} environmentId={this.state.currentRunSettings.environmentId} fields="all" clickHandler={this.netClickHandle.bind(this)}/>
     </div>
 

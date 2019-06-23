@@ -43,6 +43,8 @@ object NeuronGenome {
 			"id" -> n.id,
 			"name" -> n.name, 
 			"layer" -> n.layer,
+			"isInputConnected" -> n.isInputConnected,
+			"isOutputConnected" -> n.isOutputConnected,
 			"activationFunction" -> n.activationFunction,
 			"subnetid" -> n.subnetId,
 			"biasWeight" -> n.biasWeight,

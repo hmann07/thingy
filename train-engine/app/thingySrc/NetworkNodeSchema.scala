@@ -10,7 +10,7 @@ case class NetworkNodeSchema(
 		out: OutputNodes = OutputNodes(), // THIS could be hidden to
 		hidden: HiddenNodes = HiddenNodes(),
 		allNodes: Map[Int, Node] = Map.empty,
-		inNodes: Map[Int, List[ActorRef]] = Map.empty
+		inNodes: Map[Int, Map[ActorRef, Double]] = Map.empty
 	){
 
 

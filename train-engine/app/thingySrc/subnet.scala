@@ -192,11 +192,7 @@ class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGe
 
 	 	// now close down any neurons not used.
 
-	 	context.children.foreach(c=> if(!newNetworkSchema.allNodes.values.exists(x	=> x.actor.path.name == c.path.name)) context.stop(c))
-
-	 	// Now send down the connections to remaining neurons
-
-	 	val (connectionConfigs, inputnodes) = networkGenome.connections.foldLeft((Map[ActorRef, Neuron.ConnectionConfig](), Map[Int, List[ActorRef]]())) { (acc, current) =>
+	 	val (connectionConfigs, inputnodes) = networkGenome.connections.foldLeft((Map[ActorRef, Neuron.ConnectionConfig](), Map[Int, Map[ActorRef, Double]]())) { (acc, current) =>
 	 		
 	 		val (connectionId, connection) = current
 	 		val (actorConnectionConfigs, inputConnectedActors) = acc
@@ -212,14 +208,14 @@ class SubNetwork(name: String, nodeGenome: NeuronGenome, subnetGenome: NetworkGe
 		 		val suc = Successor(toActor, connection.weight, connection.recurrent)
 
 
-		 		val updatedInputConnectedActors: Map[Int, List[ActorRef]] = if(connection.isConnectedInput){
+		 		val updatedInputConnectedActors: Map[Int, Map[ActorRef, Double]] = if(connection.isConnectedInput){
 		 				inputConnectedActors.get(connection.from) match {
-		 					case Some(existing: List[ActorRef]) => 
-		 						val newActorList: List[ActorRef] = toActor.actor :: existing
+		 					case Some(existing: Map[ActorRef, Double]) => 
+		 						val newActorList: Map[ActorRef, Double] =  existing + (toActor.actor -> connection.weight.value)
 		 						inputConnectedActors + (connection.from -> newActorList)
 		 					case None =>
 		 						
-		 						inputConnectedActors + (connection.from -> List(toActor.actor)) 
+		 						inputConnectedActors + (connection.from -> Map(toActor.actor -> connection.weight.value)) 
 		 				}
 		 				
 		 			} else {

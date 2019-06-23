@@ -44,7 +44,8 @@ case class ConfigData(
   addNetworkConnection: Double = 0.025,
   mutateWeights: Double = 0.95,
   compatWeightCoeff: Double = 0.4,
-  compatDisjointCoeff: Double = 1
+  compatDisjointCoeff: Double = 1,
+  evaluatorType: String ="SSEEvaluator"
   )
 
   implicit val configWriter: BSONDocumentWriter[ConfigData] = Macros.writer[ConfigData]

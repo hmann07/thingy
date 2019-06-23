@@ -72,7 +72,8 @@ class ConfigController @Inject()(cache: SyncCacheApi, cc: ControllerComponents)(
       "addNetworkConnection" -> of(doubleFormat),
       "mutateWeights" -> of(doubleFormat),
       "compatWeightCoeff" -> of(doubleFormat),
-      "compatDisjointCoeff" -> of(doubleFormat)
+      "compatDisjointCoeff" -> of(doubleFormat),
+      "evaluatorType" -> text
     )(ConfigData.apply)(ConfigData.unapply)
   )
 

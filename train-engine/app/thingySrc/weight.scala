@@ -90,7 +90,7 @@ object Weight {
 		  */
 
 		 def jiggle = {
-		 	val newval = value + {if(Random.nextDouble<0.5)-1 else 1} * (  Random.nextDouble)
+		 	val newval = value + {if(Random.nextDouble<0.5)-1 else 1} * ( 0.1 * Random.nextDouble)
 		 	val limitval = if(Math.abs(newval) > (weightRange / 2)) {if(newval<0){-(weightRange / 2)}else{(weightRange / 2)}} else newval
 		 	//val limitval = newval
 

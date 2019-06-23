@@ -48,7 +48,7 @@ case class SoftmaxEvaluator(
 
 		val finalLoss = aggregatedIterationValue / epochLength
 
-		copy(auxValue = finalLoss, fitness=finalLoss)
+		copy(auxValue = finalLoss, fitness=1/finalLoss)
 
 	}
 

@@ -8,6 +8,7 @@ import com.thingy.selection.TournamentSelection
 import play.api.libs.json._
 import com.thingy.config.ConfigDataClass.ConfigData
 import scala.collection.immutable.ListMap
+import com.thingy.population.{PopulationCandidate, ElitePopulationCandidate, NormalPopulationCandidate}
 import reactivemongo.bson.{
   BSONWriter, BSONDocument, BSONDouble, BSONDocumentWriter, BSONDocumentReader, Macros, document
 }
@@ -81,7 +82,7 @@ case class Species(id: Int = 0,
 	}
 }
 
-object SpeciesDirectory {
+object SpeciesDirectory  {
 	
 	implicit val speciesDirWrites: Writes[SpeciesDirectory] = new Writes[SpeciesDirectory] {
     def writes(speciesDir: SpeciesDirectory): JsValue = Json.obj(
@@ -104,7 +105,7 @@ object SpeciesDirectory {
 
 }
 
-case class SpeciesDirectory (
+case class SpeciesDirectory  (
 	val configData: ConfigData,
 	val currentSpeciesId: Int = 0, 
 	val species: ListMap[Int, Species] = ListMap.empty,
@@ -232,18 +233,22 @@ case class SpeciesDirectory (
 			// right, here we correct the explicit fitness sharing based total and species fitness.
 
 			val (speciesWithFitnessSharing, totalFitnessShared) = species.foldLeft((List[Species](), 0.0)) { case ((speciesList, tfs), (speciesIdx, species)) => {
+				
+				// 
 				val speciesFitness = species.members.foldLeft(0.0) { (totalFitness, currentMember)=> {
+
 						totalFitness + (currentMember.fitnessValue / species.memberCount)
+						// this devision of fitness by members means one member nor one species dominates
 				}}
 
 
 				def memberSortPredicate(p1: SpeciesMember , p2: SpeciesMember) = {
 					p1.fitnessValue > p2.fitnessValue
+
 				}
 				// SORT MEMBERS TO ALLOW FOR Elimination of lower performing members
 				val sortedMemberList = species.members.sortWith(memberSortPredicate)
-
-
+				
 				( species.copy(speciesTotalFitness = speciesFitness, members = sortedMemberList) :: speciesList , tfs + speciesFitness)
 			}}
 
@@ -253,20 +258,21 @@ case class SpeciesDirectory (
 				
 				val speciesCandidates = ((s.speciesTotalFitness / totalFitnessShared) * populationSize).toInt
 				// elites?
+				val eliteCount = Math.max((speciesCandidates * 0.05).toInt, 1)
 				// 	
 				if(speciesCandidates > 1) {
-					val elite: () => NetworkGenome = () => s.generationalArchetype.genome
+					val eliteGenomes: List[ElitePopulationCandidate] = s.members.take(eliteCount).map(member => {ElitePopulationCandidate(() => member.genome)})
 
-					1.to(speciesCandidates - 1).map(i => {
+					1.to(speciesCandidates - eliteCount).map(i => {
 							
 							if(Random.nextDouble < configData.crossoverRate){
 							// crossover
 							generationFunction(s)
 							} else {
 							// mutation only
-							() => TournamentSelection.select(s.members.take(s.members.size- (s.members.size * .25).toInt )).genome
+							NormalPopulationCandidate(() => TournamentSelection.select(s.members.take(s.members.size- (s.members.size * .1).toInt )).genome)
 							}
-					}) :+ elite
+					}) ++ eliteGenomes
 
 				} else {
 
@@ -277,7 +283,7 @@ case class SpeciesDirectory (
 							generationFunction(s)
 							} else {
 							// mutation only
-							() => TournamentSelection.select(s.members.take(s.members.size- (s.members.size * .25).toInt )).genome
+							NormalPopulationCandidate(() => TournamentSelection.select(s.members.take(s.members.size- (s.members.size * .1).toInt )).genome)
 							}
 					}) 
 
@@ -292,16 +298,16 @@ case class SpeciesDirectory (
 			})
 		}
 
-		def generationFunction(s: Species): () => NetworkGenome = {
+		def generationFunction(s: Species): PopulationCandidate = {
 			val genome1 = TournamentSelection.select(s.members.take( s.members.size- (s.members.size * .25).toInt ))
 			val genome2 = TournamentSelection.select(s.members.take( s.members.size -(s.members.size * .25).toInt ))
 
 			val orderedGenome = (if(genome1.fitnessValue > genome2.fitnessValue) genome1 else genome2, if(genome1.fitnessValue > genome2.fitnessValue) genome2 else genome1)
 			
-			val f = () => {
+			val f = NormalPopulationCandidate(() => {
 				orderedGenome._1.genome.crossover(orderedGenome._2.genome)
 
-			}
+			})
 
 			f
 	}

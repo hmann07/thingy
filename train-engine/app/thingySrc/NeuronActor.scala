@@ -1,4 +1,4 @@
- package com.thingy.neuron
+  package com.thingy.neuron
 
 import akka.actor.{ ActorRef, FSM, Props }
 import com.thingy.activationfunctions.ActivationFunction
@@ -146,7 +146,9 @@ class Neuron(genome: NeuronGenome) extends FSM[NeuronState, NeuronSettings] {
 								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
 							}
 							case "hidden" => {
-								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = t.activationFunction.function(newT.activationLevel + (t.genome.biasWeight.value * -1)) * output.weight.value, recurrent = output.recurrent))
+								val finalActivation = t.activationFunction.function(newT.activationLevel + (t.genome.biasWeight.value * -1))
+								log.debug("finalActivationLevel = {}", finalActivation)
+								t.connections.outputs.foreach(output => output.node.actor ! s.copy(value = finalActivation * output.weight.value, recurrent = output.recurrent))
 							}
 						}
 						// reset the neuron

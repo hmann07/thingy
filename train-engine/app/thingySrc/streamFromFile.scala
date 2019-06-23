@@ -11,7 +11,7 @@ class StreamFromFile(implicit as: ActorSystem) {
 //implicit val system = ActorSystem("QuickStart")
 implicit val materializer = ActorMaterializer()
 
-val file = Paths.get("C:\\Users\\mau\\Documents\\thingy\\train-engine\\app\\thingySrc\\resources\\iris.json")
+val file = Paths.get("C:\\Windows\\Temp\\normalisedIrisData.csv")
 
 println(file)
 def startStream: Future[IOResult] = FileIO.fromPath(file)

@@ -169,7 +169,9 @@ class Mutator(configData: ConfigData) {
 
 
 	def removeNetworkNode(genome: NetworkGenome) {
-
+		
+		val connectionCount = genome.neurons.size
+		val nodeToRemove = genome.neurons.values.toList(Random.nextInt(connectionCount))
 	}
 
 	 

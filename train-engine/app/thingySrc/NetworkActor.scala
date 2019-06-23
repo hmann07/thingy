@@ -46,7 +46,7 @@ object Network {
 	final case class Signal(value: Double)
 	final case class Mutate()
 	case class Mutated()
-	case class NetworkUpdate(f: GenomeIO)
+	case class NetworkUpdate(f: GenomeIO, elite: Boolean = false)
 	case class Done(evaluator: Evaluator, genome: NetworkGenome)
 	case class Completed()
     // an override of props to allow Actor to take con structor args.
@@ -116,7 +116,7 @@ class Network(name: String,
 		case Event(s: Neuron.Signal, t: NetworkSettings) =>
 
 			log.debug("received signal of {}", s.value)
-			nodeSchema.in.nodes.foreach {i =>
+			t.networkSchema.in.nodes.foreach {i =>
 			 	i.actor ! s
 				}
 
@@ -125,7 +125,7 @@ class Network(name: String,
 		case Event(r: Representation, t: NetworkSettings) =>
 
 			log.debug("received representation of {} will generate batch {}", r.input, t.rCount)
-			
+			//println(t.networkSchema.inNodes)
 			// Send the signals off into the network, send signal with a batch id (rCount)
 
 			//REWORK (TO REDUCE THE NUMBER OF ACTORS IN LARGE FEATURE DOMAINS). THE GENERATED ACTORS MUST BE SELECTED ON THE BASIS THEY ARE CONNECTED TO AN INPUT. I.E THE WILL BE A SUB SELECTION
@@ -143,8 +143,9 @@ class Network(name: String,
 			*/
 
 			r.input.foreach(i => {
-				nodeSchema.inNodes(i._1).foreach(a => a ! Neuron.Signal(i._2, r.flags, t.rCount))
-			})
+				t.networkSchema.inNodes(i._1).foreach({
+					case (actor, weight) => actor ! Neuron.Signal(i._2 * weight, r.flags, t.rCount) 
+			})})
 
 
 			val updateExpected = t.expectedOutputs + (t.rCount -> r)
@@ -207,7 +208,7 @@ class Network(name: String,
       		// Here we should decide whether or not to mutate the new genome... 
       		// if we mutate - > go to status mutating
       		// if we don't mutate, go to ready and perceive
-
+      		if(!ng.elite) {
       		val mr = configData.globalMutationRate
       		if(Random.nextDouble < mr) {
       			
@@ -242,6 +243,16 @@ class Network(name: String,
       			environment ! Perceive()
 				stay using updatedSettingsNoMut	
       		}
+
+      	} else {
+      		// this is an elite genome
+      		val updatedSchemaNoMut = generateActors(t.networkSchema, updatedGenome)
+     		val updatedSettingsNoMut = updatedSettings.copy(genome = updatedGenome, networkSchema = updatedSchemaNoMut)
+
+      		log.debug("new network received and actors updated")
+      		environment ! Perceive()
+			stay using updatedSettingsNoMut	
+      	}
 	}
 
 	onTransition {
@@ -303,6 +314,7 @@ class Network(name: String,
 			// generate the new actor
 			val updatedSchema = generateActors(t.networkSchema, updatedGenome)
 			val updatedSettings = t.copy(genome = updatedGenome, networkSchema = updatedSchema)
+			
 			// need to tell two neurons that they have a disabled connection and a new one.
 			log.debug("genome updated now: {}, represented as : {}", updatedGenome.toJson, updatedGenome.toJson)
 			goto(NetworkActive) using updatedSettings
@@ -324,6 +336,12 @@ class Network(name: String,
 
 	when(NetworkTest) {
 
+
+		case Event(e: ConnectionConfig , t: NetworkSettings) =>
+			log.info("network received connection settings, this shoud be turned off.")
+			stay
+
+
 		case Event(s: Neuron.Signal, t: NetworkSettings) =>
 
 			log.debug("received signal of {}", s.value)
@@ -339,12 +357,15 @@ class Network(name: String,
 			
 			// Send the signals off into the network, send signal with a batch id (rCount)
 			r.input.foreach(i => {
-				nodeSchema.allNodes(i._1).actor ! Neuron.Signal(i._2, r.flags, t.rCount)
-			})
+				t.networkSchema.inNodes(i._1).foreach({
+					case (actor, weight) => actor ! Neuron.Signal(i._2 * weight, r.flags, t.rCount) 
+			})})
+
 
 			val updateExpected = t.expectedOutputs + (t.rCount -> r)
 
 			stay using t.copy(rCount = t.rCount + 1, expectedOutputs = updateExpected)
+
 
 		case Event(s: Neuron.Output, t: NetworkSettings) =>
 
@@ -359,7 +380,14 @@ class Network(name: String,
 			// check have we processed a representation complete?
 			if(updateOutputs(s.batchId).size == t.expectedOutputs(s.batchId).expectedOutput.size) {
 				
-				out ! "" + t.expectedOutputs(s.batchId).input.values.mkString(",") + "," + 	t.expectedOutputs(s.batchId).expectedOutput.values.mkString(",") + ", " + updateExisting.values.mkString(",") 
+				val matchedInOuts = t.expectedOutputs(s.batchId).expectedOutput.map(exp=> {
+					exp._2 + "->" + updateExisting(exp._1)
+				}
+
+				)
+
+
+				out ! "" + t.expectedOutputs(s.batchId).input.values.mkString(",") + "," + 	matchedInOuts.mkString(",")
 				
 
 				// now double check if we have more representations to process
@@ -425,12 +453,12 @@ class Network(name: String,
 			 		// already an actor for this genome?
 				 	{if(!schemaObj.allNodes.contains(currentObj.id)){
 				 		// there is no actor, so create one
-				 		val ar: ActorRef =  if(currentObj.layer > 1) context.actorOf(Neuron.props(currentObj), currentObj.name) else self
+				 		val ar: ActorRef =  if(currentObj.layer > 0) context.actorOf(Neuron.props(currentObj), currentObj.name) else self
 				 		schemaObj.update(currentObj, ar)
 		 	 		} else {
 		 	 			//send the structure to the neuron to update things such as bias
 		 	 			// but no need to if this is an input
-		 	 			if(currentObj.layer > 1) {
+		 	 			if(currentObj.layer > 0) {
 		 	 				val sn: ActorRef = schemaObj.allNodes(currentObj.id).actor
 		 	 				sn ! currentObj
 		 	 			}
@@ -445,7 +473,7 @@ class Network(name: String,
 
 	 	// Now send down the connections to remaining neurons
 
-	 	val (connectionConfigs, inputnodes) = networkGenome.connections.foldLeft((Map[ActorRef, Neuron.ConnectionConfig](), Map[Int, List[ActorRef]]())) { (acc, current) =>
+	 	val (connectionConfigs, inputnodes) = networkGenome.connections.foldLeft((Map[ActorRef, Neuron.ConnectionConfig](), Map[Int, Map[ActorRef, Double]]())) { (acc, current) =>
 	 		
 	 		val (connectionId, connection) = current
 	 		val (actorConnectionConfigs, inputConnectedActors) = acc
@@ -461,19 +489,21 @@ class Network(name: String,
 		 		val suc = Successor(toActor, connection.weight, connection.recurrent)
 
 
-		 		val updatedInputConnectedActors: Map[Int, List[ActorRef]] = if(connection.isConnectedInput){
+		 		val updatedInputConnectedActors: Map[Int, Map[ActorRef, Double]] = if(connection.isConnectedInput){
 		 				inputConnectedActors.get(connection.from) match {
-		 					case Some(existing: List[ActorRef]) => 
-		 						val newActorList: List[ActorRef] = toActor.actor :: existing
+		 					case Some(existing: Map[ActorRef, Double]) =>
+
+		 						val newActorList: Map[ActorRef, Double] =  existing + (toActor.actor -> connection.weight.value)
 		 						inputConnectedActors + (connection.from -> newActorList)
 		 					case None =>
 		 						
-		 						inputConnectedActors + (connection.from -> List(toActor.actor)) 
+		 						inputConnectedActors + (connection.from -> Map(toActor.actor -> connection.weight.value)) 
 		 				}
 		 				
 		 			} else {
 		 				inputConnectedActors
 		 			}
+		 		
 
 		 		// Create configs for all inputs
 		 		val updateIncoming: Map[ActorRef, Neuron.ConnectionConfig] = actorConnectionConfigs get toActor.actor match {
@@ -509,9 +539,12 @@ class Network(name: String,
 			 			(updateIncoming + (fromActor.actor -> Neuron.ConnectionConfig(outputs = List(suc), neuronGenome = neurons(connection.from))), updatedInputConnectedActors)
 			 	}
 	 	} else {
+
 			(actorConnectionConfigs, inputConnectedActors) 
 		}
-	}
+
+	}	
+	
 
 		// Maps of actor and their connection config has been created.
 		// It's now possible to send the configs to the actors.
@@ -521,7 +554,7 @@ class Network(name: String,
 			c._1 ! c._2
 	 	})
 
-
+		
 		newNetworkSchema.copy(inNodes = inputnodes)
    	}
 

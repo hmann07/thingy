@@ -108,17 +108,23 @@ class Population(out: ActorRef, configData: ConfigData, runtimeConfig: RuntimeCo
 	
  	val generations = configData.maxGenerations
  	
- 	def repurposeAgents(gestatable: List[()=>NetworkGenome], population: List[ActorRef], innovation: ActorRef, envType:EnvironmentType) = {
+ 	def repurposeAgents(gestatable: List[PopulationCandidate], population: List[ActorRef], innovation: ActorRef, envType:EnvironmentType) = {
  		rep(gestatable, population, List.empty, innovation, envType)
  	}
 
 
 
- 	private def rep(g:List[()=>NetworkGenome], c: List[ActorRef], cummulate: List[ActorRef], innovation: ActorRef, envType: EnvironmentType):List[ActorRef] ={
+ 	private def rep(g:List[PopulationCandidate], c: List[ActorRef], cummulate: List[ActorRef], innovation: ActorRef, envType: EnvironmentType):List[ActorRef] ={
 		g.headOption.map(gnew => {
-			val evalG = new GenomeIO(None, Some(gnew))
+
+			val e = gnew match {
+				case x: ElitePopulationCandidate => true
+				case _ => false
+			}
+
+			val evalG = new GenomeIO(None, Some(gnew.genomeFunction))
 			c.headOption.map(cnew => {
-				cnew ! Network.NetworkUpdate(evalG)
+				cnew ! Network.NetworkUpdate(evalG, e)
 				rep(g.tail, c.tail, cnew :: cummulate, innovation, envType)
 			}).getOrElse(
 				// we should actually mutate here too? If it's a new member it won't mutate otherwise, Since mutation is being done at network level
@@ -205,6 +211,7 @@ class Population(out: ActorRef, configData: ConfigData, runtimeConfig: RuntimeCo
  					"runId" -> runId,
  					"generation" -> s.currentGeneration,
  					"species" -> species.id,
+ 					"memberCount" -> species.memberCount,
  					"speciesTotalFitness" -> species.speciesTotalFitness,
  					"speciesBestFitness" -> species.generationalArchetype.fitnessValue
  				)))})
